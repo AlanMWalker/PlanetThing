@@ -1,0 +1,2 @@
+D:\src\ProjectMountainLobster\Debug\ProjectMountainLobster.exe
+D:\src\ProjectMountainLobster\Debug\ProjectMountainLobster.pdb
