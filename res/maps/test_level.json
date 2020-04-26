@@ -32,6 +32,31 @@
  "orientation":"orthogonal",
  "properties":[
         {
+         "name":"test_bool",
+         "type":"bool",
+         "value":true
+        }, 
+        {
+         "name":"test_col",
+         "type":"color",
+         "value":"#ffaf76b6"
+        }, 
+        {
+         "name":"test_file",
+         "type":"file",
+         "value":""
+        }, 
+        {
+         "name":"test_float",
+         "type":"float",
+         "value":3.141
+        }, 
+        {
+         "name":"test_int",
+         "type":"int",
+         "value":10
+        }, 
+        {
          "name":"ye",
          "type":"string",
          "value":""
