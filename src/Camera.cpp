@@ -20,7 +20,7 @@ KInitStatus Camera::init()
 		return KInitStatus::Nullptr;
 	}
 
-	KInitStatus::Success;
+	return KInitStatus::Success;
 }
 
 void Camera::onEnterScene()
