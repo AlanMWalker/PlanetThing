@@ -76,7 +76,7 @@ private:
 			static bool hasBeenPrint = false;
 			if (!hasBeenPrint)
 			{
-				Krawler::KPrintf(L"Skipping imgui draw");
+				Krawler::KPrintf(L"Skipping imgui draw\n");
 				hasBeenPrint = true;
 			}
 		}

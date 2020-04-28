@@ -26,9 +26,20 @@
          "width":20,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":12,
+         "name":"Object Layer 1",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":12,
- "nextobjectid":1,
+ "nextlayerid":13,
+ "nextobjectid":2,
  "orientation":"orthogonal",
  "properties":[
         {
@@ -76,6 +87,34 @@
          "spacing":0,
          "tilecount":3,
          "tileheight":32,
+         "tiles":[
+                {
+                 "id":0,
+                 "properties":[
+                        {
+                         "name":"blocked",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }, 
+                {
+                 "id":1,
+                 "properties":[
+                        {
+                         "name":"blocked",
+                         "type":"bool",
+                         "value":false
+                        }]
+                }, 
+                {
+                 "id":2,
+                 "properties":[
+                        {
+                         "name":"blocked",
+                         "type":"bool",
+                         "value":false
+                        }]
+                }],
          "tilewidth":32
         }],
  "tilewidth":32,

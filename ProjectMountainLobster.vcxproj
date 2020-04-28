@@ -54,13 +54,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\src\KRAWLER\KRAWLER\KRAWLER Engine\include;D:\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-audio-d.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\SFML-2.5.1\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\..\..\SFML-2.5.1\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -71,7 +71,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\src\KRAWLER\KRAWLER\KRAWLER Engine\include;D:\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -79,7 +79,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;sfml-audio.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\SFML-2.5.1\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\..\SFML-2.5.1\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -87,8 +87,12 @@
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\GameSetup.cpp" />
     <ClCompile Include="MountainLobster.cpp" />
+    <ClCompile Include="src\BlockedMap.cpp" />
     <ClCompile Include="src\PlayerLocomotive.cpp" />
+    <ClCompile Include="src\CompLocomotive.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -103,7 +107,11 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="include\BlockedMap.h" />
+    <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\DbgImgui.h" />
+    <ClInclude Include="include\GameSetup.h" />
+    <ClInclude Include="include\CompLocomotive.h" />
     <ClInclude Include="include\PlayerLocomotive.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

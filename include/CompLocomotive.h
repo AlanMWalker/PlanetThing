@@ -6,25 +6,25 @@
 #include "KComponent.h"
 #include "DbgImgui.h"
 
-
-class PlayerLocomotive 
+class CompLocomotive
 	: public Krawler::KComponentBase
 {
 public:
 
-	PlayerLocomotive(Krawler::KEntity* pEntity);
-	~PlayerLocomotive() = default;
+	CompLocomotive(Krawler::KEntity* pEntity);
+	~CompLocomotive() = default;
 
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
 	virtual void tick() override;
-	
+
 
 private:
+	
+	sf::CircleShape m_Shape;
 
 	imguicomp* m_pImgui = nullptr;
 	Krawler::Components::KCSprite* m_pSprite = nullptr;
-	sf::CircleShape m_shape;
 
 	float m_moveSpeed = 100.0f;
 };
