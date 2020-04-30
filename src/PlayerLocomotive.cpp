@@ -29,20 +29,19 @@ KInitStatus PlayerLocomotive::init()
 		m_pSprite = new KCSprite(getEntity(), Vec2f(32, 32));
 		getEntity()->addComponent(m_pSprite);
 
-		GET_APP()->getRenderer()->addDebugShape(&m_shape);
-		m_shape = sf::RectangleShape(Vec2f(32, 32));
-		m_shape.setOrigin(16, 16);
-		m_shape.setFillColor(Colour(0, 0, 255, 100));
+		GET_APP()->getRenderer()->addDebugShape(&m_colliderDebugShape);
+		m_colliderDebugShape = sf::RectangleShape(colliderBounds);
+		m_colliderDebugShape.setOrigin(colliderBounds * 0.5f);
+		m_colliderDebugShape.setFillColor(Colour(0, 0, 255, 100));
 		getEntity()->getTransform()->setPosition(35, 64);
 		getEntity()->getTransform()->setOrigin(16, 16);
 	}
 	{
 
 		// Temporary place to attatch collider
-		auto collider = new KCBoxCollider(getEntity(), Vec2f(32, 32));
+		auto collider = new KCBoxCollider(getEntity(), colliderBounds);
 		getEntity()->addComponent(collider);
 		collider->subscribeCollisionCallback(&m_callback);
-
 	}
 
 	// DEBUG LINE
@@ -93,7 +92,7 @@ void PlayerLocomotive::tick()
 
 	manageIntersections(dir, dt);
 	getEntity()->getTransform()->move(dir * m_moveSpeed * dt);
-	m_shape.setPosition(getEntity()->getTransform()->getPosition());
+	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
 
 }
 
@@ -101,7 +100,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 {
 	// 
 	const Vec2f currentPos = getEntity()->getTransform()->getPosition();
-	const Vec2f halfSize = PLAYER_SIZE * 0.5f;
+	const Vec2f halfSize = colliderBounds * 0.5f;
 
 	Vec2f startPointsX[2], endPointsX[2];
 	Vec2f startPointsY[2], endPointsY[2];
