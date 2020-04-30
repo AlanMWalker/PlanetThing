@@ -125,8 +125,9 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			// BOTTOM RIGHT POINT
 			startPointsX[1] = currentPos + halfSize;
 		}
-		endPointsX[0] = startPointsX[0] + dir * m_moveSpeed * dt;
-		endPointsX[1] = startPointsX[1] + dir * m_moveSpeed * dt;
+		Vec2f tempDir = Vec2f(dir.x, 0);
+		endPointsX[0] = startPointsX[0] + tempDir * m_moveSpeed * dt;
+		endPointsX[1] = startPointsX[1] + tempDir * m_moveSpeed * dt;
 	}
 
 
@@ -149,8 +150,9 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			// BOTTOM RIGHT
 			startPointsY[1] = currentPos + halfSize;
 		}
-		endPointsY[0] = startPointsY[0] + dir * m_moveSpeed * dt;
-		endPointsY[1] = startPointsY[1] + dir * m_moveSpeed * dt;
+		Vec2f tempDir = Vec2f(0, dir.y);
+		endPointsY[0] = startPointsY[0] + tempDir * m_moveSpeed * dt;
+		endPointsY[1] = startPointsY[1] + tempDir * m_moveSpeed * dt;
 	}
 	// raycast x
 	for (int i = 0; i < 2; ++i)
