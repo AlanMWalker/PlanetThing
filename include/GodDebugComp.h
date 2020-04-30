@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DbgImgui.h"
+
 #include <Krawler.h>
 #include <Components\KCSprite.h>
 #include <SFML\Graphics\CircleShape.hpp>
@@ -20,6 +22,7 @@ public:
 	virtual void tick() override;
 
 private: 
+	imguicomp* m_pImgui = nullptr;
 
 	std::vector<sf::RectangleShape> m_colliderShapes;
 };

@@ -31,7 +31,7 @@ KInitStatus CompLocomotive::init()
 	m_pSprite = new KCSprite(getEntity(), Vec2f(32, 32));
 	getEntity()->addComponent(m_pSprite);
 
-	getEntity()->getTransform()->setTranslation(rand() % 200 + 30, rand() % 200 + 30);
+	getEntity()->getTransform()->setPosition(rand() % 200 + 30, rand() % 200 + 30);
 	
 	m_Shape.setRadius(100);
 	m_Shape.setOrigin(84, 84);

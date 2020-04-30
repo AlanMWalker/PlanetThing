@@ -16,5 +16,5 @@ public:
 	virtual void tick() override;
 
 private:
-	Krawler::KEntity* m_pPlayer;
+	Krawler::KEntity* m_pPlayer = nullptr;
 };

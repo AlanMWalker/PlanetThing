@@ -12,6 +12,9 @@ GodDebugComp::GodDebugComp(Krawler::KEntity* pEntity)
 
 KInitStatus GodDebugComp::init()
 {
+	m_pImgui = getEntity()->getComponent<imguicomp>();
+
+
 	return KInitStatus::Success;
 }
 
@@ -22,7 +25,7 @@ void GodDebugComp::onEnterScene()
 
 	for (auto item : list)
 	{
-		if (item->getEntityTag() == L"Terrain")
+		if (item->getTag() == L"Terrain")
 		{
 			sf::RectangleShape r;
 			r = sf::RectangleShape(Vec2f(32, 32));
@@ -45,5 +48,13 @@ void GodDebugComp::tick()
 		// close
 		GET_APP()->closeApplication();
 	}
+
+	static bool bDebugShapes = GET_APP()->getRenderer()->isShowingDebugDrawables();
+	m_pImgui->update();
+	m_pImgui->begin("-- God Debug Tools --");
+	ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
+	m_pImgui->end();
+
+	GET_APP()->getRenderer()->showDebugDrawables(bDebugShapes);
 }
 

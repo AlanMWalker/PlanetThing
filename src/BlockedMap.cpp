@@ -90,7 +90,7 @@ void BlockedMap::setupBlockedMap()
 					pEntity->setTag(L"Terrain");
 					const Vec2f tileDim = Vec2f(levelImportData->tileWidth, levelImportData->tileHeight);
 					pEntity->addComponent(new KCBoxCollider(pEntity, tileDim));
-					pEntity->getTransform()->setTranslation(i * tileDim.x, j * tileDim.y);
+					pEntity->getTransform()->setPosition(i * tileDim.x, j * tileDim.y);
 					pEntity->getTransform()->setOrigin(tileDim * 0.5f);
 					KPRINTF("#");
 				}

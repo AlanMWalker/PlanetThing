@@ -6,9 +6,7 @@
 #include <KComponent.h>
 #include <Components\KCBoxCollider.h>
 
-#include "DbgImgui.h"
-
-
+//Todo move this to its own class
 struct DbgLine
 	: public sf::Drawable
 {
@@ -41,7 +39,7 @@ struct DbgLine
 
 };
 
-class PlayerLocomotive 
+class PlayerLocomotive
 	: public Krawler::KComponentBase
 {
 public:
@@ -55,11 +53,14 @@ public:
 
 private:
 
-	imguicomp* m_pImgui = nullptr;
+	void manageIntersections(Krawler::Vec2f& dir, float dt);
+
 	Krawler::Components::KCSprite* m_pSprite = nullptr;
 	sf::RectangleShape m_shape;
-	DbgLine m_line;
-	
+	DbgLine m_rayA, m_rayB;
+	DbgLine m_rayC, m_rayD;
+	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(32, 32);
+
 	void resolve(const Krawler::KCollisionDetectionData& collData);
 
 	Krawler::Components::KCColliderBaseCallback m_callback = [this](const Krawler::KCollisionDetectionData& collData)
