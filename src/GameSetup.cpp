@@ -1,15 +1,17 @@
-#include "GameSetup.h"
+#include <GameSetup.h>
+
 // engine
 #include <Krawler.h>
 #include <KApplication.h>
+#include <DbgImgui.h>
 
+// components
+#include <GodDebugComp.h>
 #include <Components\KCTileMap.h>
+#include <PlayerLocomotive.h>
+#include <Camera.h>
+#include <Spawner.h>
 
-#include "DbgImgui.h"
-#include "PlayerLocomotive.h"
-#include "CompLocomotive.h"
-#include "Camera.h"
-#include "GodDebugComp.h"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -22,13 +24,12 @@ GameSetup::GameSetup()
 	createMap();
 	createBlockedMap();
 	createPlayer();
-	createAi();
 }
 
 void GameSetup::createGod()
 {
 	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(KTEXT("God"));
+	entity->setTag(L"God");
 	entity->addComponent(new imguicomp(entity));
 	entity->addComponent(new GodDebugComp(entity));
 }
@@ -36,8 +37,9 @@ void GameSetup::createGod()
 void GameSetup::createMap()
 {
 	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(KTEXT("Map"));
+	entity->setTag(L"Map");
 	entity->addComponent(new KCTileMapSplit(entity, L"test_level"));
+	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200))));
 }
 
 void GameSetup::createBlockedMap()
@@ -48,15 +50,8 @@ void GameSetup::createBlockedMap()
 void GameSetup::createPlayer()
 {
 	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(KTEXT("Player"));
+	entity->setTag(L"Player");
 	entity->addComponent(new PlayerLocomotive(entity));
 	entity->addComponent(new Camera(entity));
-
 }
 
-void GameSetup::createAi()
-{
-	auto compEntity = GET_SCENE()->addEntityToScene();
-	compEntity->setTag(KTEXT("Comp"));
-	compEntity->addComponent(new CompLocomotive(compEntity));
-}

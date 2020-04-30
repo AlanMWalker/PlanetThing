@@ -3,8 +3,8 @@
 #include <Krawler.h>
 #include <Components\KCSprite.h>
 #include <SFML\Graphics\CircleShape.hpp>
-#include "KComponent.h"
-#include "DbgImgui.h"
+#include <KComponent.h>
+#include <DbgImgui.h>
 
 class CompLocomotive
 	: public Krawler::KComponentBase
@@ -20,11 +20,12 @@ public:
 
 
 private:
-	
 	sf::CircleShape m_Shape;
 
 	imguicomp* m_pImgui = nullptr;
 	Krawler::Components::KCSprite* m_pSprite = nullptr;
 
 	float m_moveSpeed = 100.0f;
+
+	void detectEnermy();
 };

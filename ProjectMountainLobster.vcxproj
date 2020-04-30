@@ -94,6 +94,7 @@
     <ClCompile Include="src\GodDebugComp.cpp" />
     <ClCompile Include="src\PlayerLocomotive.cpp" />
     <ClCompile Include="src\CompLocomotive.cpp" />
+    <ClCompile Include="src\Spawner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -115,6 +116,7 @@
     <ClInclude Include="include\CompLocomotive.h" />
     <ClInclude Include="include\GodDebugComp.h" />
     <ClInclude Include="include\PlayerLocomotive.h" />
+    <ClInclude Include="include\Spawner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -11,6 +11,7 @@
     <ClCompile Include="src\CompLocomotive.cpp" />
     <ClCompile Include="src\GameSetup.cpp" />
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Spawner.cpp" />
     <ClCompile Include="src\GodDebugComp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -27,6 +28,7 @@
     <ClInclude Include="include\CompLocomotive.h" />
     <ClInclude Include="include\PlayerLocomotive.h" />
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\Spawner.h" />
     <ClInclude Include="include\GodDebugComp.h" />
   </ItemGroup>
 </Project>

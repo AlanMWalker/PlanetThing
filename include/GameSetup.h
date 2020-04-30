@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BlockedMap.h"
+#include <BlockedMap.h>
 
 class GameSetup
 {

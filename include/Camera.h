@@ -1,13 +1,12 @@
 #pragma once
 
 #include <Krawler.h>
-#include "KComponent.h"
+#include <KComponent.h>
 
 class Camera
 	: public Krawler::KComponentBase
 {
 public:
-
 	Camera(Krawler::KEntity* pEntity);
 	~Camera() = default;
 

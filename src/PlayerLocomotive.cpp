@@ -1,8 +1,9 @@
+#include <PlayerLocomotive.h>
+// engine
 #include <KApplication.h>
 #include <AssetLoader\KAssetLoader.h>
 #include <Input\KInput.h>
 
-#include "PlayerLocomotive.h"
 
 using namespace Krawler;
 using namespace Krawler::Components;
@@ -18,7 +19,7 @@ KInitStatus PlayerLocomotive::init()
 	auto pGod = GET_SCENE()->findEntityByTag(KTEXT("God"));
 	if (!pGod)
 	{
-		KPRINTF("Couldn't find God in PlayerLocomotive!\n");
+		KPRINTF("Couldn't find God entity in PlayerLocomotive!\n");
 		return KInitStatus::Nullptr;
 	}
 
@@ -107,7 +108,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 
 	if (dir.x != 0.0f)
 	{
-		if (dir.x == -1.0f)
+		if (dir.x < 0.0f)
 		{ // LEFT
 			// TOP LEFT POINT
 			startPointsX[0] = currentPos - halfSize;
@@ -132,7 +133,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 
 	if (dir.y != 0.0f)
 	{
-		if (dir.y == -1.0f)
+		if (dir.y < 0.0f)
 		{ // UP
 			// TOP LEFT POINT
 			startPointsY[0] = currentPos - halfSize;
@@ -172,7 +173,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 		}
 	}
 
-	// raycast x
+	// raycast y
 	for (int i = 0; i < 2; ++i)
 	{
 		if (endPointsY[i] - startPointsY[i] != Vec2f())

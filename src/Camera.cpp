@@ -1,13 +1,12 @@
+#include <Camera.h>
+
 #include <KApplication.h>
-#include "..\include\Camera.h"
 
 using namespace Krawler;
-
 
 Camera::Camera(KEntity* pEntity)
 	: KComponentBase(pEntity)
 {
-
 }
 
 KInitStatus Camera::init()
@@ -16,7 +15,7 @@ KInitStatus Camera::init()
 
 	if (!m_pPlayer)
 	{
-		KPRINTF("Couldn't find Player in Camera!\n");
+		KPRINTF("Couldn't find Player entity in Camera!\n");
 		return KInitStatus::Nullptr;
 	}
 
@@ -34,5 +33,4 @@ void Camera::tick()
 	Vec2f windowSize(GET_APP()->getWindowSize());
 
 	GET_APP()->getRenderWindow()->setView(sf::View(playerPos, windowSize));
-
 }

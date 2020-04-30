@@ -1,10 +1,12 @@
 #pragma once
 
 #include <Krawler.h>
-#include <Components\KCSprite.h>
-#include <SFML\Graphics\RectangleShape.hpp>
 #include <KComponent.h>
+#include <SFML\Graphics\RectangleShape.hpp>
+#include <Components\KCSprite.h>
 #include <Components\KCBoxCollider.h>
+
+#include <DbgImgui.h>
 
 //Todo move this to its own class
 struct DbgLine
@@ -52,6 +54,7 @@ public:
 	virtual void tick() override;
 
 private:
+	Krawler::KEntity* m_pGod = nullptr;
 
 	void manageIntersections(Krawler::Vec2f& dir, float dt);
 	Krawler::Vec2f colliderBounds = Krawler::Vec2f(28, 28);
