@@ -57,7 +57,7 @@ private:
 	Krawler::KEntity* m_pGod = nullptr;
 
 	void manageIntersections(Krawler::Vec2f& dir, float dt);
-	Krawler::Vec2f colliderBounds = Krawler::Vec2f(28, 28);
+	Krawler::Vec2f m_colliderBounds = Krawler::Vec2f(28, 28);
 	Krawler::Components::KCSprite* m_pSprite = nullptr;
 	sf::RectangleShape m_colliderDebugShape;
 	DbgLine m_rayA, m_rayB;

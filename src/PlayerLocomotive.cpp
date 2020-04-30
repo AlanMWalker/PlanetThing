@@ -31,16 +31,16 @@ KInitStatus PlayerLocomotive::init()
 		getEntity()->addComponent(m_pSprite);
 
 		GET_APP()->getRenderer()->addDebugShape(&m_colliderDebugShape);
-		m_colliderDebugShape = sf::RectangleShape(colliderBounds);
-		m_colliderDebugShape.setOrigin(colliderBounds * 0.5f);
+		m_colliderDebugShape = sf::RectangleShape(m_colliderBounds);
+		m_colliderDebugShape.setOrigin(m_colliderBounds * 0.5f);
 		m_colliderDebugShape.setFillColor(Colour(0, 0, 255, 100));
-		getEntity()->getTransform()->setPosition(35, 64);
+		getEntity()->getTransform()->setPosition(200, 250);
 		getEntity()->getTransform()->setOrigin(16, 16);
 	}
 	{
 
 		// Temporary place to attatch collider
-		auto collider = new KCBoxCollider(getEntity(), colliderBounds);
+		auto collider = new KCBoxCollider(getEntity(), m_colliderBounds);
 		getEntity()->addComponent(collider);
 		collider->subscribeCollisionCallback(&m_callback);
 	}
@@ -101,7 +101,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 {
 	// 
 	const Vec2f currentPos = getEntity()->getTransform()->getPosition();
-	const Vec2f halfSize = colliderBounds * 0.5f;
+	const Vec2f halfSize = m_colliderBounds * 0.5f;
 
 	Vec2f startPointsX[2], endPointsX[2];
 	Vec2f startPointsY[2], endPointsY[2];
@@ -167,7 +167,6 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			const bool result = GET_APP()->getOverlord().castRayInScene(startPointsX[i], endPointsX[i], L"Terrain", getEntity());
 			if (result)
 			{
-				KPRINTF_A("Raycast hit for start point %s\n", dir.x > 0 ? L"Right" : L"Left");
 				dir.x = 0.0f;
 			}
 		}
@@ -186,7 +185,6 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			const bool result = GET_APP()->getOverlord().castRayInScene(startPointsY[i], endPointsY[i], L"Terrain", getEntity());
 			if (result)
 			{
-				KPRINTF_A("Raycast hit for start point %s\n", dir.y > 0 ? L"Down" : L"Up");
 				dir.y = 0;
 			}
 		}
