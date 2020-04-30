@@ -79,7 +79,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;sfml-audio.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)\..\SFML-2.5.1\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\..\..\SFML-2.5.1\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -91,6 +91,7 @@
     <ClCompile Include="src\GameSetup.cpp" />
     <ClCompile Include="MountainLobster.cpp" />
     <ClCompile Include="src\BlockedMap.cpp" />
+    <ClCompile Include="src\GodDebugComp.cpp" />
     <ClCompile Include="src\PlayerLocomotive.cpp" />
     <ClCompile Include="src\CompLocomotive.cpp" />
   </ItemGroup>
@@ -112,6 +113,7 @@
     <ClInclude Include="include\DbgImgui.h" />
     <ClInclude Include="include\GameSetup.h" />
     <ClInclude Include="include\CompLocomotive.h" />
+    <ClInclude Include="include\GodDebugComp.h" />
     <ClInclude Include="include\PlayerLocomotive.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

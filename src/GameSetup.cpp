@@ -9,6 +9,7 @@
 #include "PlayerLocomotive.h"
 #include "CompLocomotive.h"
 #include "Camera.h"
+#include "GodDebugComp.h"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -29,6 +30,7 @@ void GameSetup::createGod()
 	auto entity = GET_SCENE()->addEntityToScene();
 	entity->setTag(KTEXT("God"));
 	entity->addComponent(new imguicomp(entity));
+	entity->addComponent(new GodDebugComp(entity));
 }
 
 void GameSetup::createMap()
@@ -36,7 +38,6 @@ void GameSetup::createMap()
 	auto entity = GET_SCENE()->addEntityToScene();
 	entity->setTag(KTEXT("Map"));
 	entity->addComponent(new KCTileMapSplit(entity, L"test_level"));
-
 }
 
 void GameSetup::createBlockedMap()
@@ -59,5 +60,3 @@ void GameSetup::createAi()
 	compEntity->setTag(KTEXT("Comp"));
 	compEntity->addComponent(new CompLocomotive(compEntity));
 }
-
-

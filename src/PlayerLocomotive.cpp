@@ -16,7 +16,6 @@ PlayerLocomotive::PlayerLocomotive(KEntity* pEntity)
 KInitStatus PlayerLocomotive::init()
 {
 	auto pGod = GET_SCENE()->findEntityByTag(KTEXT("God"));
-
 	if (!pGod)
 	{
 		KPRINTF("Couldn't find God in PlayerLocomotive!\n");
@@ -25,17 +24,30 @@ KInitStatus PlayerLocomotive::init()
 
 	m_pImgui = pGod->getComponent<imguicomp>();
 
-	// Whilst working on the movement we'll handle
+	{// Whilst working on the movement we'll handle
 	// setting up graphics here
 	// should be moved to a different component afterwards
-	m_pSprite = new KCSprite(getEntity(), Vec2f(32, 32));
-	getEntity()->addComponent(m_pSprite);
+		m_pSprite = new KCSprite(getEntity(), Vec2f(32, 32));
+		getEntity()->addComponent(m_pSprite);
 
-	GET_APP()->getRenderer()->addDebugShape(&m_shape);
-	m_shape.setRadius(20.0f);
-	m_shape.setFillColor(sf::Color::Red);
-	getEntity()->getTransform()->setTranslation(35, 64);
+		GET_APP()->getRenderer()->addDebugShape(&m_shape);
+		m_shape = sf::RectangleShape(Vec2f(32, 32));
+		m_shape.setOrigin(16, 16);
+		m_shape.setFillColor(Colour(0, 0, 255, 100));
+		getEntity()->getTransform()->setTranslation(35, 64);
+		getEntity()->getTransform()->setOrigin(16, 16);
+	}
+	{
 
+		// Temporary place to attatch collider
+		auto collider = new KCBoxCollider(getEntity(), Vec2f(32, 32));
+		getEntity()->addComponent(collider);
+		collider->subscribeCollisionCallback(&m_callback);
+
+	}
+	// DEBUG LINE
+	m_line.setCol(Colour::Magenta);
+	GET_APP()->getRenderer()->addDebugShape(&m_line);
 	return KInitStatus::Success;
 }
 
@@ -47,6 +59,8 @@ void PlayerLocomotive::onEnterScene()
 
 void PlayerLocomotive::tick()
 {
+	const float dt = GET_APP()->getDeltaTime();
+
 	m_pImgui->update();
 	m_pImgui->begin("Box2D Testing");
 	ImGui::SliderFloat("Move Speed", &m_moveSpeed, 0, 1000);
@@ -74,6 +88,21 @@ void PlayerLocomotive::tick()
 		dir.x = 1.0f;
 	}
 
-	dir = Normalise(dir);
-	getEntity()->getTransform()->move(dir * m_moveSpeed * GET_APP()->getDeltaTime());
+
+	if (dir != Vec2f())
+	{
+		const Vec2f start = getEntity()->getTransform()->getTranslation();
+		const Vec2f end = start + (dir * m_moveSpeed * dt);
+
+		GET_APP()->getOverlord().castRayInScene(start, end, getEntity());
+		m_line.setStartEnd(start, end);
+	}
+
+	getEntity()->getTransform()->move(dir * m_moveSpeed * dt);
+	m_shape.setPosition(getEntity()->getTransform()->getPosition());
+
+}
+
+void PlayerLocomotive::resolve(const KCollisionDetectionData& collData)
+{
 }
