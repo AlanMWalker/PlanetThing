@@ -89,7 +89,7 @@ void PlayerLocomotive::tick()
 		dir.x = 1.0f;
 	}
 
-
+	dir = Normalise(dir);
 	manageIntersections(dir, dt);
 	getEntity()->getTransform()->move(dir * m_moveSpeed * dt);
 	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());

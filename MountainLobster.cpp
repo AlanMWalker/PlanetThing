@@ -26,7 +26,7 @@ int main(void)
 {
 	int32 i = sf::Texture::getMaximumSize();
 	KApplicationInitialise initApp(false);
-	initApp.gameFps = 60;
+	initApp.gameFps = 200;
 	initApp.physicsFps = 60;
 	initApp.width = 1024;
 	initApp.height = 768;
