@@ -14,26 +14,26 @@ using namespace Krawler::Input;
 Spawner::Spawner(KEntity* pEntity, Vec2f spawnPoint, int numOfEntities)
 	: KComponentBase(pEntity)
 {
-	this->spawnPoint = spawnPoint;
-	this->numOfEntities = numOfEntities;
+	this->m_spawnPoint = spawnPoint;
+	this->m_numOfEntities = numOfEntities;
 }
 
 KInitStatus Spawner::init()
 {
-	m_pMap = GET_SCENE()->findEntityByTag(KTEXT("Map"));
+	m_pMap = GET_SCENE()->findEntity(KTEXT("Map"));
 	if (!m_pMap)
 	{
 		KPRINTF("Couldn't find Map entity on Spawner!\n");
 		return KInitStatus::Nullptr;
 	}
 
-	m_entityList.resize(numOfEntities);
+	m_entityList.resize(m_numOfEntities);
 	for (auto &entity : m_entityList)
 	{
 		entity = GET_SCENE()->addEntityToScene();
 		auto loco = new CompLocomotive(entity);
 		entity->addComponent(loco);
-		entity->getTransform()->setPosition(spawnPoint);
+		entity->getTransform()->setPosition(m_spawnPoint);
 		entity->setActive(false);
 	}
 

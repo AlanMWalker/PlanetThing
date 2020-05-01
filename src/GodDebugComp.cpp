@@ -2,6 +2,8 @@
 #include <Input\KInput.h>
 #include <KApplication.h>
 
+#include "PlayerLocomotive.h"
+
 using namespace Krawler;
 using namespace Krawler::Input;
 
@@ -49,10 +51,13 @@ void GodDebugComp::tick()
 		GET_APP()->closeApplication();
 	}
 
+	float* pMoveSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_moveSpeed;
+
 	static bool bDebugShapes = GET_APP()->getRenderer()->isShowingDebugDrawables();
 	m_pImgui->update();
 	m_pImgui->begin("-- God Debug Tools --");
 	ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
+	ImGui::InputFloat("Player Move Speed", pMoveSpeed);
 	m_pImgui->end();
 
 	GET_APP()->getRenderer()->showDebugDrawables(bDebugShapes);

@@ -52,6 +52,8 @@ public:
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
 	virtual void tick() override;
+	
+	float m_moveSpeed = 100.0f;
 
 private:
 	Krawler::KEntity* m_pGod = nullptr;
@@ -71,5 +73,4 @@ private:
 		resolve(collData);
 	};
 
-	float m_moveSpeed = 100.0f;
 };

@@ -24,8 +24,8 @@ public:
 
 private:
 	// Properties 
-	Krawler::Vec2f spawnPoint;
-	int numOfEntities;
+	Krawler::Vec2f m_spawnPoint;
+	int m_numOfEntities;
 
 	Krawler::KEntity* m_pMap = nullptr;
 	std::vector<Krawler::KEntity*> m_entityList;

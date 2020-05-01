@@ -16,13 +16,12 @@ PlayerLocomotive::PlayerLocomotive(KEntity* pEntity)
 
 KInitStatus PlayerLocomotive::init()
 {
-	auto pGod = GET_SCENE()->findEntityByTag(KTEXT("God"));
+	auto pGod = GET_SCENE()->findEntity(KTEXT("God"));
 	if (!pGod)
 	{
 		KPRINTF("Couldn't find God entity in PlayerLocomotive!\n");
 		return KInitStatus::Nullptr;
 	}
-
 
 	{// Whilst working on the movement we'll handle
 	// setting up graphics here
@@ -92,6 +91,7 @@ void PlayerLocomotive::tick()
 
 	dir = Normalise(dir);
 	manageIntersections(dir, dt);
+	KPrintf(L"DIR = %f : %f \n", dir.x, dir.y);
 	getEntity()->getTransform()->move(dir * m_moveSpeed * dt);
 	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
 
@@ -189,7 +189,22 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			}
 		}
 	}
+		
+	const float fdirx = fabs(dir.x);
+	const float fdiry = fabs(dir.y);
 
+	// if we cancelled the vertical then the fabs(dir.x) is not 1 but it is also greater than 0
+	// and the vertical component of dir is 0.0
+	if (fabs(dir.x) != 1.0f && fabs(dir.x) > 0.0f && dir.y == 0.0f)
+	{
+		dir.x /= fdirx;
+	}
+	// if we cancelled the horizontal then the fabs(dir.y) is not 1 but it is also greater than 0
+	// and the horizontal component of dir is 0.0
+	else if (fabs(dir.y) != 1.0f && fabs(dir.y) > 0.0f && dir.x == 0.0f)
+	{
+		dir.y /= fdiry;
+	}
 }
 
 void PlayerLocomotive::resolve(const KCollisionDetectionData& collData)

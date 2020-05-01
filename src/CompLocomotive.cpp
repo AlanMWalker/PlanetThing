@@ -16,7 +16,7 @@ CompLocomotive::CompLocomotive(KEntity* pEntity)
 
 KInitStatus CompLocomotive::init()
 {
-	auto pGod = GET_SCENE()->findEntityByTag(KTEXT("God"));
+	auto pGod = GET_SCENE()->findEntity(KTEXT("God"));
 
 	if (!pGod)
 	{
@@ -61,7 +61,7 @@ void CompLocomotive::detectEnermy()
 {
 	Vec2f dir;
 
-	auto playerEntity = GET_SCENE()->findEntityByTag(L"Player");
+	auto playerEntity = GET_SCENE()->findEntity(L"Player");
 
 	auto entityPos = playerEntity->getTransform()->getPosition();
 	auto myPos = getEntity()->getTransform()->getPosition();
