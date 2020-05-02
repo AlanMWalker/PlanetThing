@@ -23,6 +23,7 @@ public:
 
 private: 
 	imguicomp* m_pImgui = nullptr;
+	bool pShowDodgeSettings = false;
 
 	std::vector<sf::RectangleShape> m_colliderShapes;
 };

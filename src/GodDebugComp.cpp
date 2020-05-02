@@ -54,9 +54,22 @@ void GodDebugComp::tick()
 	float* pMoveSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_moveSpeed;
 
 	static bool bDebugShapes = GET_APP()->getRenderer()->isShowingDebugDrawables();
+
 	m_pImgui->update();
 	m_pImgui->begin("-- God Debug Tools --");
 	ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
+	ImGui::Separator();
+
+	ImGui::Checkbox("Dodge Settings", &pShowDodgeSettings);
+	if (pShowDodgeSettings)
+	{
+		auto pDodgeTiming = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeTiming;
+		auto pDodgeCooldown = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeCooldown;
+		auto pDodgeSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeMultiplyer;
+		ImGui::SliderFloat("Dodge Timing", pDodgeTiming, 0.0f, 5.0f);
+		ImGui::SliderFloat("Dodge Cooldown", pDodgeCooldown, 0.0f, 5.0f);
+		ImGui::SliderFloat("Dodge Speed", pDodgeSpeed, 0.0f, 5.0f);
+	}
 	ImGui::InputFloat("Player Move Speed", pMoveSpeed);
 	m_pImgui->end();
 

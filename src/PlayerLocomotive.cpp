@@ -23,9 +23,14 @@ KInitStatus PlayerLocomotive::init()
 		return KInitStatus::Nullptr;
 	}
 
-	{// Whilst working on the movement we'll handle
-	// setting up graphics here
-	// should be moved to a different component afterwards
+
+	{
+		// Whilst working on the movement we'll handle
+		// setting up graphics here
+		// should be moved to a different component afterwards
+		getEntity()->getTransform()->setPosition(200, 250);
+		getEntity()->getTransform()->setOrigin(16, 16);
+
 		m_pSprite = new KCSprite(getEntity(), Vec2f(32, 32));
 		getEntity()->addComponent(m_pSprite);
 
@@ -33,11 +38,8 @@ KInitStatus PlayerLocomotive::init()
 		m_colliderDebugShape = sf::RectangleShape(m_colliderBounds);
 		m_colliderDebugShape.setOrigin(m_colliderBounds * 0.5f);
 		m_colliderDebugShape.setFillColor(Colour(0, 0, 255, 100));
-		getEntity()->getTransform()->setPosition(200, 250);
-		getEntity()->getTransform()->setOrigin(16, 16);
 	}
 	{
-
 		// Temporary place to attatch collider
 		auto collider = new KCBoxCollider(getEntity(), m_colliderBounds);
 		getEntity()->addComponent(collider);
@@ -65,36 +67,84 @@ void PlayerLocomotive::onEnterScene()
 
 void PlayerLocomotive::tick()
 {
+	Vec2f dir;
 	const float dt = GET_APP()->getDeltaTime();
 
-	Vec2f dir;
-	if (KInput::Pressed(KKey::W))
+	if (!m_isDodging)
 	{
-		m_pSprite->setTextureRect(Recti{ 32,0,32,32 });
-		dir.y = -1.0f;
+		if (KInput::Pressed(UP))
+		{
+			m_pSprite->setTextureRect(Recti{ 32,0,32,32 });
+			dir.y = -1.0f;
+		}
+		if (KInput::Pressed(DOWN))
+		{
+			m_pSprite->setTextureRect(Recti{ 0,0,32,32 });
+			dir.y = 1.0f;
+		}
+		if (KInput::Pressed(LEFT))
+		{
+			m_pSprite->setTextureRect(Recti{ 64,0,32,32 });
+			dir.x = -1.0f;
+		}
+		if (KInput::Pressed(RIGHT))
+		{
+			m_pSprite->setTextureRect(Recti{ 96, 0,32,32 });
+			dir.x = 1.0f;
+		}
 	}
-	if (KInput::Pressed(KKey::S))
+	else
 	{
-		m_pSprite->setTextureRect(Recti{ 0,0,32,32 });
-		dir.y = 1.0f;
-	}
-	if (KInput::Pressed(KKey::A))
-	{
-		m_pSprite->setTextureRect(Recti{ 64,0,32,32 });
-		dir.x = -1.0f;
-	}
-	if (KInput::Pressed(KKey::D))
-	{
-		m_pSprite->setTextureRect(Recti{ 96, 0,32,32 });
-		dir.x = 1.0f;
+		dir = m_lastDir;
 	}
 
 	dir = Normalise(dir);
+
+
+	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
+
+	handleDodge(dir, dt);
 	manageIntersections(dir, dt);
-	KPrintf(L"DIR = %f : %f \n", dir.x, dir.y);
-	getEntity()->getTransform()->move(dir * m_moveSpeed * dt);
+	getEntity()->getTransform()->move(dir * speed * dt);
 	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
 
+}
+
+void PlayerLocomotive::handleDodge(const Vec2f& dir, float dt)
+{
+	if (KInput::JustPressed(DODGE) && !m_isDodging && m_canDodge && m_hasReleasedDodge)
+	{
+		m_isDodging = true;
+		m_lastDir = dir;
+		m_hasReleasedDodge = false;
+		m_canDodge = false;
+		return;
+	}
+
+	if (KInput::JustReleased(KKey::Space))
+	{
+		m_hasReleasedDodge = true;
+	}
+
+	if (m_isDodging)
+	{
+		m_dodgeTimer += dt;
+
+		if (m_dodgeTimer >= m_dodgeTiming)
+		{
+			m_isDodging = false;
+			m_dodgeTimer = 0.0f;
+		}
+	}
+	else if (!m_isDodging && !m_canDodge)
+	{
+		m_dodgeCDTimer += dt;
+		if (m_dodgeCDTimer >= m_dodgeCooldown)
+		{
+			m_dodgeCDTimer = 0.0f;
+			m_canDodge = true;
+		}
+	}
 }
 
 void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
@@ -102,6 +152,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 	// 
 	const Vec2f currentPos = getEntity()->getTransform()->getPosition();
 	const Vec2f halfSize = m_colliderBounds * 0.5f;
+	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
 
 	Vec2f startPointsX[2], endPointsX[2];
 	Vec2f startPointsY[2], endPointsY[2];
@@ -126,8 +177,8 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			startPointsX[1] = currentPos + halfSize;
 		}
 		Vec2f tempDir = Vec2f(dir.x, 0);
-		endPointsX[0] = startPointsX[0] + tempDir * m_moveSpeed * dt;
-		endPointsX[1] = startPointsX[1] + tempDir * m_moveSpeed * dt;
+		endPointsX[0] = startPointsX[0] + tempDir * speed * dt;
+		endPointsX[1] = startPointsX[1] + tempDir * speed * dt;
 	}
 
 
@@ -151,8 +202,8 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			startPointsY[1] = currentPos + halfSize;
 		}
 		Vec2f tempDir = Vec2f(0, dir.y);
-		endPointsY[0] = startPointsY[0] + tempDir * m_moveSpeed * dt;
-		endPointsY[1] = startPointsY[1] + tempDir * m_moveSpeed * dt;
+		endPointsY[0] = startPointsY[0] + tempDir * speed * dt;
+		endPointsY[1] = startPointsY[1] + tempDir * speed * dt;
 	}
 	// raycast x
 	for (int i = 0; i < 2; ++i)
