@@ -69,12 +69,33 @@ void PlayerLocomotive::tick()
 {
 	Vec2f dir;
 	const float dt = GET_APP()->getDeltaTime();
+	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
 
+	if (!sf::Joystick::isConnected(0))
+	{
+		handleKeyboardInput(dir, dt);
+	}
+	else
+	{
+		handleJoystickInput(dir, dt);
+	}
+
+	handleDodge(dir, dt);
+	manageIntersections(dir, dt);
+
+	dir = Normalise(dir);
+	getEntity()->getTransform()->move(dir * speed * dt);
+	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
+
+}
+
+void PlayerLocomotive::handleKeyboardInput(Vec2f& dir, float dt)
+{
 	if (!m_isDodging)
 	{
 		if (KInput::Pressed(UP))
 		{
-			m_pSprite->setTextureRect(Recti{ 32,0,32,32 });
+ 			m_pSprite->setTextureRect(Recti{ 32,0,32,32 });
 			dir.y = -1.0f;
 		}
 		if (KInput::Pressed(DOWN))
@@ -92,40 +113,74 @@ void PlayerLocomotive::tick()
 			m_pSprite->setTextureRect(Recti{ 96, 0,32,32 });
 			dir.x = 1.0f;
 		}
+		if (KInput::JustPressed(DODGE) && !m_isDodging && m_canDodge && m_hasReleasedDodge)
+		{
+			m_isDodging = true;
+			m_lastDir = dir;
+			m_hasReleasedDodge = false;
+			m_canDodge = false;
+			return;
+		}
+		if (KInput::JustReleased(DODGE))
+		{
+			m_hasReleasedDodge = true;
+		}
 	}
 	else
 	{
 		dir = m_lastDir;
 	}
+}
 
-	dir = Normalise(dir);
+void PlayerLocomotive::handleJoystickInput(Krawler::Vec2f& dir, float dt)
+{
+	Vec2f moveAxis = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::X) / 100, sf::Joystick::getAxisPosition(0, sf::Joystick::Y) / 100);
 
+	float deadzone = 0.2f;
 
-	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
+	if (!m_isDodging)
+	{
+		if (moveAxis.x >= 0.10f)
+		{
+			dir.x = moveAxis.x;
+		}
+		else if (moveAxis.x <= -0.10f)
+		{
+			dir.x = moveAxis.x;
+		}
 
-	handleDodge(dir, dt);
-	manageIntersections(dir, dt);
-	getEntity()->getTransform()->move(dir * speed * dt);
-	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
+		if (moveAxis.y >= 0.10f)
+		{
+			dir.y = moveAxis.y;
+		}
+		else if (moveAxis.y <= -0.10f)
+		{
+			dir.y = moveAxis.y;
+		}
 
+		if (sf::Joystick::isButtonPressed(0, 0) && !m_isDodging && m_canDodge && m_hasReleasedDodge)
+		{
+			m_isDodging = true;
+			m_lastDir = dir;
+			m_hasReleasedDodge = false;
+			m_canDodge = false;
+			return;
+		}
+
+		if (!sf::Joystick::isButtonPressed(0, 0))
+		{
+			m_hasReleasedDodge = true;
+		}
+
+	}
+	else
+	{
+		dir = m_lastDir;
+	}
 }
 
 void PlayerLocomotive::handleDodge(const Vec2f& dir, float dt)
 {
-	if (KInput::JustPressed(DODGE) && !m_isDodging && m_canDodge && m_hasReleasedDodge)
-	{
-		m_isDodging = true;
-		m_lastDir = dir;
-		m_hasReleasedDodge = false;
-		m_canDodge = false;
-		return;
-	}
-
-	if (KInput::JustReleased(KKey::Space))
-	{
-		m_hasReleasedDodge = true;
-	}
-
 	if (m_isDodging)
 	{
 		m_dodgeTimer += dt;
@@ -240,7 +295,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			}
 		}
 	}
-		
+
 	const float fdirx = fabs(dir.x);
 	const float fdiry = fabs(dir.y);
 

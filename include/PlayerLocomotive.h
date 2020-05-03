@@ -49,6 +49,8 @@ public:
 	PlayerLocomotive(Krawler::KEntity* pEntity);
 	~PlayerLocomotive() = default;
 
+	float m_moveSpeed = 100.0f;
+	
 	float m_dodgeTiming = 0.4f;
 	float m_dodgeCooldown = 1.0f;
 	float m_dodgeMultiplyer = 2.0f;
@@ -56,16 +58,17 @@ public:
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
 	virtual void tick() override;
-	
-	float m_moveSpeed = 100.0f;
 
 private:
-	// Loco input keys
+
+	// KEYBOARD INPUT KEYS
 	Krawler::Input::KKey UP = Krawler::Input::KKey::W;
 	Krawler::Input::KKey DOWN = Krawler::Input::KKey::S;
 	Krawler::Input::KKey LEFT = Krawler::Input::KKey::A;
 	Krawler::Input::KKey RIGHT = Krawler::Input::KKey::D;
 	Krawler::Input::KKey DODGE = Krawler::Input::KKey::Space;
+
+	// JOY
 
 	Krawler::Vec2f m_lastDir;
 
@@ -75,19 +78,21 @@ private:
 	float m_dodgeTimer = 0.0f;
 	float m_dodgeCDTimer = 0.0f; 
 
-	void handleDodge(const Krawler::Vec2f &dir, float dt);
-
 	Krawler::KEntity* m_pGod = nullptr;
+	sf::RectangleShape m_colliderDebugShape;
 
-	void manageIntersections(Krawler::Vec2f& dir, float dt);
+	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(32, 32);
 	Krawler::Vec2f m_colliderBounds = Krawler::Vec2f(28, 28);
 	Krawler::Components::KCSprite* m_pSprite = nullptr;
-	sf::RectangleShape m_colliderDebugShape;
+	
 	DbgLine m_rayA, m_rayB;
 	DbgLine m_rayC, m_rayD;
-	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(32, 32);
 
 
+	void handleKeyboardInput(Krawler::Vec2f& dir, float dt);
+	void handleJoystickInput(Krawler::Vec2f& dir, float dt);
+	void handleDodge(const Krawler::Vec2f& dir, float dt);
+	void manageIntersections(Krawler::Vec2f& dir, float dt);
 	void resolve(const Krawler::KCollisionDetectionData& collData);
 
 	Krawler::Components::KCColliderBaseCallback m_callback = [this](const Krawler::KCollisionDetectionData& collData)
