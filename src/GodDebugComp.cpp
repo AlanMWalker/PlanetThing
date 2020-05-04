@@ -7,6 +7,7 @@
 using namespace Krawler;
 using namespace Krawler::Input;
 
+
 GodDebugComp::GodDebugComp(Krawler::KEntity* pEntity)
 	: KComponentBase(pEntity)
 {
@@ -16,6 +17,7 @@ KInitStatus GodDebugComp::init()
 {
 	m_pImgui = getEntity()->getComponent<imguicomp>();
 
+	setStyle(*m_pImgui);
 
 	return KInitStatus::Success;
 }
@@ -57,22 +59,117 @@ void GodDebugComp::tick()
 
 	m_pImgui->update();
 	m_pImgui->begin("-- God Debug Tools --");
+
 	ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
 	ImGui::Separator();
 
 	ImGui::Checkbox("Dodge Settings", &pShowDodgeSettings);
-	if (pShowDodgeSettings)
 	{
-		auto pDodgeTiming = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeTiming;
-		auto pDodgeCooldown = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeCooldown;
-		auto pDodgeSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeMultiplyer;
-		ImGui::SliderFloat("Dodge Timing", pDodgeTiming, 0.0f, 5.0f);
-		ImGui::SliderFloat("Dodge Cooldown", pDodgeCooldown, 0.0f, 5.0f);
-		ImGui::SliderFloat("Dodge Speed", pDodgeSpeed, 0.0f, 5.0f);
+		if (pShowDodgeSettings)
+		{
+			auto pDodgeTiming = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeTiming;
+			auto pDodgeCooldown = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeCooldown;
+			auto pDodgeSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeMultiplyer;
+
+			ImGui::Text("Dodge Timing"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeTiming, 0.0f, 5.0f, "%.2f");
+			ImGui::Text("Dodge Cooldown"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeCooldown, 0.0f, 5.0f, "%.2f");
+			ImGui::Text("Dodge Speed"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeSpeed, 0.0f, 5.0f, "%.2f");
+		}
 	}
-	ImGui::InputFloat("Player Move Speed", pMoveSpeed);
+	ImGui::Separator();
+
+	ImGui::SliderFloat("Player Move Speed", pMoveSpeed, 0.0f, 1000.0f, "%.f");
+	ImGui::Separator();
+
+	//if (sf::Joystick::isConnected(0))
+	{
+		ImGui::Text("yoyStick Axis Testing");
+		{
+			// Left Stick
+			Vec2f in0 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::X), sf::Joystick::getAxisPosition(0, sf::Joystick::Y));
+
+			// Right Stick
+			Vec2f in2 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::Z), sf::Joystick::getAxisPosition(0, sf::Joystick::R));
+
+			// in1.x = L2 analog | in1.y = R2 analog
+			Vec2f in1 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::V), sf::Joystick::getAxisPosition(0, sf::Joystick::U));
+
+			// D-pad input
+			Vec2f in3 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::PovX), sf::Joystick::getAxisPosition(0, sf::Joystick::PovY) * -1.0f);
+
+			ImGui::Text("LS, x = %f | y = %f", in0.x, in0.y);
+
+
+
+			ImGui::Spacing();
+			ImGui::Text("RS, x = %f | y = %f", in2.x, in2.y);
+			ImGui::Spacing();
+			ImGui::Text("Triggers, x = %f | y = %f", in1.x, in1.y);
+			ImGui::Spacing();
+			ImGui::Text("D-pad, x = %f | y = %f", in3.x, in3.y);
+		}
+		ImGui::Separator();
+	}
+
+
 	m_pImgui->end();
 
 	GET_APP()->getRenderer()->showDebugDrawables(bDebugShapes);
 }
 
+void GodDebugComp::setStyle(imguicomp ImGui)
+{
+	ImGuiStyle* style = &ImGui::GetStyle();
+
+	style->WindowPadding = ImVec2(15, 15);
+	style->WindowRounding = 0.0f;
+	style->FramePadding = ImVec2(5, 5);
+	style->FrameRounding = 0.0f;
+	style->ItemSpacing = ImVec2(12, 8);
+	style->ItemInnerSpacing = ImVec2(8, 6);
+	style->IndentSpacing = 25.0f;
+	style->ScrollbarSize = 15.0f;
+	style->ScrollbarRounding = 0.0f;
+	style->GrabMinSize = 5.0f;
+	style->GrabRounding = 0.0;
+
+	style->Colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.83f, 1.00f);
+	style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
+	style->Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
+	style->Colors[ImGuiCol_Border] = ImVec4(0.80f, 0.80f, 0.83f, 0.88f);
+	style->Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
+	style->Colors[ImGuiCol_FrameBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_FrameBgActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(1.00f, 0.98f, 0.95f, 0.75f);
+	style->Colors[ImGuiCol_TitleBgActive] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
+	style->Colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_CheckMark] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_SliderGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_Button] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_ButtonActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_Header] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_HeaderHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_HeaderActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_Column] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_ColumnHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_ColumnActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	style->Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_PlotLines] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+	style->Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+	style->Colors[ImGuiCol_PlotHistogram] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+	style->Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+	style->Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.25f, 1.00f, 0.00f, 0.43f);
+	style->Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
+}

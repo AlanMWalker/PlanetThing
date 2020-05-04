@@ -26,4 +26,7 @@ private:
 	bool pShowDodgeSettings = false;
 
 	std::vector<sf::RectangleShape> m_colliderShapes;
+
+	void setStyle(imguicomp ImGui);
+
 };
