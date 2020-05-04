@@ -6,6 +6,7 @@
 #include <Components\KCSprite.h>
 #include <Components\KCBoxCollider.h>
 
+
 #include <DbgImgui.h>
 
 //Todo move this to its own class
@@ -83,10 +84,11 @@ private:
 
 	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(32, 32);
 	Krawler::Vec2f m_colliderBounds = Krawler::Vec2f(28, 28);
-	Krawler::Components::KCSprite* m_pSprite = nullptr;
-	
 	DbgLine m_rayA, m_rayB;
 	DbgLine m_rayC, m_rayD;
+	
+
+	int m_frames = 0;
 
 
 	void handleKeyboardInput(Krawler::Vec2f& dir, float dt);

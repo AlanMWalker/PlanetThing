@@ -64,6 +64,7 @@ void BlockedMap::setupBlockedMap()
 	// May be more optimal to use a set internally 
 	// within the TilesetBlockedRecord struct
 	auto levelImportData = ASSET().getLevelMap(m_levelName);
+	std::wstring mapPrint;
 	for (int32 j = 0; j < levelImportData->height; ++j)
 	{
 		for (int32 i = 0; i < levelImportData->width; ++i)
@@ -81,7 +82,7 @@ void BlockedMap::setupBlockedMap()
 				if (result == m_blockedRecords.back().blockedTileIds.end())
 				{
 					m_blockedMap.push_back(TileWalkState::Walkable);
-					KPRINTF("_");
+					mapPrint.push_back('_');
 				}
 				else
 				{
@@ -92,10 +93,11 @@ void BlockedMap::setupBlockedMap()
 					pEntity->addComponent(new KCBoxCollider(pEntity, tileDim));
 					pEntity->getTransform()->setPosition(i * tileDim.x, j * tileDim.y);
 					pEntity->getTransform()->setOrigin(tileDim * 0.5f);
-					KPRINTF("#");
+					mapPrint.push_back('#');
 				}
 			}
 		}
-		KPRINTF("\n");
+		mapPrint.push_back('\n');
 	}
+	KPrintf(L"%s\n", mapPrint.c_str());
 }

@@ -3,7 +3,10 @@
 #include <KApplication.h>
 #include <AssetLoader\KAssetLoader.h>
 #include <Input\KInput.h>
+#include <Maths\KMaths.hpp>
 
+#include "PlayerRenderableComp.h"
+#include "NetworkComms.h"
 
 using namespace Krawler;
 using namespace Krawler::Components;
@@ -28,11 +31,10 @@ KInitStatus PlayerLocomotive::init()
 		// Whilst working on the movement we'll handle
 		// setting up graphics here
 		// should be moved to a different component afterwards
-		getEntity()->getTransform()->setPosition(200, 250);
+		//getEntity()->getTransform()->setPosition(200, 250);
+		getEntity()->getTransform()->setPosition(Maths::RandFloat(40, 500),
+			Maths::RandFloat(140, 540));
 		getEntity()->getTransform()->setOrigin(16, 16);
-
-		m_pSprite = new KCSprite(getEntity(), Vec2f(32, 32));
-		getEntity()->addComponent(m_pSprite);
 
 		GET_APP()->getRenderer()->addDebugShape(&m_colliderDebugShape);
 		m_colliderDebugShape = sf::RectangleShape(m_colliderBounds);
@@ -61,8 +63,7 @@ KInitStatus PlayerLocomotive::init()
 
 void PlayerLocomotive::onEnterScene()
 {
-	m_pSprite->setTexture(ASSET().getTexture(KTEXT("fighter")));
-	m_pSprite->setTextureRect(Recti{ 0,0,32,32 });
+
 }
 
 void PlayerLocomotive::tick()
@@ -86,31 +87,42 @@ void PlayerLocomotive::tick()
 	dir = Normalise(dir);
 	getEntity()->getTransform()->move(dir * speed * dt);
 	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
+	static sf::Clock c;
 
+	if (NetworkComms::get().isSpawnedIn())
+	{
+		if (c.getElapsedTime().asMilliseconds() > 50)
+		{
+			NetworkComms::get().moveInWorld(getEntity()->getTransform()->getPosition());
+			c.restart();
+		}
+	}
 }
 
 void PlayerLocomotive::handleKeyboardInput(Vec2f& dir, float dt)
 {
+	auto renderComp = getEntity()->getComponent<PlayerRenderableComp>();
+
 	if (!m_isDodging)
 	{
 		if (KInput::Pressed(UP))
 		{
- 			m_pSprite->setTextureRect(Recti{ 32,0,32,32 });
+			renderComp->setWalkFrame(WalkDir::Up);
 			dir.y = -1.0f;
 		}
 		if (KInput::Pressed(DOWN))
 		{
-			m_pSprite->setTextureRect(Recti{ 0,0,32,32 });
+			renderComp->setWalkFrame(WalkDir::Down);
 			dir.y = 1.0f;
 		}
 		if (KInput::Pressed(LEFT))
 		{
-			m_pSprite->setTextureRect(Recti{ 64,0,32,32 });
+			renderComp->setWalkFrame(WalkDir::Left);
 			dir.x = -1.0f;
 		}
 		if (KInput::Pressed(RIGHT))
 		{
-			m_pSprite->setTextureRect(Recti{ 96, 0,32,32 });
+			renderComp->setWalkFrame(WalkDir::Right);
 			dir.x = 1.0f;
 		}
 		if (KInput::JustPressed(DODGE) && !m_isDodging && m_canDodge && m_hasReleasedDodge)

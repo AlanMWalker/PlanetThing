@@ -15,9 +15,13 @@
 #include <crtdbg.h>
 #endif
 
+extern "C" __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+extern "C" __declspec(dllexport) unsigned long AmdPowerXpressRequestHighPerformance = 1;
+
+#include <SFML/Network.hpp>
 using namespace Krawler;
 
-#ifndef _CONSOLE
+#ifndef _DEBUG
 #include <Windows.h>
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
 #else
@@ -28,9 +32,9 @@ int main(void)
 	KApplicationInitialise initApp(false);
 	initApp.gameFps = 60;
 	initApp.physicsFps = 60;
-	initApp.width = 1024;
-	initApp.height = 768;
-	initApp.windowStyle = KWindowStyle::Windowed_Fixed_Size;
+	initApp.width = 1920;
+	initApp.height = 1080;
+	initApp.windowStyle = KWindowStyle::Windowed_Resizeable;
 	initApp.windowTitle = KTEXT("Project Mountain Lion - InDev");
 	StartupEngine(&initApp);
 

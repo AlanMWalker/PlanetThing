@@ -54,12 +54,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui;$(ProjectDir)\..\GameMaster\shared;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-audio-d.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;ws2_32.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-audio-d.lib;sfml-network-d.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\SFML-2.5.1\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -71,14 +71,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui;$(ProjectDir)\..\GameMaster\shared;$(ProjectDir)\..\GameMaster\shared</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;sfml-audio.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;ws2_32.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;sfml-audio.lib;sfml-network.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\SFML-2.5.1\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -87,11 +87,13 @@
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\PlayerRenderableComp.cpp" />
+    <ClCompile Include="MountainLobster.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\GameSetup.cpp" />
-    <ClCompile Include="MountainLobster.cpp" />
     <ClCompile Include="src\BlockedMap.cpp" />
     <ClCompile Include="src\GodDebugComp.cpp" />
+    <ClCompile Include="src\NetworkComms.cpp" />
     <ClCompile Include="src\PlayerLocomotive.cpp" />
     <ClCompile Include="src\CompLocomotive.cpp" />
     <ClCompile Include="src\Spawner.cpp" />
@@ -115,7 +117,9 @@
     <ClInclude Include="include\GameSetup.h" />
     <ClInclude Include="include\CompLocomotive.h" />
     <ClInclude Include="include\GodDebugComp.h" />
+    <ClInclude Include="include\NetworkComms.h" />
     <ClInclude Include="include\PlayerLocomotive.h" />
+    <ClInclude Include="include\PlayerRenderableComp.h" />
     <ClInclude Include="include\Spawner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

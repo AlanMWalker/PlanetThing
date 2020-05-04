@@ -2,14 +2,15 @@
 #include <Input\KInput.h>
 #include <KApplication.h>
 
+#include "NetworkComms.h"
 #include "PlayerLocomotive.h"
+#include "GameSetup.h"
 
 using namespace Krawler;
 using namespace Krawler::Input;
 
-
-GodDebugComp::GodDebugComp(Krawler::KEntity* pEntity)
-	: KComponentBase(pEntity)
+GodDebugComp::GodDebugComp(Krawler::KEntity* pEntity, GameSetup* pSetup)
+	: KComponentBase(pEntity), m_pSetup(pSetup)
 {
 }
 
@@ -47,13 +48,19 @@ void GodDebugComp::onEnterScene()
 
 void GodDebugComp::tick()
 {
+	// Just so game setup can handle spawning networked players on the 
+	// correct thread we call a game setup tick since it's not 
+	// a component, waking game setup up to check if it should make
+	// a networked player visible
+	m_pSetup->tick();
+
 	if (KInput::JustPressed(KKey::Escape))
 	{
 		// close
 		GET_APP()->closeApplication();
 	}
-
-	float* pMoveSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_moveSpeed;
+	auto pPlayerEntity = GET_SCENE()->findEntity(L"Player");
+	float* pMoveSpeed = &pPlayerEntity->getComponent<PlayerLocomotive>()->m_moveSpeed;
 
 	static bool bDebugShapes = GET_APP()->getRenderer()->isShowingDebugDrawables();
 
@@ -110,11 +117,38 @@ void GodDebugComp::tick()
 		}
 		ImGui::Separator();
 	}
+	ImGui::InputFloat("Player Move Speed", pMoveSpeed);
+	ImGui::Separator();
 
-
+	static bool canSpawnIn = true;
+	static char playerName[12];
+	if (canSpawnIn)
+	{
+		ImGui::Text("Game Server Login");
+		ImGui::InputText("Player Name", playerName, 12);
+		canSpawnIn = !(ImGui::Button("Spawn to Server"));
+		if (!canSpawnIn)
+		{
+			NetworkComms::get().setPlayerName(TO_WSTR(playerName));
+			NetworkComms::get().spawnIn(pPlayerEntity->getTransform()->getPosition());
+		}
+	}
+	networkImgui();
 	m_pImgui->end();
 
 	GET_APP()->getRenderer()->showDebugDrawables(bDebugShapes);
+}
+
+void GodDebugComp::networkImgui()
+{
+	static bool bShowNetworkDebugs = false;
+	ImGui::Checkbox("Show Network Debugs", &bShowNetworkDebugs);
+	if (bShowNetworkDebugs)
+	{
+		auto timeInMs = NetworkComms::get().getServerResponseTime().asMilliseconds();
+		ImGui::Text("Server Response Time: %d ms", timeInMs);
+
+	}
 }
 
 void GodDebugComp::setStyle(imguicomp ImGui)

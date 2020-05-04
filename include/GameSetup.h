@@ -1,21 +1,71 @@
 #pragma once
+#pragma once
 
 #include <BlockedMap.h>
+#include <SFML\Network.hpp>
+#include <atomic>
+#include <queue>
+#include <functional>
+#include <mutex>
+#include <KEntity.h>
+
+#include "ServerPackets.h"
+
+class NetworkComms;
+constexpr unsigned int MAX_NETWORKED_PLAYERS{ 5 };
+
+struct NetworkedPlayer
+{
+	std::wstring playerName;
+	Krawler::KEntity* pEntity;
+	Krawler::Vec2f lastPos;
+	long long lastTimestamp;
+	std::queue<Krawler::Vec2f> positions;
+	std::queue<long long> timeStamps;
+	float lerpT = 0.0f;
+	bool bSpawned = false;
+	bool bIsMoving = false;
+};
+
 
 class GameSetup
 {
-public: 
-	
-	GameSetup();
+public:
 
-private: 
+	GameSetup();
+	~GameSetup();
+
+	void tick();
+
+private:
 
 	void createGod();
 	void createMap();
 	void createBlockedMap();
 	void createPlayer();
-	void createAi();
+	void createNetworkedPlayers();
+
+
+	void handleMoveInWorld(ServerClientMessage* pMessage);
 
 	BlockedMap m_blockedMap;
-	
+
+
+	NetworkedPlayer m_networkedPlayers[MAX_NETWORKED_PLAYERS];
+	std::queue<MoveInWorld> m_toSpawnQueue;
+	std::queue<std::pair<Krawler::Vec2f, NetworkedPlayer*>> m_toMove;
+
+	const unsigned int MAX_CONNECTION_RETRIES = 3;
+
+	std::atomic_bool m_bShouldSpawnNetworkedPlayer = false;
+	std::mutex m_spawnInMutex;
+	std::atomic_uint32_t m_networkedPlayerIdx = 0;
+
+	std::function<void(ServerClientMessage*)> m_func = [this](ServerClientMessage* pMessage)
+	{
+		// Change the client network sub 
+		// to take function pointers instead of this 
+		handleMoveInWorld(pMessage);
+
+	};
 };
