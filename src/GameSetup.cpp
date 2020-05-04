@@ -6,6 +6,7 @@
 // engine
 #include <Krawler.h>
 #include <KApplication.h>
+#include <AssetLoader\KAssetLoader.h>
 #include <DbgImgui.h>
 
 // components
@@ -18,6 +19,7 @@
 #include "ServerPackets.h"
 #include "NetworkComms.h"
 
+#include <SFML\Graphics\Text.hpp>
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -48,17 +50,28 @@ void GameSetup::tick()
 	{
 		while (!m_toSpawnQueue.empty() && m_networkedPlayerIdx < MAX_NETWORKED_PLAYERS)
 		{
+			auto pFont = ASSET().getFont(L"Seriphim");
 			MoveInWorld miw = m_toSpawnQueue.front();
-			m_networkedPlayers[m_networkedPlayerIdx].pEntity->setActive(true);
-			m_networkedPlayers[m_networkedPlayerIdx].pEntity->getTransform()->setPosition(miw.playerPosition);
-			m_networkedPlayers[m_networkedPlayerIdx].playerName = TO_WSTR(miw.playerName);
-			m_networkedPlayers[m_networkedPlayerIdx].bSpawned = true;
+
+			auto& networkedPlayer = m_networkedPlayers[m_networkedPlayerIdx];
+			networkedPlayer.pEntity->setActive(true);
+			networkedPlayer.pEntity->getTransform()->setPosition(miw.playerPosition);
+			networkedPlayer.playerName = TO_WSTR(miw.playerName);
+			networkedPlayer.bSpawned = true;
+			networkedPlayer.pPlayerNameText = new sf::Text(miw.playerName, *pFont);
+			networkedPlayer.pPlayerNameText->setCharacterSize(16);
+
+			const Vec2f halfBounds(networkedPlayer.pPlayerNameText->getGlobalBounds().width/2, networkedPlayer.pPlayerNameText->getGlobalBounds().height);
+			networkedPlayer.pPlayerNameText->setOrigin(halfBounds);
+			networkedPlayer.pPlayerNameText->setPosition(miw.playerPosition - Vec2f(0, 16));
+			GET_APP()->getRenderer()->addDebugShape(networkedPlayer.pPlayerNameText);
+
 			m_bShouldSpawnNetworkedPlayer = false;
 			++m_networkedPlayerIdx;
 			m_toSpawnQueue.pop();
-
 		}
 	}
+
 
 	lock_guard<mutex>lock(m_spawnInMutex);
 	for (auto& np : m_networkedPlayers)
@@ -66,9 +79,6 @@ void GameSetup::tick()
 		// if positions to move
 		// and we're not moving
 		// and we're spawned in
-		if (np.positions.size() > 0)
-			KPrintf(L"Number of positions to catch up on is - %d\n", np.positions.size());
-
 		if (np.positions.size() > 1 && np.bSpawned && !np.bIsMoving)
 		{
 			np.lastPos = np.positions.front();
@@ -80,12 +90,6 @@ void GameSetup::tick()
 		}
 		else if (np.positions.size() == 1 && np.bSpawned && !np.bIsMoving)
 		{
-			/*	if (np.lastTimestamp > 0)
-				{
-					np.lastPos = np.pEntity->getTransform()->getPosition();
-
-					np.bIsMoving = true;
-				}*/
 			if (np.positions.front() == np.pEntity->getTransform()->getPosition())
 			{
 				np.positions.pop();
@@ -114,6 +118,12 @@ void GameSetup::tick()
 				np.lerpT = 0.0f;
 				np.bIsMoving = false;
 			}
+		}
+
+		if (np.bSpawned)
+		{
+			const Vec2f halfBounds(np.pPlayerNameText->getGlobalBounds().width, np.pPlayerNameText->getGlobalBounds().height);
+			np.pPlayerNameText->setPosition(np.pEntity->getTransform()->getPosition() - Vec2f(0, 16));
 		}
 	}
 }

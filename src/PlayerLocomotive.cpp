@@ -91,7 +91,7 @@ void PlayerLocomotive::tick()
 
 	if (NetworkComms::get().isSpawnedIn())
 	{
-		if (c.getElapsedTime().asMilliseconds() > 50)
+		if (c.getElapsedTime().asMilliseconds() > 55)
 		{
 			NetworkComms::get().moveInWorld(getEntity()->getTransform()->getPosition());
 			c.restart();

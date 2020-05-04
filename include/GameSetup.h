@@ -11,17 +11,23 @@
 
 #include "ServerPackets.h"
 
+namespace sf
+{
+	class Text;
+}
+
 class NetworkComms;
 constexpr unsigned int MAX_NETWORKED_PLAYERS{ 5 };
 
 struct NetworkedPlayer
 {
 	std::wstring playerName;
-	Krawler::KEntity* pEntity;
 	Krawler::Vec2f lastPos;
-	long long lastTimestamp;
 	std::queue<Krawler::Vec2f> positions;
 	std::queue<long long> timeStamps;
+	long long lastTimestamp;
+	Krawler::KEntity* pEntity;
+	sf::Text* pPlayerNameText;
 	float lerpT = 0.0f;
 	bool bSpawned = false;
 	bool bIsMoving = false;

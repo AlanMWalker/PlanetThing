@@ -106,8 +106,6 @@ void GodDebugComp::tick()
 
 			ImGui::Text("LS, x = %f | y = %f", in0.x, in0.y);
 
-
-
 			ImGui::Spacing();
 			ImGui::Text("RS, x = %f | y = %f", in2.x, in2.y);
 			ImGui::Spacing();
