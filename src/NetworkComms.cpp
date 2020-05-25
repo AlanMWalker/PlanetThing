@@ -1,14 +1,11 @@
 #include "NetworkComms.h"
 #include <KApplication.h>
 #include <ctime>
+#include "NetworkUtils.h"
 
 using namespace std;
 using namespace Krawler;
 
-long long timestamp()
-{
-	return chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
-}
 
 NetworkComms::NetworkComms()
 {
@@ -193,7 +190,7 @@ void NetworkComms::connectToServer()
 	if (bDidFail)
 	{
 		KPRINTF("Error - Shutting down game after connection failure!\n");
-		GET_APP()->closeApplication();
+		//GET_APP()->closeApplication();
 	}
 	else
 	{

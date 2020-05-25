@@ -51,7 +51,7 @@ public:
 	~PlayerLocomotive() = default;
 
 	float m_moveSpeed = 100.0f;
-	
+
 	float m_dodgeTiming = 0.4f;
 	float m_dodgeCooldown = 1.0f;
 	float m_dodgeMultiplyer = 2.0f;
@@ -77,16 +77,17 @@ private:
 	bool m_canDodge = true;
 	bool m_hasReleasedDodge = true;
 	float m_dodgeTimer = 0.0f;
-	float m_dodgeCDTimer = 0.0f; 
+	float m_dodgeCDTimer = 0.0f;
 
 	Krawler::KEntity* m_pGod = nullptr;
 	sf::RectangleShape m_colliderDebugShape;
 
-	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(32, 32);
-	Krawler::Vec2f m_colliderBounds = Krawler::Vec2f(28, 28);
+	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(128, 128);
+	const Krawler::Vec2f PLAYER_HALF_SIZE = PLAYER_SIZE * 0.5f;
+	Krawler::Vec2f m_colliderBounds = Krawler::Vec2f(120, 120);
 	DbgLine m_rayA, m_rayB;
 	DbgLine m_rayC, m_rayD;
-	
+
 
 	int m_frames = 0;
 

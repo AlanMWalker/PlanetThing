@@ -38,16 +38,6 @@ int main(void)
 	initApp.windowTitle = KTEXT("Project Mountain Lion - InDev");
 	StartupEngine(&initApp);
 
-
-	/*int a = 0xFFFFFFFF;
-	int b = 0xF0;
-
-	if (!(a & b))
-	{
-		std::cout << "Not same" << std::endl;
-	}*/
-
-
 	auto app = KApplication::getApp();
 	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Main_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));
 	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Test_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));

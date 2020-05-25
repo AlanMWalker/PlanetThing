@@ -1,5 +1,6 @@
 #pragma once
-#pragma once
+
+#define RUN_SERVER 1
 
 #include <BlockedMap.h>
 #include <SFML\Network.hpp>
@@ -8,8 +9,13 @@
 #include <functional>
 #include <mutex>
 #include <KEntity.h>
+#include <thread>
 
 #include "ServerPackets.h"
+
+#if RUN_SERVER
+#include "ServerPoll.h"
+#endif
 
 namespace sf
 {
@@ -43,6 +49,8 @@ public:
 
 	void tick();
 
+	const BlockedMap& getBlockedMap() const { return m_blockedMap; }
+
 private:
 
 	void createGod();
@@ -51,8 +59,15 @@ private:
 	void createPlayer();
 	void createNetworkedPlayers();
 
-
 	void handleMoveInWorld(ServerClientMessage* pMessage);
+
+#if RUN_SERVER
+	void createServer();
+
+	std::thread m_serverPollThread;
+	ServerPoll m_serverPoll;
+	
+#endif
 
 	BlockedMap m_blockedMap;
 

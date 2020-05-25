@@ -36,12 +36,16 @@ GameSetup::GameSetup()
 	createBlockedMap();
 	createPlayer();
 	createNetworkedPlayers();
+#if RUN_SERVER
+	createServer();
+#endif
 }
 
 GameSetup::~GameSetup()
 {
 	auto p = &NetworkComms::get();
 	KFREE(p);
+	m_serverPollThread.join();
 }
 
 void GameSetup::tick()
@@ -61,9 +65,11 @@ void GameSetup::tick()
 			networkedPlayer.pPlayerNameText = new sf::Text(miw.playerName, *pFont);
 			networkedPlayer.pPlayerNameText->setCharacterSize(16);
 
-			const Vec2f halfBounds(networkedPlayer.pPlayerNameText->getGlobalBounds().width/2, networkedPlayer.pPlayerNameText->getGlobalBounds().height);
+			const Vec2f halfBounds(networkedPlayer.pPlayerNameText->getGlobalBounds().width / 2, networkedPlayer.pPlayerNameText->getGlobalBounds().height);
 			networkedPlayer.pPlayerNameText->setOrigin(halfBounds);
-			networkedPlayer.pPlayerNameText->setPosition(miw.playerPosition - Vec2f(0, 16));
+
+			networkedPlayer.pPlayerNameText->setPosition(miw.playerPosition - Vec2f(0,
+				networkedPlayer.pEntity->getComponent<KCAnimatedSprite>()->getOnscreenBounds().height / 2.0f - halfBounds.y));
 			GET_APP()->getRenderer()->addDebugShape(networkedPlayer.pPlayerNameText);
 
 			m_bShouldSpawnNetworkedPlayer = false;
@@ -140,13 +146,13 @@ void GameSetup::createMap()
 {
 	auto entity = GET_SCENE()->addEntityToScene();
 	entity->setTag(L"Map");
-	entity->addComponent(new KCTileMapSplit(entity, L"test_level"));
+	entity->addComponent(new KCTileMapSplit(entity, L"demo_level"));
 	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200))));
 }
 
 void GameSetup::createBlockedMap()
 {
-	m_blockedMap.setup(L"test_level");
+	m_blockedMap.setup(L"demo_level");
 }
 
 void GameSetup::createPlayer()
@@ -169,6 +175,18 @@ void GameSetup::createNetworkedPlayers()
 	}
 	NetworkComms::get().subscribeToPacketType(MessageType::Move, &m_func);
 }
+
+#if RUN_SERVER
+void GameSetup::createServer()
+{
+	if (!m_serverPoll.loadServer())
+	{
+		return;
+	}
+
+	m_serverPollThread = std::thread(&ServerPoll::runServer, &m_serverPoll);
+}
+#endif
 
 void GameSetup::handleMoveInWorld(ServerClientMessage* pMessage)
 {

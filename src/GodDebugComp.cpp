@@ -33,7 +33,7 @@ void GodDebugComp::onEnterScene()
 		if (item->getTag() == L"Terrain")
 		{
 			sf::RectangleShape r;
-			r = sf::RectangleShape(Vec2f(32, 32));
+			r = sf::RectangleShape(m_pSetup->getBlockedMap().getTileSize());
 			r.setFillColor(Colour(255, 0, 0, 100));
 			r.setPosition(item->getTransform()->getPosition());
 			m_colliderShapes.push_back(r);
@@ -83,9 +83,6 @@ void GodDebugComp::tick()
 			ImGui::Text("Dodge Speed"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeSpeed, 0.0f, 5.0f, "%.2f");
 		}
 	}
-	ImGui::Separator();
-
-	ImGui::SliderFloat("Player Move Speed", pMoveSpeed, 0.0f, 1000.0f, "%.f");
 	ImGui::Separator();
 
 	//if (sf::Joystick::isConnected(0))

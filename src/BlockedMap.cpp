@@ -64,6 +64,8 @@ void BlockedMap::setupBlockedMap()
 	// May be more optimal to use a set internally 
 	// within the TilesetBlockedRecord struct
 	auto levelImportData = ASSET().getLevelMap(m_levelName);
+	m_tileSize = Vec2f(levelImportData->tileWidth, levelImportData->tileHeight);
+
 	std::wstring mapPrint;
 	for (int32 j = 0; j < levelImportData->height; ++j)
 	{
@@ -89,10 +91,9 @@ void BlockedMap::setupBlockedMap()
 					m_blockedMap.push_back(TileWalkState::Blocked);
 					auto pEntity = GET_SCENE()->addEntityToScene();
 					pEntity->setTag(L"Terrain");
-					const Vec2f tileDim = Vec2f(levelImportData->tileWidth, levelImportData->tileHeight);
-					pEntity->addComponent(new KCBoxCollider(pEntity, tileDim));
-					pEntity->getTransform()->setPosition(i * tileDim.x, j * tileDim.y);
-					pEntity->getTransform()->setOrigin(tileDim * 0.5f);
+					pEntity->addComponent(new KCBoxCollider(pEntity, m_tileSize));
+					pEntity->getTransform()->setPosition(i * m_tileSize.x, j * m_tileSize.y);
+					pEntity->getTransform()->setOrigin(m_tileSize * 0.5f);
 					mapPrint.push_back('#');
 				}
 			}

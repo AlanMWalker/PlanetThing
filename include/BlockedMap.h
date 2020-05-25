@@ -15,8 +15,10 @@ public:
 	void setup(const std::wstring& level);
 	void destroy();
 
+	Krawler::Vec2f getTileSize() const { return m_tileSize; }
+
 private:
-	
+
 	struct TilesetBlockedRecord
 	{
 		std::vector<Krawler::int32> blockedTileIds;
@@ -26,7 +28,7 @@ private:
 
 	enum TileWalkState
 	{
-		Walkable = 0, 
+		Walkable = 0,
 		Blocked = 1
 	};
 
@@ -34,8 +36,8 @@ private:
 
 	std::vector<TileWalkState> m_blockedMap;
 	std::wstring m_levelName;
-	
-	
+	Krawler::Vec2f m_tileSize;
+
 	void setupBlockedRecords();
 	void setupBlockedMap();
 };

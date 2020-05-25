@@ -34,7 +34,7 @@ KInitStatus PlayerLocomotive::init()
 		//getEntity()->getTransform()->setPosition(200, 250);
 		getEntity()->getTransform()->setPosition(Maths::RandFloat(40, 500),
 			Maths::RandFloat(140, 540));
-		getEntity()->getTransform()->setOrigin(16, 16);
+		getEntity()->getTransform()->setOrigin(PLAYER_HALF_SIZE);
 
 		GET_APP()->getRenderer()->addDebugShape(&m_colliderDebugShape);
 		m_colliderDebugShape = sf::RectangleShape(m_colliderBounds);
@@ -81,10 +81,10 @@ void PlayerLocomotive::tick()
 		handleJoystickInput(dir, dt);
 	}
 
+	dir = Normalise(dir);
 	handleDodge(dir, dt);
 	manageIntersections(dir, dt);
 
-	dir = Normalise(dir);
 	getEntity()->getTransform()->move(dir * speed * dt);
 	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
 	static sf::Clock c;
@@ -107,22 +107,22 @@ void PlayerLocomotive::handleKeyboardInput(Vec2f& dir, float dt)
 	{
 		if (KInput::Pressed(UP))
 		{
-			renderComp->setWalkFrame(WalkDir::Up);
+
 			dir.y = -1.0f;
 		}
 		if (KInput::Pressed(DOWN))
 		{
-			renderComp->setWalkFrame(WalkDir::Down);
+
 			dir.y = 1.0f;
 		}
 		if (KInput::Pressed(LEFT))
 		{
-			renderComp->setWalkFrame(WalkDir::Left);
+
 			dir.x = -1.0f;
 		}
 		if (KInput::Pressed(RIGHT))
 		{
-			renderComp->setWalkFrame(WalkDir::Right);
+
 			dir.x = 1.0f;
 		}
 		if (KInput::JustPressed(DODGE) && !m_isDodging && m_canDodge && m_hasReleasedDodge)
@@ -137,6 +137,75 @@ void PlayerLocomotive::handleKeyboardInput(Vec2f& dir, float dt)
 		{
 			m_hasReleasedDodge = true;
 		}
+
+		static bool bUpPressed = false;
+		static bool bDownPressed = false;
+		static bool bLeftPressed = false;
+		static bool bRightPressed = false;
+
+		if (KInput::JustPressed(UP))
+		{
+			if (!bUpPressed)
+			{
+				bUpPressed = true;
+				renderComp->startPlayingWalkAnim(WalkDir::Up);
+			}
+		}
+
+		if (KInput::JustReleased(UP))
+		{
+			bUpPressed = false;
+			renderComp->stopPlayingWalkAnim();
+		}
+
+
+		if (KInput::JustPressed(DOWN))
+		{
+			if (!bDownPressed)
+			{
+				bDownPressed = true;
+				renderComp->startPlayingWalkAnim(WalkDir::Down);
+			}
+		}
+
+		if (KInput::JustReleased(DOWN))
+		{
+			bDownPressed = false;
+			renderComp->stopPlayingWalkAnim();
+		}
+
+
+
+		if (KInput::JustPressed(LEFT))
+		{
+			if (!bLeftPressed)
+			{
+				bLeftPressed = true;
+				renderComp->startPlayingWalkAnim(WalkDir::Left);
+			}
+		}
+
+		if (KInput::JustReleased(LEFT))
+		{
+			bLeftPressed = false;
+			renderComp->stopPlayingWalkAnim();
+		}
+
+		if (KInput::JustPressed(RIGHT))
+		{
+			if (!bRightPressed)
+			{
+				bRightPressed = true;
+				renderComp->startPlayingWalkAnim(WalkDir::Right);
+			}
+		}
+
+		if (KInput::JustReleased(RIGHT))
+		{
+			bRightPressed = false;
+			renderComp->stopPlayingWalkAnim();
+		}
+
 	}
 	else
 	{
@@ -224,6 +293,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 	Vec2f startPointsX[2], endPointsX[2];
 	Vec2f startPointsY[2], endPointsY[2];
 
+
 	if (dir.x != 0.0f)
 	{
 		if (dir.x < 0.0f)
@@ -310,16 +380,16 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 
 	const float fdirx = fabs(dir.x);
 	const float fdiry = fabs(dir.y);
-
 	// if we cancelled the vertical then the fabs(dir.x) is not 1 but it is also greater than 0
 	// and the vertical component of dir is 0.0
-	if (fabs(dir.x) != 1.0f && fabs(dir.x) > 0.0f && dir.y == 0.0f)
+	if (fdirx != 1.0f && fdirx > 0.0f && dir.y == 0.0f)
 	{
 		dir.x /= fdirx;
 	}
+
 	// if we cancelled the horizontal then the fabs(dir.y) is not 1 but it is also greater than 0
 	// and the horizontal component of dir is 0.0
-	else if (fabs(dir.y) != 1.0f && fabs(dir.y) > 0.0f && dir.x == 0.0f)
+	else if (fdiry != 1.0f && fdiry > 0.0f && dir.x == 0.0f)
 	{
 		dir.y /= fdiry;
 	}

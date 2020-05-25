@@ -71,7 +71,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui;$(ProjectDir)\..\GameMaster\shared;$(ProjectDir)\..\GameMaster\shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -87,6 +87,7 @@
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\GameClient.cpp" />
     <ClCompile Include="src\PlayerRenderableComp.cpp" />
     <ClCompile Include="MountainLobster.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -96,6 +97,7 @@
     <ClCompile Include="src\NetworkComms.cpp" />
     <ClCompile Include="src\PlayerLocomotive.cpp" />
     <ClCompile Include="src\CompLocomotive.cpp" />
+    <ClCompile Include="src\ServerPoll.cpp" />
     <ClCompile Include="src\Spawner.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -114,12 +116,16 @@
     <ClInclude Include="include\BlockedMap.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\DbgImgui.h" />
+    <ClInclude Include="include\GameClient.h" />
     <ClInclude Include="include\GameSetup.h" />
     <ClInclude Include="include\CompLocomotive.h" />
     <ClInclude Include="include\GodDebugComp.h" />
     <ClInclude Include="include\NetworkComms.h" />
+    <ClInclude Include="include\NetworkUtils.h" />
     <ClInclude Include="include\PlayerLocomotive.h" />
     <ClInclude Include="include\PlayerRenderableComp.h" />
+    <ClInclude Include="include\ServerPackets.h" />
+    <ClInclude Include="include\ServerPoll.h" />
     <ClInclude Include="include\Spawner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

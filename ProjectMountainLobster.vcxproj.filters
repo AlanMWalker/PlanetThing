@@ -15,6 +15,8 @@
     <ClCompile Include="MountainLobster.cpp" />
     <ClCompile Include="src\NetworkComms.cpp" />
     <ClCompile Include="src\PlayerRenderableComp.cpp" />
+    <ClCompile Include="src\ServerPoll.cpp" />
+    <ClCompile Include="src\GameClient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
@@ -34,5 +36,9 @@
     <ClInclude Include="include\GodDebugComp.h" />
     <ClInclude Include="include\NetworkComms.h" />
     <ClInclude Include="include\PlayerRenderableComp.h" />
+    <ClInclude Include="include\ServerPoll.h" />
+    <ClInclude Include="include\ServerPackets.h" />
+    <ClInclude Include="include\GameClient.h" />
+    <ClInclude Include="include\NetworkUtils.h" />
   </ItemGroup>
 </Project>
