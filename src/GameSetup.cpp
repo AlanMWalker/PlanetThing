@@ -45,7 +45,10 @@ GameSetup::~GameSetup()
 {
 	auto p = &NetworkComms::get();
 	KFREE(p);
+
+#if RUN_SERVER
 	m_serverPollThread.join();
+#endif
 }
 
 void GameSetup::tick()
