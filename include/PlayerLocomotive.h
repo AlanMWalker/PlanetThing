@@ -95,7 +95,7 @@ private:
 	void handleKeyboardInput(Krawler::Vec2f& dir, float dt);
 	void handleJoystickInput(Krawler::Vec2f& dir, float dt);
 	void handleDodge(const Krawler::Vec2f& dir, float dt);
-	void manageIntersections(Krawler::Vec2f& dir, float dt);
+	void manageIntersections(Krawler::Vec2f& dir, float dt, float speed);
 	void resolve(const Krawler::KCollisionDetectionData& collData);
 
 	Krawler::Components::KCColliderBaseCallback m_callback = [this](const Krawler::KCollisionDetectionData& collData)

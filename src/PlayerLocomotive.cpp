@@ -70,7 +70,6 @@ void PlayerLocomotive::tick()
 {
 	Vec2f dir;
 	const float dt = GET_APP()->getDeltaTime();
-	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
 
 	if (!sf::Joystick::isConnected(0))
 	{
@@ -83,8 +82,11 @@ void PlayerLocomotive::tick()
 
 	dir = Normalise(dir);
 	handleDodge(dir, dt);
-	manageIntersections(dir, dt);
 
+	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
+
+	manageIntersections(dir, dt, speed);
+  
 	getEntity()->getTransform()->move(dir * speed * dt);
 	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
 	static sf::Clock c;
@@ -283,12 +285,25 @@ void PlayerLocomotive::handleDodge(const Vec2f& dir, float dt)
 	}
 }
 
-void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
+void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt, float speed)
 {
-	// 
 	const Vec2f currentPos = getEntity()->getTransform()->getPosition();
 	const Vec2f halfSize = m_colliderBounds * 0.5f;
-	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
+
+	const float fdirx = fabs(dir.x);
+	const float fdiry = fabs(dir.y);
+	// if we cancelled the vertical then the fabs(dir.x) is not 1 but it is also greater than 0
+	// and the vertical component of dir is 0.0
+	if (fdirx != 1.0f && fdirx > 0.0f && dir.y == 0.0f)
+	{
+		dir.x /= fdirx;
+	}
+	// if we cancelled the horizontal then the fabs(dir.y) is not 1 but it is also greater than 0
+	// and the horizontal component of dir is 0.0
+	else if (fdiry != 1.0f && fdiry > 0.0f && dir.x == 0.0f)
+	{
+		dir.y /= fdiry;
+	}
 
 	Vec2f startPointsX[2], endPointsX[2];
 	Vec2f startPointsY[2], endPointsY[2];
@@ -303,7 +318,6 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 
 			// BOTTOM LEFT POINT
 			startPointsX[1] = currentPos - Vec2f(halfSize.x, -halfSize.y);
-
 		}
 		else
 		{ // RIGHT 
@@ -317,7 +331,6 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 		endPointsX[0] = startPointsX[0] + tempDir * speed * dt;
 		endPointsX[1] = startPointsX[1] + tempDir * speed * dt;
 	}
-
 
 	if (dir.y != 0.0f)
 	{
@@ -342,6 +355,7 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 		endPointsY[0] = startPointsY[0] + tempDir * speed * dt;
 		endPointsY[1] = startPointsY[1] + tempDir * speed * dt;
 	}
+
 	// raycast x
 	for (int i = 0; i < 2; ++i)
 	{
@@ -373,26 +387,11 @@ void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt)
 			const bool result = GET_APP()->getOverlord().castRayInScene(startPointsY[i], endPointsY[i], L"Terrain", getEntity());
 			if (result)
 			{
-				dir.y = 0;
+				dir.y = 0.0f;
 			}
 		}
 	}
 
-	const float fdirx = fabs(dir.x);
-	const float fdiry = fabs(dir.y);
-	// if we cancelled the vertical then the fabs(dir.x) is not 1 but it is also greater than 0
-	// and the vertical component of dir is 0.0
-	if (fdirx != 1.0f && fdirx > 0.0f && dir.y == 0.0f)
-	{
-		dir.x /= fdirx;
-	}
-
-	// if we cancelled the horizontal then the fabs(dir.y) is not 1 but it is also greater than 0
-	// and the horizontal component of dir is 0.0
-	else if (fdiry != 1.0f && fdiry > 0.0f && dir.x == 0.0f)
-	{
-		dir.y /= fdiry;
-	}
 }
 
 void PlayerLocomotive::resolve(const KCollisionDetectionData& collData)
