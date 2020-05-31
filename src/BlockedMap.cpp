@@ -12,9 +12,11 @@ using namespace Krawler::TiledImport;
 
 // Public
 
-void BlockedMap::setup(const std::wstring& level)
+void BlockedMap::setup(const std::wstring& level, Krawler::KEntity* pMapEntity)
 {
 	m_levelName = level;
+	m_pMapEntity = pMapEntity;
+
 	setupBlockedRecords();
 	setupBlockedMap();
 }
@@ -65,6 +67,10 @@ void BlockedMap::setupBlockedMap()
 	// within the TilesetBlockedRecord struct
 	auto levelImportData = ASSET().getLevelMap(m_levelName);
 	m_tileSize = Vec2f(levelImportData->tileWidth, levelImportData->tileHeight);
+	m_tileSize.x *= m_pMapEntity->getTransform()->getScale().x;
+	m_tileSize.y *= m_pMapEntity->getTransform()->getScale().y;
+
+	// Scale tilesize by tilemap 
 
 	std::wstring mapPrint;
 	for (int32 j = 0; j < levelImportData->height; ++j)

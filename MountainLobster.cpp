@@ -43,10 +43,12 @@ int main(void)
 	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Test_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));
 	app->getSceneDirector().setStartScene(KTEXT("Main_Scene"));
 
-	GameSetup g{};
+	{
+		GameSetup g{};
 
-	InitialiseSubmodules();
-	RunApplication();
+		InitialiseSubmodules();
+		RunApplication();
+	}
 	ShutdownEngine();
 	_CrtDumpMemoryLeaks();
 	return 0;

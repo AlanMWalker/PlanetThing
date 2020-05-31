@@ -4,6 +4,8 @@
 #include <vector>
 
 #include <Krawler.h>
+#include <KEntity.h>
+
 
 class BlockedMap
 {
@@ -12,7 +14,7 @@ public:
 	BlockedMap() = default;
 	~BlockedMap() = default;
 
-	void setup(const std::wstring& level);
+	void setup(const std::wstring& level, Krawler::KEntity* pMapEntity);
 	void destroy();
 
 	Krawler::Vec2f getTileSize() const { return m_tileSize; }
@@ -37,6 +39,7 @@ private:
 	std::vector<TileWalkState> m_blockedMap;
 	std::wstring m_levelName;
 	Krawler::Vec2f m_tileSize;
+	Krawler::KEntity* m_pMapEntity = nullptr;
 
 	void setupBlockedRecords();
 	void setupBlockedMap();

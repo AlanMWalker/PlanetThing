@@ -23,7 +23,7 @@ bool ServerPoll::loadServer()
 void ServerPoll::runServer()
 {
 	sf::Clock serverClock;
-	while (true)
+	while (m_bIsRunning)
 	{
 		const sf::Time tBefore = serverClock.getElapsedTime();
 		const int result = handleReceived();
@@ -54,6 +54,12 @@ void ServerPoll::runServer()
 		}
 		//this_thread::sleep_for(milliseconds(SleepTime));
 	}
+	m_bFinishedClosing = true;
+}
+
+void ServerPoll::closeServer()
+{
+	m_bIsRunning = true;
 }
 
 void ServerPoll::pollConnected()

@@ -7,6 +7,7 @@
 #include <chrono>
 
 #include <queue>
+#include <atomic>
 
 #include <Krawler.h>
 
@@ -21,15 +22,18 @@
 
 class ServerPoll
 {
-public: 
-	
-	ServerPoll(); 
+public:
+
+	ServerPoll();
 	~ServerPoll() = default;
 
 	bool loadServer();
 	void runServer();
+	void closeServer();
 
-private: 
+	const std::atomic_bool& hasFinishedClosingConnections() const { return m_bFinishedClosing; }
+
+private:
 	struct InboundMessage
 	{
 		sf::Packet receivedPacket;
@@ -43,7 +47,7 @@ private:
 
 	void processInboundMessage(InboundMessage& message);
 	MessageType getMessageType(InboundMessage& message);
-	
+
 	void handleEstablish(InboundMessage& message);
 	void handleMove(InboundMessage& message);
 
@@ -53,9 +57,10 @@ private:
 	using MessageSenderPair = std::pair<GameClient*, ServerClientMessage*>;
 	std::queue<MessageSenderPair> m_messages;
 
-	sf::UdpSocket m_commsSocket; 
+	sf::UdpSocket m_commsSocket;
 
-	
+	std::atomic_bool m_bIsRunning = true;
+	std::atomic_bool m_bFinishedClosing = false;
 
 	bool m_bLogExeTime = false;
 	int m_frames = 0;

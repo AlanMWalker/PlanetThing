@@ -82,15 +82,14 @@ private:
 	Krawler::KEntity* m_pGod = nullptr;
 	sf::RectangleShape m_colliderDebugShape;
 
-	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(128, 128);
+	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(48, 48);
 	const Krawler::Vec2f PLAYER_HALF_SIZE = PLAYER_SIZE * 0.5f;
-	Krawler::Vec2f m_colliderBounds = Krawler::Vec2f(120, 120);
+	const Krawler::Vec2f m_colliderBounds = (PLAYER_SIZE * 0.5f);
+
 	DbgLine m_rayA, m_rayB;
 	DbgLine m_rayC, m_rayD;
 
-
 	int m_frames = 0;
-
 
 	void handleKeyboardInput(Krawler::Vec2f& dir, float dt);
 	void handleJoystickInput(Krawler::Vec2f& dir, float dt);
@@ -102,5 +101,4 @@ private:
 	{
 		resolve(collData);
 	};
-
 };

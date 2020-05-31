@@ -33,7 +33,6 @@ GameSetup::GameSetup()
 	NetworkComms::get();
 	createGod();
 	createMap();
-	createBlockedMap();
 	createPlayer();
 	createNetworkedPlayers();
 #if RUN_SERVER
@@ -44,9 +43,20 @@ GameSetup::GameSetup()
 GameSetup::~GameSetup()
 {
 	auto p = &NetworkComms::get();
+	p->closeComms();
 	KFREE(p);
 
+
 #if RUN_SERVER
+	m_serverPoll.closeServer();
+	chrono::milliseconds s(0);
+	do
+	{
+		this_thread::sleep_for(chrono::milliseconds(5));
+		s += chrono::milliseconds(5);
+	} while (!m_serverPoll.hasFinishedClosingConnections());
+	auto i = (int)s.count();
+	KPrintf(L"I slept for %d ms\n", i);
 	m_serverPollThread.join();
 #endif
 }
@@ -147,15 +157,15 @@ void GameSetup::createGod()
 
 void GameSetup::createMap()
 {
+	const auto LevelName = L"new_assets_map";
 	auto entity = GET_SCENE()->addEntityToScene();
 	entity->setTag(L"Map");
-	entity->addComponent(new KCTileMapSplit(entity, L"demo_level"));
-	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200))));
-}
+	entity->addComponent(new KCTileMapSplit(entity, LevelName));
 
-void GameSetup::createBlockedMap()
-{
-	m_blockedMap.setup(L"demo_level");
+	entity->getTransform()->setScale(2, 2);
+	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200))));
+
+	m_blockedMap.setup(LevelName, entity);
 }
 
 void GameSetup::createPlayer()

@@ -10,7 +10,7 @@ PlayerRenderableComp::PlayerRenderableComp(Krawler::KEntity* pEntity)
 
 KInitStatus PlayerRenderableComp::init()
 {
-	m_pAnimatedSprite = new KCAnimatedSprite(getEntity(), ASSET().getAnimation(L"player_left"));
+	m_pAnimatedSprite = new KCAnimatedSprite(getEntity(), ASSET().getAnimation(L"hero_idle"));
 	m_pAnimatedSprite->setRepeatingState(true);
 	getEntity()->addComponent(m_pAnimatedSprite);
 
@@ -32,11 +32,13 @@ void PlayerRenderableComp::startPlayingWalkAnim(WalkDir dir)
 	switch (dir)
 	{
 	case WalkDir::Left:
-			m_pAnimatedSprite->setAnimation(LEFT_WALK_ANIM);
+			m_pAnimatedSprite->setAnimation(RIGHT_WALK_ANIM);
+			getEntity()->getTransform()->setScale(-1.0f, 1.0);
 			m_pAnimatedSprite->play();
 		break;
 	case WalkDir::Right:
 		m_pAnimatedSprite->setAnimation(RIGHT_WALK_ANIM);
+		getEntity()->getTransform()->setScale(1.0f, 1.0);
 		m_pAnimatedSprite->play();
 		break;
 	case WalkDir::Up:

@@ -56,6 +56,11 @@ void NetworkComms::subscribeToPacketType(MessageType type, std::function<void(Se
 	m_typeSubscribers[type].push_back(funcRef);
 }
 
+void NetworkComms::closeComms()
+{
+	m_bCommsAlive = false;
+}
+
 void NetworkComms::loadNetworkConf()
 {
 	wifstream networkFile(L"network.cfg", ios::in);
@@ -143,7 +148,7 @@ void NetworkComms::connectToServer()
 	bool bDidFail = false;
 	sf::Clock elapsed;
 
-	while (!m_bConnEstablished && !bDidFail)
+	while (!m_bConnEstablished && !bDidFail && m_bCommsAlive)
 	{
 
 		sf::IpAddress incomingIp;
@@ -153,6 +158,7 @@ void NetworkComms::connectToServer()
 		if ((asSeconds > 1) && (asSeconds % 5) == 0)
 		{
 			sendHandShake();
+			elapsed.restart();
 		}
 
 		if (asSeconds > MAX_RETRY_TIME)
@@ -190,7 +196,6 @@ void NetworkComms::connectToServer()
 	if (bDidFail)
 	{
 		KPRINTF("Error - Shutting down game after connection failure!\n");
-		//GET_APP()->closeApplication();
 	}
 	else
 	{
@@ -202,7 +207,7 @@ void NetworkComms::networkPollLoop()
 {
 	KPRINTF("Network Poll Loop Initiated\n");
 	constexpr int32 MAX_TIME = 16;
-	while (GET_APP()->getRenderWindow()->isOpen())
+	while (m_bCommsAlive)
 	{
 		bool bCouldLock = false;
 		const auto t1 = chrono::high_resolution_clock::now();

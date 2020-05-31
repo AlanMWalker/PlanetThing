@@ -1,6 +1,6 @@
 #pragma once
 
-#define RUN_SERVER 1
+#define RUN_SERVER 0
 
 #include <BlockedMap.h>
 #include <SFML\Network.hpp>
@@ -55,7 +55,6 @@ private:
 
 	void createGod();
 	void createMap();
-	void createBlockedMap();
 	void createPlayer();
 	void createNetworkedPlayers();
 

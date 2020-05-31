@@ -44,6 +44,8 @@ public:
 	void setPlayerName(const std::wstring& name) { m_networkInfo.playerName = TO_ASTR(name); }
 	const std::atomic_bool& isSpawnedIn() const { return m_bDidSpawnInWorld; }
 
+	void closeComms();
+
 	sf::Time getServerResponseTime() const { return sf::milliseconds(m_serverResponseTime); }
 
 private:
@@ -61,6 +63,7 @@ private:
 	std::mutex m_queueMutex;
 	std::atomic_bool m_bConnEstablished = false;
 	std::atomic_bool m_bDidSpawnInWorld = false;
+	std::atomic_bool m_bCommsAlive = true;
 
 	NetworkInfo m_networkInfo;
 	sf::UdpSocket m_connSocket;

@@ -36,8 +36,8 @@ private:
 	Krawler::Components::KCSprite* m_pSprite = nullptr;
 	Krawler::Components::KCAnimatedSprite* m_pAnimatedSprite = nullptr;
 
-	const std::wstring  LEFT_WALK_ANIM = L"player_left";
-	const std::wstring  RIGHT_WALK_ANIM = L"player_right";
-	const std::wstring  UP_WALK_ANIM = L"player_up";
-	const std::wstring  DOWN_WALK_ANIM = L"player_down";
+	//const std::wstring  LEFT_WALK_ANIM = L"hero_run_left";
+	const std::wstring  RIGHT_WALK_ANIM = L"hero_run_right";
+	const std::wstring  UP_WALK_ANIM = L"hero_run_up";
+	const std::wstring  DOWN_WALK_ANIM = L"hero_run_down";
 };

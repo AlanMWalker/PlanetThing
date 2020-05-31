@@ -31,6 +31,7 @@ void Camera::tick()
 {
 	Vec2f playerPos(m_pPlayer->getTransform()->getPosition());
 	Vec2f windowSize(GET_APP()->getWindowSize());
-
-	GET_APP()->getRenderWindow()->setView(sf::View(playerPos, windowSize));
+	sf::View v(playerPos, windowSize); 
+	v.zoom(0.5f);
+	GET_APP()->getRenderWindow()->setView(v);
 }
