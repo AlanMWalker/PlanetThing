@@ -27,13 +27,13 @@ void GodDebugComp::onEnterScene()
 {
 	auto pRenderer = GET_APP()->getRenderer();
 	auto list = GET_SCENE()->getAllocatedEntityList();
-
+	auto& blockedMap = BlockedMap::getInstance();
 	for (auto item : list)
 	{
 		if (item->getTag() == L"Terrain")
 		{
 			sf::RectangleShape r;
-			r = sf::RectangleShape(m_pSetup->getBlockedMap().getTileSize());
+			r = sf::RectangleShape(blockedMap.getTileSize());
 			r.setFillColor(Colour(255, 0, 0, 100));
 			r.setPosition(item->getTransform()->getPosition());
 			m_colliderShapes.push_back(r);
@@ -184,7 +184,8 @@ void GodDebugComp::handlePathClicks()
 			KPRINTF("Right click registered \n");
 
 			end = KInput::GetMouseWorldPosition();
-			auto path = m_pSetup->getBlockedMap().getWalkablePath(start, end);
+			auto& blockedMap = BlockedMap::getInstance();
+			auto path = blockedMap.getWalkablePath(start, end);
 
 			for (auto& point : path)
 			{
@@ -206,6 +207,8 @@ void GodDebugComp::handlePathClicks()
 
 void GodDebugComp::handleShowTileChildren()
 {
+	auto& blockedMap = BlockedMap::getInstance();
+
 	if (KInput::MouseJustPressed(KMouseButton::Left))
 	{
 		const Vec2f mousePos = KInput::GetMouseWorldPosition();
@@ -214,8 +217,8 @@ void GodDebugComp::handleShowTileChildren()
 			GET_APP()->getRenderer()->removeDebugShape(&s);
 		}
 		m_tileAndChildren.clear();
-		auto positions = m_pSetup->getBlockedMap().getTileChildren(mousePos);
-		auto tilesize = m_pSetup->getBlockedMap().getTileSize();
+		auto positions = blockedMap.getTileChildren(mousePos);
+		auto tilesize = blockedMap.getTileSize();
 		for (auto p : positions)
 		{
 			m_tileAndChildren.push_back(sf::RectangleShape(tilesize));
@@ -225,7 +228,7 @@ void GodDebugComp::handleShowTileChildren()
 			}
 			else
 			{
-				m_tileAndChildren.back().setFillColor(Colour{ 255,0,255, 80 });
+				m_tileAndChildren.back().setFillColor(Colour{ 0,255, 255, 80 });
 			}
 			m_tileAndChildren.back().setPosition(p);
 		}

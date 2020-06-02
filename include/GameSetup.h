@@ -49,8 +49,6 @@ public:
 
 	void tick();
 
-	BlockedMap& getBlockedMap() { return m_blockedMap; }
-
 private:
 
 	void createGod();
@@ -67,9 +65,6 @@ private:
 	ServerPoll m_serverPoll;
 	
 #endif
-
-	BlockedMap m_blockedMap;
-
 
 	NetworkedPlayer m_networkedPlayers[MAX_NETWORKED_PLAYERS];
 	std::queue<MoveInWorld> m_toSpawnQueue;

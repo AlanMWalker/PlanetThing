@@ -14,8 +14,12 @@
 class BlockedMap
 {
 public:
+	static BlockedMap& getInstance()
+	{
+		static BlockedMap* pBlockedMap = new BlockedMap();
 
-	BlockedMap() = default;
+		return *pBlockedMap;
+	}
 	~BlockedMap() = default;
 
 	void setup(const std::wstring& level, Krawler::KEntity* pMapEntity);
@@ -28,6 +32,7 @@ public:
 
 
 private:
+	BlockedMap() = default;
 
 	struct TilesetBlockedRecord
 	{
@@ -65,10 +70,10 @@ private:
 
 		virtual float distanceTo(AStarNode* pNode) const override
 		{
-			const float dx = (pNode->getX() - getX());
-			const float dy = (pNode->getY() - getY());
-
-			return sqrtf((dx * dx) + (dy * dy));
+			const Krawler::Vec2f myPos(getX(), getY());
+			const Krawler::Vec2f theirPos(pNode->getX(), pNode->getY());
+			const Krawler::Vec2f dx = theirPos - myPos;
+			return GetLength(dx);
 		}
 	};
 

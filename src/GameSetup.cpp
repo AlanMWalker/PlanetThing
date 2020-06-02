@@ -31,6 +31,7 @@ using namespace std;
 GameSetup::GameSetup()
 {
 	NetworkComms::get();
+	BlockedMap::getInstance();
 	createGod();
 	createMap();
 	createPlayer();
@@ -42,10 +43,16 @@ GameSetup::GameSetup()
 
 GameSetup::~GameSetup()
 {
-	auto p = &NetworkComms::get();
-	p->closeComms();
-	KFREE(p);
+	{
+		auto p = &NetworkComms::get();
+		p->closeComms();
+		KFREE(p);
+	}
 
+	{
+		auto p = &BlockedMap::getInstance();
+		KFREE(p);
+	}
 
 #if RUN_SERVER
 	m_serverPoll.closeServer();
@@ -165,7 +172,7 @@ void GameSetup::createMap()
 	//entity->getTransform()->setScale(2, 2);
 	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200))));
 
-	m_blockedMap.setup(LevelName, entity);
+	BlockedMap::getInstance().setup(LevelName, entity);
 }
 
 void GameSetup::createPlayer()
