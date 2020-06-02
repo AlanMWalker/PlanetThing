@@ -88,6 +88,9 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\GameClient.cpp" />
+    <ClCompile Include="src\PathFinder\AStar.cpp" />
+    <ClCompile Include="src\PathFinder\Dijkstra.cpp" />
+    <ClCompile Include="src\PathFinder\Node.cpp" />
     <ClCompile Include="src\PlayerRenderableComp.cpp" />
     <ClCompile Include="MountainLobster.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -122,6 +125,11 @@
     <ClInclude Include="include\GodDebugComp.h" />
     <ClInclude Include="include\NetworkComms.h" />
     <ClInclude Include="include\NetworkUtils.h" />
+    <ClInclude Include="include\PathFinder\AStar.h" />
+    <ClInclude Include="include\PathFinder\Dijkstra.h" />
+    <ClInclude Include="include\PathFinder\Node.h" />
+    <ClInclude Include="include\PathFinder\PathAlgorithm.h" />
+    <ClInclude Include="include\PathFinder\PathFinder.h" />
     <ClInclude Include="include\PlayerLocomotive.h" />
     <ClInclude Include="include\PlayerRenderableComp.h" />
     <ClInclude Include="include\ServerPackets.h" />

@@ -17,6 +17,9 @@
     <ClCompile Include="src\PlayerRenderableComp.cpp" />
     <ClCompile Include="src\ServerPoll.cpp" />
     <ClCompile Include="src\GameClient.cpp" />
+    <ClCompile Include="src\PathFinder\AStar.cpp" />
+    <ClCompile Include="src\PathFinder\Dijkstra.cpp" />
+    <ClCompile Include="src\PathFinder\Node.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
@@ -40,5 +43,10 @@
     <ClInclude Include="include\ServerPackets.h" />
     <ClInclude Include="include\GameClient.h" />
     <ClInclude Include="include\NetworkUtils.h" />
+    <ClInclude Include="include\PathFinder\AStar.h" />
+    <ClInclude Include="include\PathFinder\Dijkstra.h" />
+    <ClInclude Include="include\PathFinder\Node.h" />
+    <ClInclude Include="include\PathFinder\PathAlgorithm.h" />
+    <ClInclude Include="include\PathFinder\PathFinder.h" />
   </ItemGroup>
 </Project>

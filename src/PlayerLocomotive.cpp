@@ -32,8 +32,8 @@ KInitStatus PlayerLocomotive::init()
 		// setting up graphics here
 		// should be moved to a different component afterwards
 		//getEntity()->getTransform()->setPosition(200, 250);
-		getEntity()->getTransform()->setPosition(Maths::RandFloat(40, 500),
-			Maths::RandFloat(140, 540));
+		getEntity()->getTransform()->setPosition(Maths::RandFloat(32, 300),
+			Maths::RandFloat(32, 300));
 		getEntity()->getTransform()->setOrigin(PLAYER_HALF_SIZE);
 
 		GET_APP()->getRenderer()->addDebugShape(&m_colliderDebugShape);

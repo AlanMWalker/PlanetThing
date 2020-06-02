@@ -21,15 +21,23 @@ public:
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
 	virtual void tick() override;
+	virtual void onExitScene() override;
 
 private: 
+
+	void handlePathClicks();
+	void handleShowTileChildren();
 
 	void networkImgui();
 	imguicomp* m_pImgui = nullptr;
 	bool pShowDodgeSettings = false;
 
 	std::vector<sf::RectangleShape> m_colliderShapes;
+	std::vector<sf::RectangleShape> m_tileAndChildren;
+
 	GameSetup* m_pSetup = nullptr;
+
+	std::vector<sf::RectangleShape> m_drawnPath;
 
 	void setStyle(imguicomp ImGui);
 

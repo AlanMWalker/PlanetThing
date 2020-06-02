@@ -61,13 +61,22 @@ void GodDebugComp::tick()
 	}
 	auto pPlayerEntity = GET_SCENE()->findEntity(L"Player");
 	float* pMoveSpeed = &pPlayerEntity->getComponent<PlayerLocomotive>()->m_moveSpeed;
+	handlePathClicks();
 
 	static bool bDebugShapes = GET_APP()->getRenderer()->isShowingDebugDrawables();
+	static bool bShowTileNodes = false;
 
 	m_pImgui->update();
 	m_pImgui->begin("-- God Debug Tools --");
 
 	ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
+	ImGui::Separator();
+
+	ImGui::Checkbox("Visual Tile Nodes Mode", &bShowTileNodes);
+	if (bShowTileNodes)
+	{
+		handleShowTileChildren();
+	}
 	ImGui::Separator();
 
 	ImGui::Checkbox("Dodge Settings", &pShowDodgeSettings);
@@ -132,6 +141,101 @@ void GodDebugComp::tick()
 	m_pImgui->end();
 
 	GET_APP()->getRenderer()->showDebugDrawables(bDebugShapes);
+}
+
+void GodDebugComp::onExitScene()
+{
+	m_tileAndChildren.clear();
+	m_colliderShapes.clear();
+}
+
+void GodDebugComp::handlePathClicks()
+{
+	static int32 clickCount = 0;
+	static Vec2f start, end;
+	static bool bEnabled = false;
+
+	if (KInput::JustPressed(KKey::P))
+	{
+		KPRINTF("Enabled path clicks\n");
+		bEnabled = true;
+	}
+
+	if (bEnabled)
+	{
+		if (KInput::MouseJustPressed(KMouseButton::Left) && clickCount == 0)
+		{
+			KPRINTF("Left click registered \n");
+
+			for (auto& s : m_drawnPath)
+				GET_APP()->getRenderer()->removeDebugShape(&s);
+
+			m_drawnPath.clear();
+
+			start = KInput::GetMouseWorldPosition();
+			m_drawnPath.push_back(sf::RectangleShape(Vec2f(10, 10)));
+			m_drawnPath.back().setPosition(start);
+			m_drawnPath.back().setOrigin(Vec2f(5, 5));
+			++clickCount;
+		}
+
+		if (KInput::MouseJustPressed(KMouseButton::Right) && clickCount == 1)
+		{
+			KPRINTF("Right click registered \n");
+
+			end = KInput::GetMouseWorldPosition();
+			auto path = m_pSetup->getBlockedMap().getWalkablePath(start, end);
+
+			for (auto& point : path)
+			{
+				m_drawnPath.push_back(sf::RectangleShape(Vec2f(10, 10)));
+				m_drawnPath.back().setPosition(point);
+				m_drawnPath.back().setOrigin(Vec2f(5, 5));
+				m_drawnPath.back().setFillColor(Colour::Green);
+			}
+
+			for (auto& point : m_drawnPath)
+			{
+				GET_APP()->getRenderer()->addDebugShape(&point);
+			}
+			clickCount = 0;
+			return;
+		}
+	}
+}
+
+void GodDebugComp::handleShowTileChildren()
+{
+	if (KInput::MouseJustPressed(KMouseButton::Left))
+	{
+		const Vec2f mousePos = KInput::GetMouseWorldPosition();
+		for (auto& s : m_tileAndChildren)
+		{
+			GET_APP()->getRenderer()->removeDebugShape(&s);
+		}
+		m_tileAndChildren.clear();
+		auto positions = m_pSetup->getBlockedMap().getTileChildren(mousePos);
+		auto tilesize = m_pSetup->getBlockedMap().getTileSize();
+		for (auto p : positions)
+		{
+			m_tileAndChildren.push_back(sf::RectangleShape(tilesize));
+			if (m_tileAndChildren.size() == 1)
+			{
+				m_tileAndChildren.back().setFillColor(Colour{ 0,255,255, 80 });
+			}
+			else
+			{
+				m_tileAndChildren.back().setFillColor(Colour{ 255,0,255, 80 });
+			}
+			m_tileAndChildren.back().setPosition(p);
+		}
+
+		for (auto& t : m_tileAndChildren)
+		{
+			GET_APP()->getRenderer()->addDebugShape(&t);
+		}
+
+	}
 }
 
 void GodDebugComp::networkImgui()

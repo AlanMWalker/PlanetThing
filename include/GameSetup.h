@@ -49,7 +49,7 @@ public:
 
 	void tick();
 
-	const BlockedMap& getBlockedMap() const { return m_blockedMap; }
+	BlockedMap& getBlockedMap() { return m_blockedMap; }
 
 private:
 
