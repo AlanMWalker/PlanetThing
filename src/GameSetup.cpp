@@ -170,7 +170,7 @@ void GameSetup::createMap()
 	entity->addComponent(new KCTileMapSplit(entity, LevelName));
 
 	//entity->getTransform()->setScale(2, 2);
-	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200))));
+	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200)), 5));
 
 	BlockedMap::getInstance().setup(LevelName, entity);
 }

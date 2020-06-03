@@ -27,18 +27,17 @@ private:
 
 	void handlePathClicks();
 	void handleShowTileChildren();
-
+	void setStyle(imguicomp ImGui);
 	void networkImgui();
-	imguicomp* m_pImgui = nullptr;
-	bool pShowDodgeSettings = false;
 
-	std::vector<sf::RectangleShape> m_colliderShapes;
+	std::vector<sf::RectangleShape> m_terrainColliderShapes;
 	std::vector<sf::RectangleShape> m_tileAndChildren;
-
-	GameSetup* m_pSetup = nullptr;
-
 	std::vector<sf::RectangleShape> m_drawnPath;
 
-	void setStyle(imguicomp ImGui);
+	GameSetup* m_pSetup = nullptr;
+	imguicomp* m_pImgui = nullptr;
+	ImFont* m_pImguiFont = nullptr;
 
+	bool m_bShowDodgeSettings = false;
+	bool m_bShowTerrainColliders = false;
 };

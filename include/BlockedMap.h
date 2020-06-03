@@ -80,6 +80,7 @@ private:
 	void setupBlockedRecords();
 	void setupBlockedMap();
 	void setupTerrainNodes();
+	void addBoxCollider(Krawler::int32 i, Krawler::int32 j);
 
 	std::vector<TilesetBlockedRecord> m_blockedRecords;
 	std::vector<TileWalkState> m_blockedMap;

@@ -25,7 +25,7 @@ private:
 
 	const Krawler::Vec2f SIZE = Krawler::Vec2f(24, 24);
 	const Krawler::Vec2f m_colliderBounds = (SIZE * 0.5f);
-	const int32 MAX_CONTINUE_FRAMES = 60;
+	const int32 MAX_CONTINUE_FRAMES = 25;
 	sf::CircleShape m_Shape;
 
 	imguicomp* m_pImgui = nullptr;
@@ -36,10 +36,10 @@ private:
 	Krawler::Vec2f m_whereWasPlayerLast;
 
 	float m_moveSpeed = 100.0f;
-	float m_detectionRadius = 150.0f;
+	float m_detectionRadius = 64.0f;
 	float m_t = 0.0f;
-	float m_distFromPoint = 10.0f;
-	float m_playerDistanceDelta = 1.0f;
+	float m_distFromPoint = 5.0f;
+	float m_playerDistanceDelta = 16.0f;
 	bool m_bIsOnPath = false;
 
 

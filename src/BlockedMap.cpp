@@ -183,11 +183,7 @@ void BlockedMap::setupBlockedMap()
 					if (bIsFirstTileLayer)
 					{
 						m_blockedMap.push_back(TileWalkState::Blocked);
-						auto pEntity = GET_SCENE()->addEntityToScene();
-						pEntity->setTag(L"Terrain");
-						pEntity->addComponent(new KCBoxCollider(pEntity, m_tileSize));
-						pEntity->getTransform()->setPosition(i * m_tileSize.x, j * m_tileSize.y);
-						pEntity->getTransform()->setOrigin(m_tileSize * 0.5f);
+						addBoxCollider(i, j);
 						mapPrint.push_back('#');
 					}
 					else
@@ -195,11 +191,7 @@ void BlockedMap::setupBlockedMap()
 						if (m_blockedMap[tileIdx] != TileWalkState::Blocked)
 						{
 							m_blockedMap[tileIdx] = TileWalkState::Blocked;
-							auto pEntity = GET_SCENE()->addEntityToScene();
-							pEntity->setTag(L"Terrain");
-							pEntity->addComponent(new KCBoxCollider(pEntity, m_tileSize));
-							pEntity->getTransform()->setPosition(i * m_tileSize.x, j * m_tileSize.y);
-							pEntity->getTransform()->setOrigin(m_tileSize * 0.5f);
+							addBoxCollider(i, j);
 							mapPrint[tileIdx] = '#';
 						}
 					}
@@ -263,4 +255,19 @@ void BlockedMap::setupTerrainNodes()
 			}
 		}
 	}
+}
+
+void BlockedMap::addBoxCollider(Krawler::int32 i, Krawler::int32 j)
+{
+	auto pEntity = GET_SCENE()->addEntityToScene();
+	KCBoxCollider & collider = *new KCBoxCollider(pEntity, m_tileSize);
+	pEntity->setTag(L"Terrain");
+	pEntity->addComponent(&collider);
+	pEntity->getTransform()->setPosition(i * m_tileSize.x, j * m_tileSize.y);
+	pEntity->getTransform()->setOrigin(m_tileSize * 0.5f);
+	KCColliderFilteringData data;
+	data.collisionFilter = 0x0000;
+	data.collisionMask = 0x0001;
+
+	collider.setCollisionFilteringData(data);
 }
