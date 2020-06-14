@@ -1,4 +1,4 @@
-#include "NetworkComms.h"
+#include "ClientPoll.h"
 #include <KApplication.h>
 #include <ctime>
 #include "NetworkUtils.h"
@@ -7,27 +7,22 @@ using namespace std;
 using namespace Krawler;
 
 
-NetworkComms::NetworkComms()
+ClientPoll::ClientPoll()
 {
-	loadNetworkConf();
-	KPrintf(L"Network info: \nServer IP : %s \nServer Port : %d \nMy Port : %d\n",
-		TO_WSTR(m_networkInfo.serverIp.toString()).c_str(), m_networkInfo.serverPort, m_networkInfo.myPort);
-	m_connSocket.setBlocking(false);
-	//connectToServer();
-	m_networkPollThread = thread(&NetworkComms::connectToServer, this);
-
 }
 
-NetworkComms::~NetworkComms()
+ClientPoll::~ClientPoll()
 {
-	m_networkPollThread.join();
-	m_connSocket.unbind();
+	
 }
 
-void NetworkComms::spawnIn(const Vec2f& pos)
+void ClientPoll::spawnIn(const Vec2f& pos)
 {
 	if (m_bDidSpawnInWorld)
+	{
 		return;
+	}
+
 	lock_guard<mutex> lock(m_queueMutex);
 	sf::Packet p;
 	MoveInWorld siw;
@@ -38,7 +33,7 @@ void NetworkComms::spawnIn(const Vec2f& pos)
 	m_bDidSpawnInWorld = true;
 }
 
-void NetworkComms::moveInWorld(const Vec2f& pos)
+void ClientPoll::moveInWorld(const Vec2f& pos)
 {
 	lock_guard<mutex> lock(m_queueMutex);
 	sf::Packet p;
@@ -51,17 +46,30 @@ void NetworkComms::moveInWorld(const Vec2f& pos)
 	m_bDidSpawnInWorld = true;
 }
 
-void NetworkComms::subscribeToPacketType(MessageType type, std::function<void(ServerClientMessage*)>* funcRef)
+void ClientPoll::subscribeToPacketType(MessageType type, std::function<void(ServerClientMessage*)>* funcRef)
 {
 	m_typeSubscribers[type].push_back(funcRef);
 }
 
-void NetworkComms::closeComms()
+void ClientPoll::closeComms()
 {
 	m_bCommsAlive = false;
+	m_networkPollThread.join();
+	m_connSocket.unbind();
 }
 
-void NetworkComms::loadNetworkConf()
+void ClientPoll::loadClient()
+{
+	loadNetworkConf();
+	KPrintf(L"Network info: \nServer IP : %s \nServer Port : %d \nMy Port : %d\n",
+		TO_WSTR(m_networkInfo.serverIp.toString()).c_str(), m_networkInfo.serverPort, m_networkInfo.myPort);
+
+	m_connSocket.setBlocking(false);
+	m_networkPollThread = thread(&ClientPoll::connectToServer, this);
+	m_bCommsAlive = true;
+}
+
+void ClientPoll::loadNetworkConf()
 {
 	wifstream networkFile(L"network.cfg", ios::in);
 
@@ -107,7 +115,7 @@ void NetworkComms::loadNetworkConf()
 }
 
 
-void NetworkComms::connectToServer()
+void ClientPoll::connectToServer()
 {
 	// First we try bind to the UDP socket
 	// that we're going to send/receive data on from 
@@ -203,7 +211,7 @@ void NetworkComms::connectToServer()
 	}
 }
 
-void NetworkComms::networkPollLoop()
+void ClientPoll::networkPollLoop()
 {
 	KPRINTF("Network Poll Loop Initiated\n");
 	constexpr int32 MAX_TIME = 16;
@@ -245,7 +253,7 @@ void NetworkComms::networkPollLoop()
 	}
 }
 
-void NetworkComms::handleReplies(sf::Packet& p)
+void ClientPoll::handleReplies(sf::Packet& p)
 {
 	auto v = (ServerClientMessage*)p.getData();
 
@@ -280,7 +288,7 @@ void NetworkComms::handleReplies(sf::Packet& p)
 	}
 }
 
-void NetworkComms::processQueue()
+void ClientPoll::processQueue()
 {
 	constexpr int32 PROCESS_QUEUE_TIME = 16000;
 	static sf::Clock c; 

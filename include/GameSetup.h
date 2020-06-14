@@ -1,7 +1,5 @@
 #pragma once
 
-#define RUN_SERVER 0
-
 #include <BlockedMap.h>
 #include <SFML\Network.hpp>
 #include <atomic>
@@ -13,16 +11,14 @@
 
 #include "ServerPackets.h"
 
-#if RUN_SERVER
 #include "ServerPoll.h"
-#endif
+#include "ClientPoll.h"
 
 namespace sf
 {
 	class Text;
 }
 
-class NetworkComms;
 constexpr unsigned int MAX_NETWORKED_PLAYERS{ 5 };
 
 struct NetworkedPlayer
@@ -56,15 +52,17 @@ private:
 	void createPlayer();
 	void createNetworkedPlayers();
 
+	void handleSpawnInForClient();
+	void handleSpawnInForServer();
 	void handleMoveInWorld(ServerClientMessage* pMessage);
 
-#if RUN_SERVER
 	void createServer();
+	void createClient();
 
 	std::thread m_serverPollThread;
 	ServerPoll m_serverPoll;
+	ClientPoll m_clientPoll;
 	
-#endif
 
 	NetworkedPlayer m_networkedPlayers[MAX_NETWORKED_PLAYERS];
 	std::queue<MoveInWorld> m_toSpawnQueue;

@@ -32,7 +32,7 @@ public:
 	void closeServer();
 
 	const std::atomic_bool& hasFinishedClosingConnections() const { return m_bFinishedClosing; }
-
+	const std::atomic_bool& isServerRunning() const { return m_bIsRunning; }
 private:
 	struct InboundMessage
 	{
@@ -59,7 +59,7 @@ private:
 
 	sf::UdpSocket m_commsSocket;
 
-	std::atomic_bool m_bIsRunning = true;
+	std::atomic_bool m_bIsRunning = false;
 	std::atomic_bool m_bFinishedClosing = false;
 
 	bool m_bLogExeTime = false;

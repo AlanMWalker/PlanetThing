@@ -97,7 +97,7 @@
     <ClCompile Include="src\GameSetup.cpp" />
     <ClCompile Include="src\BlockedMap.cpp" />
     <ClCompile Include="src\GodDebugComp.cpp" />
-    <ClCompile Include="src\NetworkComms.cpp" />
+    <ClCompile Include="src\ClientPoll.cpp" />
     <ClCompile Include="src\PlayerLocomotive.cpp" />
     <ClCompile Include="src\CompLocomotive.cpp" />
     <ClCompile Include="src\ServerPoll.cpp" />
@@ -123,7 +123,7 @@
     <ClInclude Include="include\GameSetup.h" />
     <ClInclude Include="include\CompLocomotive.h" />
     <ClInclude Include="include\GodDebugComp.h" />
-    <ClInclude Include="include\NetworkComms.h" />
+    <ClInclude Include="include\ClientPoll.h" />
     <ClInclude Include="include\NetworkUtils.h" />
     <ClInclude Include="include\PathFinder\AStar.h" />
     <ClInclude Include="include\PathFinder\Dijkstra.h" />

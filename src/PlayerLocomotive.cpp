@@ -6,14 +6,14 @@
 #include <Maths\KMaths.hpp>
 
 #include "PlayerRenderableComp.h"
-#include "NetworkComms.h"
+#include "ClientPoll.h"
 
 using namespace Krawler;
 using namespace Krawler::Components;
 using namespace Krawler::Input;
 
-PlayerLocomotive::PlayerLocomotive(KEntity* pEntity)
-	: KComponentBase(pEntity)
+PlayerLocomotive::PlayerLocomotive(KEntity* pEntity, ClientPoll* pClientPoll)
+	: KComponentBase(pEntity), m_pClientPoll(pClientPoll)
 {
 }
 
@@ -86,17 +86,20 @@ void PlayerLocomotive::tick()
 	const float speed = m_isDodging ? m_moveSpeed * m_dodgeMultiplyer : m_moveSpeed;
 
 	manageIntersections(dir, dt, speed);
-  
+
 	getEntity()->getTransform()->move(dir * speed * dt);
 	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
 	static sf::Clock c;
 
-	if (NetworkComms::get().isSpawnedIn())
+	if (m_pClientPoll->isSpawnedIn())
 	{
 		if (c.getElapsedTime().asMilliseconds() > 55)
 		{
-			NetworkComms::get().moveInWorld(getEntity()->getTransform()->getPosition());
-			c.restart();
+			if (dir != Vec2f())
+			{
+				m_pClientPoll->moveInWorld(getEntity()->getTransform()->getPosition());
+				c.restart();
+			}
 		}
 	}
 }

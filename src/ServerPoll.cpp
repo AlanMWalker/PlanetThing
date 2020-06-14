@@ -1,8 +1,12 @@
+#include <Krawler.h>
+#include <KApplication.h>
+
 #include "ServerPoll.h"
 #include "NetworkUtils.h"
 
 using namespace std;
 using namespace std::chrono;
+using namespace Krawler;
 
 ServerPoll::ServerPoll()
 {
@@ -10,6 +14,16 @@ ServerPoll::ServerPoll()
 
 bool ServerPoll::loadServer()
 {
+	std::ifstream serverConfig;
+	serverConfig.open("server_lock");
+	// if no 'server_lock' file 
+	if (serverConfig.fail())
+	{
+		return false;
+	}
+
+	GET_APP()->getRenderWindow()->setTitle("The Serva");
+
 	if (m_commsSocket.bind(SERVER_LISTENING_PORT) != sf::Socket::Done)
 	{
 		cout << "Unable to start server on port " << SERVER_LISTENING_PORT << endl;
@@ -17,12 +31,17 @@ bool ServerPoll::loadServer()
 	}
 
 	m_commsSocket.setBlocking(false);
+
+	KPRINTF("Server initialised correctly\n");
+
 	return true;
 }
 
 void ServerPoll::runServer()
 {
 	sf::Clock serverClock;
+	m_bIsRunning = true;
+
 	while (m_bIsRunning)
 	{
 		const sf::Time tBefore = serverClock.getElapsedTime();
@@ -59,7 +78,7 @@ void ServerPoll::runServer()
 
 void ServerPoll::closeServer()
 {
-	m_bIsRunning = true;
+	m_bIsRunning = false;
 }
 
 void ServerPoll::pollConnected()
@@ -254,6 +273,7 @@ void ServerPoll::handleMove(InboundMessage& message)
 	ServerClientMessage* miw = new MoveInWorld;
 	message.receivedPacket >> static_cast<MoveInWorld&>(*miw);
 	m_messages.push(MessageSenderPair(&(*gc), miw));
+	KPRINTF("Received move message\n");
 }
 
 std::vector<GameClient>::iterator ServerPoll::findGameClientFromInbound(InboundMessage& message)

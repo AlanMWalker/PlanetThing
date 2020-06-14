@@ -29,9 +29,18 @@ void Camera::onEnterScene()
 
 void Camera::tick()
 {
-	Vec2f playerPos(m_pPlayer->getTransform()->getPosition());
-	Vec2f windowSize(GET_APP()->getWindowSize());
-	sf::View v(playerPos, windowSize); 
-	//v.zoom(0.5f);
+	if (getEntity()->getTag() != L"God")
+	{
+		Vec2f playerPos(m_pPlayer->getTransform()->getPosition());
+		Vec2f windowSize(GET_APP()->getWindowSize());
+		sf::View v(playerPos, windowSize);
+		GET_APP()->getRenderWindow()->setView(v);
+	}
+}
+
+void Camera::moveCamera(const Vec2f& delta)
+{
+	sf::View v = GET_APP()->getRenderWindow()->getView();
+	v.move(delta);
 	GET_APP()->getRenderWindow()->setView(v);
 }

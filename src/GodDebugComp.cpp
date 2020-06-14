@@ -2,23 +2,24 @@
 #include <Input\KInput.h>
 #include <KApplication.h>
 
-#include "NetworkComms.h"
+#include "ClientPoll.h"
 #include "PlayerLocomotive.h"
 #include "GameSetup.h"
+#include "ServerPoll.h"
+#include "ClientPoll.h"
+#include "Camera.h"
 
 using namespace Krawler;
 using namespace Krawler::Input;
 
-GodDebugComp::GodDebugComp(Krawler::KEntity* pEntity, GameSetup* pSetup)
-	: KComponentBase(pEntity), m_pSetup(pSetup)
+GodDebugComp::GodDebugComp(Krawler::KEntity* pEntity, GameSetup* pSetup, ServerPoll* pServerPoll, ClientPoll* pClientPoll)
+	: KComponentBase(pEntity), m_pSetup(pSetup), m_pServerPoll(pServerPoll), m_pClientPoll(pClientPoll)
 {
 }
 
 KInitStatus GodDebugComp::init()
 {
 	m_pImgui = getEntity()->getComponent<imguicomp>();
-
-
 	return KInitStatus::Success;
 }
 
@@ -54,114 +55,7 @@ void GodDebugComp::tick()
 	// a component, waking game setup up to check if it should make
 	// a networked player visible
 	m_pSetup->tick();
-
-	if (KInput::JustPressed(KKey::Escape))
-	{
-		// close
-		GET_APP()->closeApplication();
-	}
-	auto pPlayerEntity = GET_SCENE()->findEntity(L"Player");
-	float* pMoveSpeed = &pPlayerEntity->getComponent<PlayerLocomotive>()->m_moveSpeed;
-	handlePathClicks();
-
-	static bool bDebugShapes = GET_APP()->getRenderer()->isShowingDebugDrawables();
-	static bool bShowTileNodes = false;
-
-	m_pImgui->update();
-	ImGui::PushFont(m_pImguiFont);
-	m_pImgui->begin("-- God Debug Tools --");
-	ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
-	if (bDebugShapes)
-	{
-		bool before = m_bShowTerrainColliders;
-		ImGui::Checkbox("Show Terrain Colliders", &m_bShowTerrainColliders);
-		if (before != m_bShowTerrainColliders && m_bShowTerrainColliders)
-		{
-			for (auto& shape : m_terrainColliderShapes)
-			{
-				shape.setFillColor(Colour(255, 0, 0, 100));
-			}
-		}
-		else if (before != m_bShowTerrainColliders && !m_bShowTerrainColliders)
-		{
-			for (auto& shape : m_terrainColliderShapes)
-			{
-				shape.setFillColor(Colour::Transparent);
-			}
-		}
-	}
-	ImGui::Separator();
-
-	ImGui::Checkbox("Visual Tile Nodes Mode", &bShowTileNodes);
-	if (bShowTileNodes)
-	{
-		handleShowTileChildren();
-	}
-	ImGui::Separator();
-
-	ImGui::Checkbox("Dodge Settings", &m_bShowDodgeSettings);
-	{
-		if (m_bShowDodgeSettings)
-		{
-			auto pDodgeTiming = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeTiming;
-			auto pDodgeCooldown = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeCooldown;
-			auto pDodgeSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeMultiplyer;
-
-			ImGui::Text("Dodge Timing"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeTiming, 0.0f, 5.0f, "%.2f");
-			ImGui::Text("Dodge Cooldown"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeCooldown, 0.0f, 5.0f, "%.2f");
-			ImGui::Text("Dodge Speed"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeSpeed, 0.0f, 5.0f, "%.2f");
-		}
-	}
-	ImGui::Separator();
-
-	//if (sf::Joystick::isConnected(0))
-	{
-		ImGui::Text("yoyStick Axis Testing");
-		{
-			// Left Stick
-			Vec2f in0 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::X), sf::Joystick::getAxisPosition(0, sf::Joystick::Y));
-
-			// Right Stick
-			Vec2f in2 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::Z), sf::Joystick::getAxisPosition(0, sf::Joystick::R));
-
-			// in1.x = L2 analog | in1.y = R2 analog
-			Vec2f in1 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::V), sf::Joystick::getAxisPosition(0, sf::Joystick::U));
-
-			// D-pad input
-			Vec2f in3 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::PovX), sf::Joystick::getAxisPosition(0, sf::Joystick::PovY) * -1.0f);
-
-			ImGui::Text("LS, x = %f | y = %f", in0.x, in0.y);
-
-			ImGui::Spacing();
-			ImGui::Text("RS, x = %f | y = %f", in2.x, in2.y);
-			ImGui::Spacing();
-			ImGui::Text("Triggers, x = %f | y = %f", in1.x, in1.y);
-			ImGui::Spacing();
-			ImGui::Text("D-pad, x = %f | y = %f", in3.x, in3.y);
-		}
-		ImGui::Separator();
-	}
-	ImGui::InputFloat("Player Move Speed", pMoveSpeed);
-	ImGui::Separator();
-
-	static bool canSpawnIn = true;
-	static char playerName[12];
-	if (canSpawnIn)
-	{
-		ImGui::Text("Game Server Login");
-		ImGui::InputText("Player Name", playerName, 12);
-		canSpawnIn = !(ImGui::Button("Spawn to Server"));
-		if (!canSpawnIn)
-		{
-			NetworkComms::get().setPlayerName(TO_WSTR(playerName));
-			NetworkComms::get().spawnIn(pPlayerEntity->getTransform()->getPosition());
-		}
-	}
-	networkImgui();
-	ImGui::PopFont();
-	m_pImgui->end();
-
-	GET_APP()->getRenderer()->showDebugDrawables(bDebugShapes);
+	handleImgui();
 }
 
 void GodDebugComp::onExitScene()
@@ -268,10 +162,173 @@ void GodDebugComp::networkImgui()
 	ImGui::Checkbox("Show Network Debugs", &bShowNetworkDebugs);
 	if (bShowNetworkDebugs)
 	{
-		auto timeInMs = NetworkComms::get().getServerResponseTime().asMilliseconds();
-		ImGui::Text("Server Response Time: %d ms", timeInMs);
-
+		if (!m_pServerPoll->isServerRunning())
+		{
+			auto timeInMs = m_pClientPoll->getServerResponseTime().asMilliseconds();
+			ImGui::Text("Server Response Time: %d ms", timeInMs);
+		}
 	}
+}
+
+void GodDebugComp::handleImgui()
+{
+	if (KInput::JustPressed(KKey::Escape))
+	{
+		// close
+		GET_APP()->closeApplication();
+	}
+	
+
+	static bool bDebugShapes = GET_APP()->getRenderer()->isShowingDebugDrawables();
+	static bool bShowTileNodes = false;
+
+	m_pImgui->update();
+	ImGui::PushFont(m_pImguiFont);
+	m_pImgui->begin("-- God Debug Tools --");
+	ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
+	if (bDebugShapes)
+	{
+		bool before = m_bShowTerrainColliders;
+		ImGui::Checkbox("Show Terrain Colliders", &m_bShowTerrainColliders);
+		if (before != m_bShowTerrainColliders && m_bShowTerrainColliders)
+		{
+			for (auto& shape : m_terrainColliderShapes)
+			{
+				shape.setFillColor(Colour(255, 0, 0, 100));
+			}
+		}
+		else if (before != m_bShowTerrainColliders && !m_bShowTerrainColliders)
+		{
+			for (auto& shape : m_terrainColliderShapes)
+			{
+				shape.setFillColor(Colour::Transparent);
+			}
+		}
+	}
+	ImGui::Separator();
+
+	if (m_pServerPoll->isServerRunning())
+	{
+		showServerDebugs();
+	}
+	else
+	{
+		showNonServerDebugs();
+	}
+
+	ImGui::Checkbox("Visual Tile Nodes Mode", &bShowTileNodes);
+	if (bShowTileNodes)
+	{
+		handleShowTileChildren();
+	}
+	ImGui::Separator();
+		
+	networkImgui();
+	ImGui::PopFont();
+	m_pImgui->end();
+
+	GET_APP()->getRenderer()->showDebugDrawables(bDebugShapes);
+}
+
+void GodDebugComp::handleServerDebugCamera()
+{
+	Vec2f dir;
+
+	if (KInput::Pressed(KKey::W))
+	{
+		dir.y = -1.0f;
+	}
+
+	if (KInput::Pressed(KKey::S))
+	{
+		dir.y = 1.0f;
+	}
+
+
+	if (KInput::Pressed(KKey::A))
+	{
+		dir.x = -1.0f;
+	}
+
+	if (KInput::Pressed(KKey::D))
+	{
+		dir.x = 1.0f;
+	}
+
+	dir = Normalise(dir);
+	getEntity()->getComponent<Camera>()->moveCamera(dir * m_freeCameraMoveSpeed);
+}
+
+void GodDebugComp::showNonServerDebugs()
+{
+	auto pPlayerEntity = GET_SCENE()->findEntity(L"Player");
+	float* pMoveSpeed = &pPlayerEntity->getComponent<PlayerLocomotive>()->m_moveSpeed;
+	handlePathClicks();
+	ImGui::Checkbox("Dodge Settings", &m_bShowDodgeSettings);
+	{
+		if (m_bShowDodgeSettings)
+		{
+			auto pDodgeTiming = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeTiming;
+			auto pDodgeCooldown = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeCooldown;
+			auto pDodgeSpeed = &GET_SCENE()->findEntity(L"Player")->getComponent<PlayerLocomotive>()->m_dodgeMultiplyer;
+
+			ImGui::Text("Dodge Timing"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeTiming, 0.0f, 5.0f, "%.2f");
+			ImGui::Text("Dodge Cooldown"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeCooldown, 0.0f, 5.0f, "%.2f");
+			ImGui::Text("Dodge Speed"); ImGui::SameLine(); ImGui::SliderFloat("", pDodgeSpeed, 0.0f, 5.0f, "%.2f");
+		}
+	}
+	ImGui::Separator();
+	ImGui::InputFloat("Player Move Speed", pMoveSpeed);
+	//if (sf::Joystick::isConnected(0))
+	{
+		ImGui::Text("yoyStick Axis Testing");
+		{
+			// Left Stick
+			Vec2f in0 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::X), sf::Joystick::getAxisPosition(0, sf::Joystick::Y));
+
+			// Right Stick
+			Vec2f in2 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::Z), sf::Joystick::getAxisPosition(0, sf::Joystick::R));
+
+			// in1.x = L2 analog | in1.y = R2 analog
+			Vec2f in1 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::V), sf::Joystick::getAxisPosition(0, sf::Joystick::U));
+
+			// D-pad input
+			Vec2f in3 = Vec2f(sf::Joystick::getAxisPosition(0, sf::Joystick::PovX), sf::Joystick::getAxisPosition(0, sf::Joystick::PovY) * -1.0f);
+
+			ImGui::Text("LS, x = %f | y = %f", in0.x, in0.y);
+
+			ImGui::Spacing();
+			ImGui::Text("RS, x = %f | y = %f", in2.x, in2.y);
+			ImGui::Spacing();
+			ImGui::Text("Triggers, x = %f | y = %f", in1.x, in1.y);
+			ImGui::Spacing();
+			ImGui::Text("D-pad, x = %f | y = %f", in3.x, in3.y);
+		}
+		ImGui::Separator();
+	}
+	ImGui::Separator();
+
+	static bool canSpawnIn = true;
+	static char playerName[12];
+	if (canSpawnIn)
+	{
+		ImGui::Text("Game Server Login");
+		ImGui::InputText("Player Name", playerName, 12);
+		canSpawnIn = !(ImGui::Button("Spawn to Server"));
+		if (!canSpawnIn)
+		{
+			m_pClientPoll->setPlayerName(TO_WSTR(playerName));
+			m_pClientPoll->spawnIn(pPlayerEntity->getTransform()->getPosition());
+		}
+	}
+}
+
+void GodDebugComp::showServerDebugs()
+{
+	handleServerDebugCamera();
+
+	ImGui::InputFloat("Free Camera Movement Speed", &m_freeCameraMoveSpeed);
+	ImGui::Separator();
 }
 
 void GodDebugComp::setStyle(imguicomp ImGui)

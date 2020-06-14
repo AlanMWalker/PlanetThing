@@ -9,6 +9,8 @@
 
 #include <DbgImgui.h>
 
+class ClientPoll;
+
 //Todo move this to its own class
 struct DbgLine
 	: public sf::Drawable
@@ -47,7 +49,7 @@ class PlayerLocomotive
 {
 public:
 
-	PlayerLocomotive(Krawler::KEntity* pEntity);
+	PlayerLocomotive(Krawler::KEntity* pEntity, ClientPoll* pClientPoll);
 	~PlayerLocomotive() = default;
 
 	float m_moveSpeed = 100.0f;
@@ -80,6 +82,7 @@ private:
 	float m_dodgeCDTimer = 0.0f;
 
 	Krawler::KEntity* m_pGod = nullptr;
+	ClientPoll* m_pClientPoll = nullptr; 
 	sf::RectangleShape m_colliderDebugShape;
 
 	const Krawler::Vec2f PLAYER_SIZE = Krawler::Vec2f(48, 48);

@@ -35,7 +35,7 @@ int main(void)
 	initApp.width = 1920;
 	initApp.height = 1080;
 	initApp.windowStyle = KWindowStyle::Windowed_Resizeable;
-	initApp.windowTitle = KTEXT("Project Mountain Lion - InDev");
+	initApp.windowTitle = KTEXT(" Lion - InDev");
 	StartupEngine(&initApp);
 
 	auto app = KApplication::getApp();

@@ -28,15 +28,12 @@ struct NetworkInfo
 	std::string playerName;
 };
 
-class NetworkComms
+class ClientPoll
 {
 public:
-	static NetworkComms& get()
-	{
-		static NetworkComms* instance = new NetworkComms();
-		return *instance;
-	}
-	~NetworkComms();
+	
+	ClientPoll();
+	~ClientPoll();
 
 	void spawnIn(const Krawler::Vec2f& pos);
 	void moveInWorld(const Krawler::Vec2f& pos);
@@ -45,12 +42,13 @@ public:
 	const std::atomic_bool& isSpawnedIn() const { return m_bDidSpawnInWorld; }
 
 	void closeComms();
+	void loadClient();
 
 	sf::Time getServerResponseTime() const { return sf::milliseconds(m_serverResponseTime); }
+	const std::atomic_bool& isClientPollRunning() const { return m_bCommsAlive; }
 
 private:
 
-	NetworkComms();
 
 	void loadNetworkConf();
 	void connectToServer();
@@ -63,7 +61,7 @@ private:
 	std::mutex m_queueMutex;
 	std::atomic_bool m_bConnEstablished = false;
 	std::atomic_bool m_bDidSpawnInWorld = false;
-	std::atomic_bool m_bCommsAlive = true;
+	std::atomic_bool m_bCommsAlive = false;
 
 	NetworkInfo m_networkInfo;
 	sf::UdpSocket m_connSocket;

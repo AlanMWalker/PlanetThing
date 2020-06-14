@@ -206,9 +206,9 @@ void BlockedMap::setupBlockedMap()
 	{
 		for (int32 i = 0; i < m_pLevelImportData->width; ++i)
 		{
-			KPrintf(L"%c", mapPrint[i + j * m_pLevelImportData->width]);
+			wprintf_s(L"%c", mapPrint[i + j * m_pLevelImportData->width]);
 		}
-		KPrintf(L"\n");
+		wprintf_s(L"\n");
 
 	}
 }

@@ -13,13 +13,13 @@
     <ClCompile Include="src\Spawner.cpp" />
     <ClCompile Include="src\GodDebugComp.cpp" />
     <ClCompile Include="MountainLobster.cpp" />
-    <ClCompile Include="src\NetworkComms.cpp" />
     <ClCompile Include="src\PlayerRenderableComp.cpp" />
     <ClCompile Include="src\ServerPoll.cpp" />
     <ClCompile Include="src\GameClient.cpp" />
     <ClCompile Include="src\PathFinder\AStar.cpp" />
     <ClCompile Include="src\PathFinder\Dijkstra.cpp" />
     <ClCompile Include="src\PathFinder\Node.cpp" />
+    <ClCompile Include="src\ClientPoll.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
@@ -37,7 +37,6 @@
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Spawner.h" />
     <ClInclude Include="include\GodDebugComp.h" />
-    <ClInclude Include="include\NetworkComms.h" />
     <ClInclude Include="include\PlayerRenderableComp.h" />
     <ClInclude Include="include\ServerPoll.h" />
     <ClInclude Include="include\ServerPackets.h" />
@@ -48,5 +47,6 @@
     <ClInclude Include="include\PathFinder\Node.h" />
     <ClInclude Include="include\PathFinder\PathAlgorithm.h" />
     <ClInclude Include="include\PathFinder\PathFinder.h" />
+    <ClInclude Include="include\ClientPoll.h" />
   </ItemGroup>
 </Project>

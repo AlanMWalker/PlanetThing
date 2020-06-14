@@ -17,7 +17,7 @@
 #include "Camera.h"
 #include "Spawner.h"
 #include "ServerPackets.h"
-#include "NetworkComms.h"
+#include "ClientPoll.h"
 
 #include <SFML\Graphics\Text.hpp>
 
@@ -30,23 +30,39 @@ using namespace std;
 
 GameSetup::GameSetup()
 {
-	NetworkComms::get();
+	// we try create a server first
+	// so that if we can't 
+	// we run the game as normal
+	createServer();
+
+	// Sleep so that we can be certain the server has had chance to wake up
+	std::this_thread::sleep_for(chrono::milliseconds(50));
+	
+	if (!m_serverPoll.isServerRunning())
+	{
+		createClient();
+	}
+
 	BlockedMap::getInstance();
+
 	createGod();
 	createMap();
-	createPlayer();
+
+	// For the server to be running 
+	// a valid server_lock file must be running
+	// if there is one, we don't need to create a player.
+	if (!m_serverPoll.isServerRunning())
+	{
+		createPlayer();
+	}
 	createNetworkedPlayers();
-#if RUN_SERVER
-	createServer();
-#endif
 }
 
 GameSetup::~GameSetup()
 {
+	if (m_clientPoll.isClientPollRunning())
 	{
-		auto p = &NetworkComms::get();
-		p->closeComms();
-		KFREE(p);
+		m_clientPoll.closeComms();
 	}
 
 	{
@@ -54,22 +70,109 @@ GameSetup::~GameSetup()
 		KFREE(p);
 	}
 
-#if RUN_SERVER
-	m_serverPoll.closeServer();
-	chrono::milliseconds s(0);
-	do
+	if (m_serverPoll.isServerRunning())
 	{
-		this_thread::sleep_for(chrono::milliseconds(5));
-		s += chrono::milliseconds(5);
-	} while (!m_serverPoll.hasFinishedClosingConnections());
-	auto i = (int)s.count();
-	KPrintf(L"I slept for %d ms\n", i);
-	m_serverPollThread.join();
-#endif
+		m_serverPoll.closeServer();
+		chrono::milliseconds s(0);
+		do
+		{
+			this_thread::sleep_for(chrono::milliseconds(5));
+			s += chrono::milliseconds(5);
+		} while (!m_serverPoll.hasFinishedClosingConnections());
+		auto i = (int)s.count();
+		KPrintf(L"I slept for %d ms\n", i);
+		m_serverPollThread.join();
+	}
 }
 
 void GameSetup::tick()
 {
+	// running as client 
+	if (!m_serverPoll.isServerRunning())
+	{
+		handleSpawnInForClient();
+	}
+	else // if running as server
+	{
+		handleSpawnInForServer();
+	}
+}
+
+void GameSetup::createGod()
+{
+	auto entity = GET_SCENE()->addEntityToScene();
+	entity->setTag(L"God");
+	entity->addComponent(new imguicomp(entity));
+	entity->addComponent(new GodDebugComp(entity, this, &m_serverPoll, &m_clientPoll));
+
+	// if the server is running, we didn't create a player
+	// which means we should create a camera
+	if (m_serverPoll.isServerRunning())
+	{
+		entity->addComponent(new Camera(entity));
+	}
+}
+
+void GameSetup::createMap()
+{
+	const auto LevelName = L"new_assets_map";
+	auto entity = GET_SCENE()->addEntityToScene();
+	entity->setTag(L"Map");
+	entity->addComponent(new KCTileMapSplit(entity, LevelName));
+
+	//entity->getTransform()->setScale(2, 2);
+	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200)), 5));
+
+	BlockedMap::getInstance().setup(LevelName, entity);
+}
+
+void GameSetup::createPlayer()
+{
+	auto entity = GET_SCENE()->addEntityToScene();
+	entity->setTag(L"Player");
+	entity->addComponent(new PlayerLocomotive(entity, &m_clientPoll));
+	entity->addComponent(new PlayerRenderableComp(entity));
+	entity->addComponent(new Camera(entity));
+}
+
+void GameSetup::createNetworkedPlayers()
+{
+	for (auto& np : m_networkedPlayers)
+	{
+		np.pEntity = GET_SCENE()->addEntityToScene();
+		np.pEntity->getTransform()->setOrigin(16, 16);
+		np.pEntity->addComponent(new PlayerRenderableComp(np.pEntity));
+		np.pEntity->setActive(false);
+	}
+
+	if (!m_serverPoll.isServerRunning())
+	{
+		m_clientPoll.subscribeToPacketType(MessageType::Move, &m_func);
+	}
+}
+
+void GameSetup::createServer()
+{
+	if (!m_serverPoll.loadServer())
+	{
+		return;
+	}
+
+	m_serverPollThread = std::thread(&ServerPoll::runServer, &m_serverPoll);
+}
+
+void GameSetup::createClient()
+{
+	if (!m_serverPoll.isServerRunning())
+	{
+		m_clientPoll.loadClient();
+	}
+}
+
+void GameSetup::handleSpawnInForClient()
+{
+	//TODO all of the code below needs to be migrated to a networkedplayer
+	// component
 	if (m_bShouldSpawnNetworkedPlayer)
 	{
 		while (!m_toSpawnQueue.empty() && m_networkedPlayerIdx < MAX_NETWORKED_PLAYERS)
@@ -154,59 +257,10 @@ void GameSetup::tick()
 	}
 }
 
-void GameSetup::createGod()
+void GameSetup::handleSpawnInForServer()
 {
-	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(L"God");
-	entity->addComponent(new imguicomp(entity));
-	entity->addComponent(new GodDebugComp(entity, this));
+	//TODO implement spawn in for server
 }
-
-void GameSetup::createMap()
-{
-	const auto LevelName = L"new_assets_map";
-	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(L"Map");
-	entity->addComponent(new KCTileMapSplit(entity, LevelName));
-
-	//entity->getTransform()->setScale(2, 2);
-	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200)), 5));
-
-	BlockedMap::getInstance().setup(LevelName, entity);
-}
-
-void GameSetup::createPlayer()
-{
-	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(L"Player");
-	entity->addComponent(new PlayerLocomotive(entity));
-	entity->addComponent(new PlayerRenderableComp(entity));
-	entity->addComponent(new Camera(entity));
-}
-
-void GameSetup::createNetworkedPlayers()
-{
-	for (auto& np : m_networkedPlayers)
-	{
-		np.pEntity = GET_SCENE()->addEntityToScene();
-		np.pEntity->getTransform()->setOrigin(16, 16);
-		np.pEntity->addComponent(new PlayerRenderableComp(np.pEntity));
-		np.pEntity->setActive(false);
-	}
-	NetworkComms::get().subscribeToPacketType(MessageType::Move, &m_func);
-}
-
-#if RUN_SERVER
-void GameSetup::createServer()
-{
-	if (!m_serverPoll.loadServer())
-	{
-		return;
-	}
-
-	m_serverPollThread = std::thread(&ServerPoll::runServer, &m_serverPoll);
-}
-#endif
 
 void GameSetup::handleMoveInWorld(ServerClientMessage* pMessage)
 {

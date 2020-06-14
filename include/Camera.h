@@ -14,6 +14,8 @@ public:
 	virtual void onEnterScene() override;
 	virtual void tick() override;
 
+	void moveCamera(const Krawler::Vec2f& delta);
+
 private:
 	Krawler::KEntity* m_pPlayer = nullptr;
 };
