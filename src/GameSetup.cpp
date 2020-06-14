@@ -42,6 +42,10 @@ GameSetup::GameSetup()
 	{
 		createClient();
 	}
+	else
+	{
+		KApplication::getApp()->setPrintFPS(false);
+	}
 
 	BlockedMap::getInstance();
 
