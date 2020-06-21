@@ -31,10 +31,10 @@ KInitStatus PlayerLocomotive::init()
 		// Whilst working on the movement we'll handle
 		// setting up graphics here
 		// should be moved to a different component afterwards
-		//getEntity()->getTransform()->setPosition(200, 250);
-		getEntity()->getTransform()->setPosition(Maths::RandFloat(32, 300),
+		//getEntity()->m_pTransform->setPosition(200, 250);
+		getEntity()->m_pTransform->setPosition(Maths::RandFloat(32, 300),
 			Maths::RandFloat(32, 300));
-		getEntity()->getTransform()->setOrigin(PLAYER_HALF_SIZE);
+		getEntity()->m_pTransform->setOrigin(PLAYER_HALF_SIZE);
 
 		GET_APP()->getRenderer()->addDebugShape(&m_colliderDebugShape);
 		m_colliderDebugShape = sf::RectangleShape(m_colliderBounds);
@@ -87,8 +87,8 @@ void PlayerLocomotive::tick()
 
 	manageIntersections(dir, dt, speed);
 
-	getEntity()->getTransform()->move(dir * speed * dt);
-	m_colliderDebugShape.setPosition(getEntity()->getTransform()->getPosition());
+	getEntity()->m_pTransform->move(dir * speed * dt);
+	m_colliderDebugShape.setPosition(getEntity()->m_pTransform->getPosition());
 	static sf::Clock c;
 
 	if (m_pClientPoll->isSpawnedIn())
@@ -97,7 +97,7 @@ void PlayerLocomotive::tick()
 		{
 			if (dir != Vec2f())
 			{
-				m_pClientPoll->moveInWorld(getEntity()->getTransform()->getPosition());
+				m_pClientPoll->moveInWorld(getEntity()->m_pTransform->getPosition());
 				c.restart();
 			}
 		}
@@ -290,7 +290,7 @@ void PlayerLocomotive::handleDodge(const Vec2f& dir, float dt)
 
 void PlayerLocomotive::manageIntersections(Vec2f& dir, float dt, float speed)
 {
-	const Vec2f currentPos = getEntity()->getTransform()->getPosition();
+	const Vec2f currentPos = getEntity()->m_pTransform->getPosition();
 	const Vec2f halfSize = m_colliderBounds * 0.5f;
 
 	const float fdirx = fabs(dir.x);

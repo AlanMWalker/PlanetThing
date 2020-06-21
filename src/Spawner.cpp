@@ -33,7 +33,7 @@ KInitStatus Spawner::init()
 		entity = GET_SCENE()->addEntityToScene();
 		auto loco = new CompLocomotive(entity);
 		entity->addComponent(loco);
-		entity->getTransform()->setPosition(m_spawnPoint);
+		entity->m_pTransform->setPosition(m_spawnPoint);
 		entity->setActive(false);
 	}
 
@@ -53,7 +53,7 @@ void Spawner::activateSpawner()
 {
 	for (auto &entity : m_entityList)
 	{
-		if (!entity->isEntityActive()) { entity->setActive(true); }
+		if (!entity->isActive()) { entity->setActive(true); }
 	}
 }
 

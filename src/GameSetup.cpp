@@ -1,5 +1,4 @@
 #include <GameSetup.h>
-
 // STD LIB
 #include <chrono>
 
@@ -30,6 +29,14 @@ static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
 	d.entityB->getComponent<KCSprite>()->setColour(Colour::Magenta);
 };
 
+Colour genColour()
+{
+	const float r = roundf((Maths::RandFloat() * 127) + 127);
+	const float g = roundf((Maths::RandFloat() * 127) + 127);
+	const float b = roundf((Maths::RandFloat() * 127) + 127);
+
+	return Colour(r, g, b, 255);
+}
 
 GameSetup::GameSetup(Krawler::KEntity* pEntity)
 	: KComponentBase(pEntity)
@@ -45,6 +52,8 @@ GameSetup::~GameSetup()
 KInitStatus GameSetup::init()
 {
 	createGod();
+	GET_APP()->setPrintFPS(false);
+	GET_APP()->getRenderer()->setSortType(Renderer::KRenderSortType::LayerSort);
 
 	// No gravity pls 
 	m_pPhysicsWorld = &GET_APP()->getPhysicsWorld();
@@ -55,29 +64,29 @@ KInitStatus GameSetup::init()
 	{
 		SpaceObject so;
 		so.bIsPlanet = true;
-		so.mass = PLANET_MASS;
+		so.mass = RandFloat(PLANET_MASS, PLANET_MASS * 2);
 		so.radius = PLANET_RADIUS;
 		so.pEntity = GET_SCENE()->addEntityToScene();
+		so.col = genColour();
 		so.pEntity->setTag(L"Planet_" + to_wstring(i + 1));
 
 
 		const Vec2f bounds(2.0f * PLANET_RADIUS, 2.0f * PLANET_RADIUS);
 
 		so.pEntity->addComponent(new KCSprite(so.pEntity, bounds));
-		so.pEntity->getTransform()->setOrigin(Vec2f(PLANET_RADIUS, PLANET_RADIUS));
+		so.pEntity->m_pTransform->setOrigin(Vec2f(PLANET_RADIUS, PLANET_RADIUS));
 
-		so.pEntity->getTransform()->setPosition(Vec2f(
-			//RandFloat(100, 600),
-			//RandFloat(100, 500)
-			GET_APP()->getWindowSize()
-		) * 0.5f);
+		so.pEntity->m_pTransform->setPosition(Vec2f(
+			RandFloat(100, 1700),
+			RandFloat(100, 900)
+		));
 
 		so.pEntity->addComponent(new KCCircleCollider(so.pEntity, PLANET_RADIUS));
 		KBodyDef bodyDef;
 		KMatDef matDef;
-
+		matDef.restitution = 0.56f;
 		bodyDef.bodyType = BodyType::Dynamic_Body;
-		bodyDef.position = so.pEntity->getTransform()->getPosition() / m_pPhysicsWorld->getPPM();
+		bodyDef.position = so.pEntity->m_pTransform->getPosition() / m_pPhysicsWorld->getPPM();
 		matDef.density = so.getDensity();
 		so.pPhysicsBody = new KCBody(*so.pEntity, bounds, bodyDef, matDef);
 		so.pEntity->addComponent(so.pPhysicsBody);
@@ -92,19 +101,20 @@ KInitStatus GameSetup::init()
 		so.radius = OBJECT_RADIUS;
 		so.pEntity = GET_SCENE()->addEntityToScene();
 		so.pEntity->setTag(L"Object_" + to_wstring(i + 1));
+		so.col = genColour();
 		const Vec2f bounds(2.0f * OBJECT_RADIUS, 2.0f * OBJECT_RADIUS);
 
 		so.pEntity->setActive(false);
 		so.pEntity->addComponent(new KCSprite(so.pEntity, bounds));
-		so.pEntity->getTransform()->setOrigin(Vec2f(OBJECT_RADIUS, OBJECT_RADIUS));
+		so.pEntity->m_pTransform->setOrigin(Vec2f(OBJECT_RADIUS, OBJECT_RADIUS));
 		so.pEntity->addComponent(new KCCircleCollider(so.pEntity, OBJECT_RADIUS));
 		//so.pPhysicsBody->setActivity(false);
 
 		KBodyDef bodyDef;
 		KMatDef matDef;
-
+		matDef.restitution = 0.65f;
 		bodyDef.bodyType = BodyType::Dynamic_Body;
-		bodyDef.position = so.pEntity->getTransform()->getPosition() / m_pPhysicsWorld->getPPM();
+		bodyDef.position = so.pEntity->m_pTransform->getPosition() / m_pPhysicsWorld->getPPM();
 		matDef.density = so.getDensity();
 		so.pPhysicsBody = new KCBody(*so.pEntity, bounds, bodyDef, matDef);
 
@@ -117,6 +127,11 @@ KInitStatus GameSetup::init()
 	GET_APP()->getRenderer()->showDebugDrawables(true);
 	line.setCol(Colour::Magenta);
 
+
+	m_pBackground = GET_SCENE()->addEntityToScene();
+	m_pBackground->addComponent(new KCSprite(m_pBackground, Vec2f(GET_APP()->getWindowSize())));
+
+
 	return KInitStatus::Success;
 }
 
@@ -127,16 +142,24 @@ void GameSetup::onEnterScene()
 
 	for (auto& so : m_spaceThings)
 	{
+		auto pSprite = so.pEntity->getComponent<KCSprite>();
 		if (so.bIsPlanet)
 		{
-			so.pEntity->getComponent<KCSprite>()->setTexture(PlanetA);
+			pSprite->setTexture(PlanetA);
 		}
 		else
 		{
-			so.pEntity->getComponent<KCSprite>()->setTexture(PlanetB);
+			pSprite->setTexture(PlanetB);
 			so.pPhysicsBody->setActivity(false);
 		}
+		pSprite->setColour(so.col);
 	}
+
+	m_pBackgroundShader = ASSET().getShader(L"heatmap");
+	m_pBackground->getComponent<KCRenderableBase>()->setShader(m_pBackgroundShader);
+	m_pBackground->getComponent<KCRenderableBase>()->setRenderLayer(-1);
+
+	m_defaultView = GET_APP()->getRenderWindow()->getView();
 }
 
 void GameSetup::tick()
@@ -156,64 +179,109 @@ void GameSetup::tick()
 		if (idx < m_spaceThings.size())
 		{
 			m_spaceThings[idx].pEntity->setActive(true);
-			m_spaceThings[idx].pEntity->getTransform()->setPosition(KInput::GetMouseWorldPosition());
-			m_spaceThings[idx].pEntity->getTransform()->setRotation(0.0f);
-			const Vec2f Position(m_spaceThings[idx].pEntity->getTransform()->getPosition());
+			m_spaceThings[idx].pEntity->m_pTransform->setPosition(KInput::GetMouseWorldPosition());
+			m_spaceThings[idx].pEntity->m_pTransform->setRotation(0.0f);
+			const Vec2f Position(m_spaceThings[idx].pEntity->m_pTransform->getPosition());
 			m_spaceThings[idx].pPhysicsBody->setPosition(Position);
 			float randAngle = Radians(RandFloat(0, 360.0f));
 
-			//m_spaceThings[idx].pPhysicsBody->setLinearVelocity(Vec2f(0.0f, 0.0f));
-			//m_spaceThings[idx].pPhysicsBody->applyForceToCentre(1.0e23f * Vec2f(cosf(randAngle), sinf(randAngle)));
-			//m_spaceThings[idx].pPhysicsBody->setAngularVelocity(0.0f);
-
-			Vec2f dir = m_spaceThings[0].pEntity->getTransform()->getPosition() - Position;
+			Vec2f dir = m_spaceThings[0].pEntity->m_pTransform->getPosition() - Position;
 			float length = GetLength(dir);
-			dir /= length;
+			dir /= length; // normalise dir 
+			length /= PPM; // convert to Metres
 			const Vec2f tangential = RotateVector(dir, 90.0f);
 
-			float vel = sqrtf(G * m_spaceThings[0].mass / length);
-			float accel = vel / GET_APP()->getPhysicsDelta();
+			// V = ¬/( G * M / r^2);
+			float vel = sqrtf((G * m_spaceThings[0].mass) / length);
+			KPrintf(L"Orbital Velocity is %f m/s\n", vel);
+			float accel = vel / (GET_APP()->getPhysicsDelta());
 			float forceMangitude = m_spaceThings[idx].mass * accel;
 
-			auto test = GetLength(dir);
 			Vec2f force = tangential * forceMangitude;
-			//m_spaceThings[idx].pPhysicsBody->setLinearVelocity(Vec2f(tangential) * m_spaceThings[0].mass * G);
-			m_spaceThings[idx].pPhysicsBody->applyForceToCentre(force);
-			//m_spaceThings[idx].pPhysicsBody->applyLinearImpulseToCenter(force * 1000.0f);
+			m_spaceThings[idx].pPhysicsBody->setLinearVelocity(vel * tangential);
 			m_spaceThings[idx].pPhysicsBody->setActivity(true);
 			m_spaceThings[idx].pPhysicsBody->setRotation(0.0f);
 			++idx;
 		}
-		/*if (!m_pObject->isEntityActive())
-		{
-			m_pObject->setActive(true);
-			m_pObject->getTransform()->setPosition(KInput::GetMouseWorldPosition());
-			m_pObject->getComponent<KCBody>()->setPosition(m_pObject->getTransform()->getPosition());
-		}*/
 
 	}
+	static bool bTailObject = false;
+	static bool bHasZoomed = false;
+	static uint32 objIdx = 0;
 
-	//if (m_pObject->isEntityActive())
-	//{
+	if (bTailObject)
+	{
+		if (objIdx + (unsigned)(PLANETS_COUNT) > m_spaceThings.size())
+		{
+			objIdx = 0;
+		}
 
+		if (m_spaceThings[(unsigned)(PLANETS_COUNT)+objIdx].pEntity->isActive())
+		{
+			auto& thing = m_spaceThings[(unsigned)(PLANETS_COUNT)+objIdx];
+			bHasZoomed = true;
+			constexpr float ZoomAmount = 1.3f;
+			auto f = KInput::GetMouseScrollDelta();
+			if (f > 0.0f)
+			{
+				zoomAt(Vec2f(thing.pEntity->m_pTransform->getPosition()), 1.0f / ZoomAmount);
+			}
+			else if (f < 0.0f)
+			{
+				zoomAt(Vec2f(thing.pEntity->m_pTransform->getPosition()), ZoomAmount);
+			}
+			sf::View v = GET_APP()->getRenderWindow()->getView();
+			v.setCenter(thing.pEntity->m_pTransform->getPosition());
+			GET_APP()->getRenderWindow()->setView(v);
+		}
 
-	//	Vec2f dir = m_pPlanet->getTransform()->getPosition() - m_pObject->getTransform()->getPosition();
-	//	float distance = GetLength(dir) / m_pPhysicsWorld->getPPM();
-	//	const float FORCE = G * PLANET_MASS * OBJECT_MASS / ((distance * distance));
+		if (KInput::JustPressed(KKey::Right))
+		{
+			++objIdx;
+		}
 
-	//	KPrintf(L"Acceleration of %f M/S^2 applied \n", FORCE / OBJECT_MASS);
+		if (KInput::JustPressed(KKey::Left))
+		{
+			--objIdx;
+		}
 
-	//	line.arr[0] = m_pObject->getTransform()->getPosition();
-	//	line.arr[1] = m_pObject->getTransform()->getPosition() + Normalise(dir) * 25.0f;
+	}
+	else
+	{
+		GET_APP()->getRenderWindow()->setView(m_defaultView);
+	}
 
-	//	m_pObject->getComponent<KCBody>()->applyForceToCentre(FORCE * Normalise(dir));
+	if (KInput::JustPressed(KKey::Space))
+	{
+		bTailObject = !bTailObject;
+		bHasZoomed = false;
+	}
 
-
-	//}
+	setBackgroundShaderParams();
 }
 
 void GameSetup::fixedTick()
 {
+
+	for (auto& so : m_spaceThings)
+	{
+		if (so.bIsPlanet || !so.pEntity->isActive())
+		{
+			continue;
+		}
+
+		Vec2f dir = m_spaceThings[0].pEntity->m_pTransform->getPosition() - so.pEntity->m_pTransform->getPosition();
+		float length = GetLength(dir);
+		dir /= length; // normalise dir 
+		length /= PPM; // convert to Metres
+		const Vec2f tangential = RotateVector(dir, 90.0f);
+
+		// V = ¬/( G * M / r^2);
+		float vel = sqrtf((G * m_spaceThings[0].mass) / length);
+		float accel = vel / (GET_APP()->getPhysicsDelta());
+
+		so.pPhysicsBody->setLinearVelocity(vel * tangential);
+	}
 	for (int32 i = 0; i < m_spaceThings.size(); ++i)
 	{
 		for (int32 j = i + 1; j < m_spaceThings.size(); ++j)
@@ -222,21 +290,21 @@ void GameSetup::fixedTick()
 			m_spaceThings[i];
 			m_spaceThings[j];
 
-			if (!m_spaceThings[i].pEntity->isEntityActive() || !m_spaceThings[j].pEntity->isEntityActive())
+			if (!m_spaceThings[i].pEntity->isActive() || !m_spaceThings[j].pEntity->isActive())
 			{
 				continue;
 			}
 
-		/*	if ((!m_spaceThings[i].bIsPlanet && !m_spaceThings[j].bIsPlanet) || (m_spaceThings[i].bIsPlanet && m_spaceThings[j].bIsPlanet))
+			if ((!m_spaceThings[i].bIsPlanet && !m_spaceThings[j].bIsPlanet) || (m_spaceThings[i].bIsPlanet && m_spaceThings[j].bIsPlanet))
 			{
 				continue;
-			}*/
+			}
 
 			std::pair <SpaceObject*, SpaceObject*> pair;
 			pair.first = &m_spaceThings[i];
 			pair.second = &m_spaceThings[j];
 
-			/*if (m_spaceThings[j].bIsPlanet)
+			if (m_spaceThings[j].bIsPlanet)
 			{
 				pair.first = &m_spaceThings[i];
 				pair.second = &m_spaceThings[j];
@@ -245,27 +313,32 @@ void GameSetup::fixedTick()
 			{
 				pair.first = &m_spaceThings[j];
 				pair.second = &m_spaceThings[i];
-			}*/
+			}
 
-			Vec2f dir = pair.second->pEntity->getTransform()->getPosition() - pair.first->pEntity->getTransform()->getPosition();
+			Vec2f dir = pair.second->pEntity->m_pTransform->getPosition() - pair.first->pEntity->m_pTransform->getPosition();
 
 			float distance = GetLength(dir) / m_pPhysicsWorld->getPPM();
 
 			const float FORCE = G * pair.first->mass * pair.second->mass / ((distance * distance));
-			//KPrintf(L"Force = %f Newtons\n", FORCE);
-			//line.arr[0] = m_pObject->getTransform()->getPosition();
-			//line.arr[1] = m_pObject->getTransform()->getPosition() + Normalise(dir) * 25.0f;
 			if (!pair.first->bIsPlanet)
-				pair.first->pPhysicsBody->applyForceToCentre(FORCE * Normalise(dir));
+			{
+				m_pPath->addPathPoint(pair.first->pEntity->m_pTransform->getPosition(), pair.first->col);
+				//pair.first->pPhysicsBody->applyForceToCentre(FORCE * Normalise(dir));
+			}
 
 			if (!pair.second->bIsPlanet)
-				pair.second->pPhysicsBody->applyForceToCentre(FORCE * Normalise(-dir));
-			//pair.first->pPhysicsBody->applyLinearImpulseToCenter((FORCE * Normalise(dir)) * GET_APP()->getPhysicsDelta());
-			//pair.first->pPhysicsBody->applyLinearImpulseToCenter(1.0e10f * Vec2f(0, 1)*10.0f);
+			{
+				m_pPath->addPathPoint(pair.second->pEntity->m_pTransform->getPosition(), pair.second->col);
+				//pair.second->pPhysicsBody->applyForceToCentre(FORCE * Normalise(-dir));
 
-
+			}
 		}
 	}
+}
+
+void GameSetup::cleanUp()
+{
+	m_spaceThings.clear();
 }
 
 void GameSetup::createGod()
@@ -274,6 +347,40 @@ void GameSetup::createGod()
 	entity->setTag(L"God");
 	entity->addComponent(new imguicomp(entity));
 	entity->addComponent(new GodDebugComp(entity));
+	m_pPath = new ProjectilePath(entity);
+	entity->addComponent(m_pPath);
+}
+
+void GameSetup::zoomAt(const Krawler::Vec2f& pos, float zoom)
+{
+	sf::View v = GET_APP()->getRenderWindow()->getView();
+	v.zoom(zoom);
+	v.setCenter(pos);
+	GET_APP()->getRenderWindow()->setView(v);
+}
+
+void GameSetup::setBackgroundShaderParams()
+{
+	std::vector<Vec2f> planetPositions;
+	std::vector<Vec3f> planetCols;
+	for (auto& so : m_spaceThings)
+	{
+		if (so.bIsPlanet)
+		{
+			const Vec2f screenPos(GET_APP()->getRenderWindow()->mapCoordsToPixel(so.pEntity->m_pTransform->getPosition()));
+			planetPositions.push_back(screenPos);
+			planetCols.push_back(Vec3f((float)(so.col.r) / 256.0f, (float)(so.col.g) / 256.0f, (float)(so.col.b) / 256.0f));
+		}
+	}
+
+	m_pBackgroundShader->setUniform("planetCount", PLANETS_COUNT);
+	m_pBackgroundShader->setUniformArray("planetPositions", &planetPositions[0], PLANETS_COUNT);
+	m_pBackgroundShader->setUniformArray("planetColours", &planetCols[0], PLANETS_COUNT);
+	
+	//int h = GET_APP()->getRenderWindow()->getView().getSize().y;
+	m_pBackgroundShader->setUniform("windowHeight", (int)GET_APP()->getRenderWindow()->getView().getSize().y);
+	m_pBackgroundShader->setUniform("colScale", colScale);
+	
 }
 
 float GameSetup::SpaceObject::getDensity()

@@ -33,12 +33,12 @@ void PlayerRenderableComp::startPlayingWalkAnim(WalkDir dir)
 	{
 	case WalkDir::Left:
 			m_pAnimatedSprite->setAnimation(RIGHT_WALK_ANIM);
-			getEntity()->getTransform()->setScale(-1.0f, 1.0);
+			getEntity()->m_pTransform->setScale(-1.0f, 1.0);
 			m_pAnimatedSprite->play();
 		break;
 	case WalkDir::Right:
 		m_pAnimatedSprite->setAnimation(RIGHT_WALK_ANIM);
-		getEntity()->getTransform()->setScale(1.0f, 1.0);
+		getEntity()->m_pTransform->setScale(1.0f, 1.0);
 		m_pAnimatedSprite->play();
 		break;
 	case WalkDir::Up:

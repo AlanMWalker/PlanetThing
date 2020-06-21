@@ -95,6 +95,7 @@
     <ClCompile Include="MountainLobster.cpp" />
     <ClCompile Include="src\GameSetup.cpp" />
     <ClCompile Include="src\GodDebugComp.cpp" />
+    <ClCompile Include="src\ProjectilePath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -120,6 +121,7 @@
     <ClInclude Include="include\PathFinder\Node.h" />
     <ClInclude Include="include\PathFinder\PathAlgorithm.h" />
     <ClInclude Include="include\PathFinder\PathFinder.h" />
+    <ClInclude Include="include\ProjectilePath.h" />
     <ClInclude Include="include\ServerPackets.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

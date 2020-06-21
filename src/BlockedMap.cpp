@@ -138,8 +138,8 @@ void BlockedMap::setupBlockedMap()
 	// May be more optimal to use a set internally 
 	// within the TilesetBlockedRecord struct
 	m_tileSize = Vec2f(m_pLevelImportData->tileWidth, m_pLevelImportData->tileHeight);
-	m_tileSize.x *= m_pMapEntity->getTransform()->getScale().x;
-	m_tileSize.y *= m_pMapEntity->getTransform()->getScale().y;
+	m_tileSize.x *= m_pMapEntity->m_pTransform->getScale().x;
+	m_tileSize.y *= m_pMapEntity->m_pTransform->getScale().y;
 
 	// Scale tilesize by tilemap 
 
@@ -263,8 +263,8 @@ void BlockedMap::addBoxCollider(Krawler::int32 i, Krawler::int32 j)
 	KCBoxCollider & collider = *new KCBoxCollider(pEntity, m_tileSize);
 	pEntity->setTag(L"Terrain");
 	pEntity->addComponent(&collider);
-	pEntity->getTransform()->setPosition(i * m_tileSize.x, j * m_tileSize.y);
-	pEntity->getTransform()->setOrigin(m_tileSize * 0.5f);
+	pEntity->m_pTransform->setPosition(i * m_tileSize.x, j * m_tileSize.y);
+	pEntity->m_pTransform->setOrigin(m_tileSize * 0.5f);
 	KCColliderFilteringData data;
 	data.collisionFilter = 0x0000;
 	data.collisionMask = 0x0001;
