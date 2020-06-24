@@ -33,7 +33,7 @@ int main(void)
 	initApp.physicsFps = 120;
 	initApp.width = 1920;//1024;
 	initApp.height = 1080;//768;
-	initApp.windowStyle = KWindowStyle::Windowed_Fixed_Size;
+	initApp.windowStyle = KWindowStyle::Windowed_Resizeable;
 	initApp.windowTitle = KTEXT("Demo");
 	StartupEngine(&initApp);
 

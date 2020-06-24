@@ -377,7 +377,7 @@ void GameSetup::setBackgroundShaderParams()
 	m_pBackgroundShader->setUniformArray("planetPositions", &planetPositions[0], PLANETS_COUNT);
 	m_pBackgroundShader->setUniformArray("planetColours", &planetCols[0], PLANETS_COUNT);
 	
-	//int h = GET_APP()->getRenderWindow()->getView().getSize().y;
+	int h = GET_APP()->getRenderWindow()->getView().getSize().y;
 	m_pBackgroundShader->setUniform("windowHeight", (int)GET_APP()->getRenderWindow()->getView().getSize().y);
 	m_pBackgroundShader->setUniform("colScale", colScale);
 	
