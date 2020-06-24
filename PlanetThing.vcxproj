@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{11F3C9E2-BFD1-4802-8DEC-AB04707E6237}</ProjectGuid>
-    <RootNamespace>ProjectMountainLobster</RootNamespace>
+    <RootNamespace>PlanetThing</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
