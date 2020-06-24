@@ -1,84 +1,105 @@
 #pragma once
 
-#include <BlockedMap.h>
-#include <SFML\Network.hpp>
-#include <atomic>
-#include <queue>
-#include <functional>
-#include <mutex>
 #include <KEntity.h>
-#include <thread>
+#include <Physics/KPhysicsWorld2D.h>
+#include <Components/KCBody.h>
 
-#include "ServerPackets.h"
+#include <SFML/Graphics.hpp>
 
-#include "ServerPoll.h"
-#include "ClientPoll.h"
+#include "ProjectilePath.h"
 
 namespace sf
 {
 	class Text;
 }
 
-constexpr unsigned int MAX_NETWORKED_PLAYERS{ 5 };
-
-struct NetworkedPlayer
+struct DbgLineDraw
+	: public sf::Drawable
 {
-	std::wstring playerName;
-	Krawler::Vec2f lastPos;
-	std::queue<Krawler::Vec2f> positions;
-	std::queue<long long> timeStamps;
-	long long lastTimestamp;
-	Krawler::KEntity* pEntity;
-	sf::Text* pPlayerNameText;
-	float lerpT = 0.0f;
-	bool bSpawned = false;
-	bool bIsMoving = false;
+	DbgLineDraw()
+	{
+
+		arr.setPrimitiveType(sf::PrimitiveType::Lines);
+		arr.resize(2);
+		arr[0].position = Krawler::Vec2f();
+		arr[1].position = Krawler::Vec2f();
+	}
+
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
+	{
+		target.draw(arr);
+	}
+
+	void setStartEnd(const Krawler::Vec2f& start, const Krawler::Vec2f& end)
+	{
+		arr[0].position = start;
+		arr[1].position = end;
+	}
+
+	void setCol(const Krawler::Colour& c)
+	{
+		arr[0].color = c;
+		arr[1].color = c;
+	}
+	sf::VertexArray arr;
+
 };
 
-
-class GameSetup
+class GameSetup :
+	public Krawler::KComponentBase
 {
 public:
+	struct SpaceObject
+	{
+		float mass;
+		float radius;
+		Krawler::Components::KCBody* pPhysicsBody;
+		Krawler::KEntity* pEntity;
+		bool bIsPlanet;
+		Krawler::Colour col = Krawler::Colour::White;
+		float getDensity();
+	};
 
-	GameSetup();
+	GameSetup(Krawler::KEntity* pEntity);
 	~GameSetup();
 
-	void tick();
+	virtual Krawler::KInitStatus init() override;
+	virtual void onEnterScene() override;
+	virtual void tick() override;
+	virtual void fixedTick() override; 
+	virtual void cleanUp() override;
+
+	float OBJECT_MASS = 200.0f;
+	float PLANET_MASS = 9.8e13f;
+	float G = 6.67e-11;
+	float colScale = 10000;
+	std::vector<SpaceObject>& getSpaceThings() { return m_spaceThings; }
 
 private:
 
+
+	float PPM = 10.0f;
+
 	void createGod();
-	void createMap();
-	void createPlayer();
-	void createNetworkedPlayers();
+	void zoomAt(const Krawler::Vec2f& pos, float zoom);
+	void setBackgroundShaderParams();
 
-	void handleSpawnInForClient();
-	void handleSpawnInForServer();
-	void handleMoveInWorld(ServerClientMessage* pMessage);
+	const float PLANET_RADIUS = 1;
+	const float OBJECT_RADIUS = 0.5f;//8.0f;
 
-	void createServer();
-	void createClient();
 
-	std::thread m_serverPollThread;
-	ServerPoll m_serverPoll;
-	ClientPoll m_clientPoll;
-	
+	const int32 PLANETS_COUNT = 2;
+	const int32 OBJECTS_COUNT = 20;
 
-	NetworkedPlayer m_networkedPlayers[MAX_NETWORKED_PLAYERS];
-	std::queue<MoveInWorld> m_toSpawnQueue;
-	std::queue<std::pair<Krawler::Vec2f, NetworkedPlayer*>> m_toMove;
+	DbgLineDraw line;
+	ProjectilePath* m_pPath = nullptr; 
+	std::vector<SpaceObject> m_spaceThings;
+	sf::View m_defaultView;
 
-	const unsigned int MAX_CONNECTION_RETRIES = 3;
+	Krawler::KEntity* m_pObject;
+	Krawler::KEntity* m_pBackground;
 
-	std::atomic_bool m_bShouldSpawnNetworkedPlayer = false;
-	std::mutex m_spawnInMutex;
-	std::atomic_uint32_t m_networkedPlayerIdx = 0;
+	sf::Shader* m_pBackgroundShader = nullptr;
 
-	std::function<void(ServerClientMessage*)> m_func = [this](ServerClientMessage* pMessage)
-	{
-		// Change the client network sub 
-		// to take function pointers instead of this 
-		handleMoveInWorld(pMessage);
-
-	};
+	Krawler::Physics::KPhysicsWorld2D* m_pPhysicsWorld = nullptr;
 };

@@ -1,4 +1,4 @@
-// stl
+//// stl
 #include <array>
 
 // engine
@@ -30,26 +30,26 @@ int main(void)
 	int32 i = sf::Texture::getMaximumSize();
 	KApplicationInitialise initApp(false);
 	initApp.gameFps = 60;
-	initApp.physicsFps = 60;
-	initApp.width = 1920;
-	initApp.height = 1080;
+	initApp.physicsFps = 120;
+	initApp.width = 1920;//1024;
+	initApp.height = 1080;//768;
 	initApp.windowStyle = KWindowStyle::Windowed_Resizeable;
-	initApp.windowTitle = KTEXT(" Lion - InDev");
+	initApp.windowTitle = KTEXT("Demo");
 	StartupEngine(&initApp);
 
 	auto app = KApplication::getApp();
 	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Main_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));
-	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Test_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));
+	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Menu_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));
 	app->getSceneDirector().setStartScene(KTEXT("Main_Scene"));
+	auto& entity = *app->getSceneDirector().getCurrentScene()->addEntityToScene();
+	
+	entity.addComponent(new GameSetup(&entity));
 
-	{
-		GameSetup g{};
-
-		InitialiseSubmodules();
-		RunApplication();
-	}
+	InitialiseSubmodules();
+	RunApplication();
 	ShutdownEngine();
 	_CrtDumpMemoryLeaks();
 	return 0;
 }
+
 

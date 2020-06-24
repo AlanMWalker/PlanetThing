@@ -34,8 +34,8 @@ KInitStatus CompLocomotive::init()
 	m_pSprite = new KCSprite(getEntity(), SIZE);
 
 	getEntity()->addComponent(m_pSprite);
-	getEntity()->getTransform()->setPosition(Maths::RandFloat(200, 300), Maths::RandFloat(200, 300));
-	getEntity()->getTransform()->setOrigin(SIZE * 0.5f);
+	getEntity()->m_pTransform->setPosition(Maths::RandFloat(200, 300), Maths::RandFloat(200, 300));
+	getEntity()->m_pTransform->setOrigin(SIZE * 0.5f);
 
 	m_Shape.setRadius(m_detectionRadius);
 	m_Shape.setOrigin(m_detectionRadius, m_detectionRadius);
@@ -64,11 +64,11 @@ void CompLocomotive::detectEnermy()
 {
 	Vec2f dir;
 
-	auto myPos = getEntity()->getTransform()->getPosition();
+	auto myPos = getEntity()->m_pTransform->getPosition();
 	KEntity* playerEntity = GET_SCENE()->findEntity(L"Player");
 	assert(playerEntity);
 
-	Vec2f playerPos = playerEntity->getTransform()->getPosition();
+	Vec2f playerPos = playerEntity->m_pTransform->getPosition();
 	auto distanceToPlayer = GetSquareLength(playerPos - myPos);
 
 	m_Shape.setPosition(myPos);
@@ -79,7 +79,7 @@ void CompLocomotive::detectEnermy()
 		if (!m_bIsOnPath)
 		{
 			m_path.clear();
-			m_path = BlockedMap::getInstance().getWalkablePath(getEntity()->getTransform()->getPosition(), playerPos);
+			m_path = BlockedMap::getInstance().getWalkablePath(getEntity()->m_pTransform->getPosition(), playerPos);
 			m_whereWasPlayerLast = playerPos;
 			m_bIsOnPath = true;
 			m_pathIdx = 0;
@@ -93,7 +93,7 @@ void CompLocomotive::detectEnermy()
 				{
 					dir = Normalise(dir);
 					manageIntersections(dir, GET_APP()->getDeltaTime(), m_moveSpeed);
-					getEntity()->getTransform()->move(dir * m_moveSpeed * GET_APP()->getDeltaTime());
+					getEntity()->m_pTransform->move(dir * m_moveSpeed * GET_APP()->getDeltaTime());
 					++m_framesToContinue;
 				}
 				else
@@ -120,7 +120,7 @@ void CompLocomotive::detectEnermy()
 
 void CompLocomotive::manageIntersections(Vec2f& dir, float dt, float speed)
 {
-	const Vec2f currentPos = getEntity()->getTransform()->getPosition();
+	const Vec2f currentPos = getEntity()->m_pTransform->getPosition();
 	const Vec2f halfSize = m_colliderBounds * 0.5f;
 
 	const float fdirx = fabs(dir.x);

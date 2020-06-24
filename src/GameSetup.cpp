@@ -1,5 +1,4 @@
 #include <GameSetup.h>
-
 // STD LIB
 #include <chrono>
 
@@ -7,17 +6,13 @@
 #include <Krawler.h>
 #include <KApplication.h>
 #include <AssetLoader\KAssetLoader.h>
-#include <DbgImgui.h>
+#include "DbgImgui.h"
+
+#include <Components/KCBody.h>
+#include <Components/KCCircleCollider.h>
 
 // components
 #include "GodDebugComp.h"
-#include "Components\KCTileMap.h"
-#include "PlayerLocomotive.h"
-#include "PlayerRenderableComp.h"
-#include "Camera.h"
-#include "Spawner.h"
-#include "ServerPackets.h"
-#include "ClientPoll.h"
 
 #include <SFML\Graphics\Text.hpp>
 
@@ -28,266 +23,371 @@ using namespace Krawler::Maths;
 
 using namespace std;
 
-GameSetup::GameSetup()
+static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
 {
-	// we try create a server first
-	// so that if we can't 
-	// we run the game as normal
-	createServer();
+	d.entityA->getComponent<KCSprite>()->setColour(Colour::Magenta);
+	d.entityB->getComponent<KCSprite>()->setColour(Colour::Magenta);
+};
 
-	// Sleep so that we can be certain the server has had chance to wake up
-	std::this_thread::sleep_for(chrono::milliseconds(50));
-	
-	if (!m_serverPoll.isServerRunning())
-	{
-		createClient();
-	}
-	else
-	{
-		KApplication::getApp()->setPrintFPS(false);
-	}
+Colour genColour()
+{
+	const float r = roundf((Maths::RandFloat() * 127) + 127);
+	const float g = roundf((Maths::RandFloat() * 127) + 127);
+	const float b = roundf((Maths::RandFloat() * 127) + 127);
 
-	BlockedMap::getInstance();
+	return Colour(r, g, b, 255);
+}
 
-	createGod();
-	createMap();
+GameSetup::GameSetup(Krawler::KEntity* pEntity)
+	: KComponentBase(pEntity)
+{
 
-	// For the server to be running 
-	// a valid server_lock file must be running
-	// if there is one, we don't need to create a player.
-	if (!m_serverPoll.isServerRunning())
-	{
-		createPlayer();
-	}
-	createNetworkedPlayers();
 }
 
 GameSetup::~GameSetup()
 {
-	if (m_clientPoll.isClientPollRunning())
+
+}
+
+KInitStatus GameSetup::init()
+{
+	createGod();
+	GET_APP()->setPrintFPS(false);
+	GET_APP()->getRenderer()->setSortType(Renderer::KRenderSortType::LayerSort);
+
+	// No gravity pls 
+	m_pPhysicsWorld = &GET_APP()->getPhysicsWorld();
+	m_pPhysicsWorld->setGravity(Vec2f(0.0f, 0.0f));
+	m_pPhysicsWorld->setPPM(PPM);
+
+	for (int i = 0; i < PLANETS_COUNT; ++i)
 	{
-		m_clientPoll.closeComms();
+		SpaceObject so;
+		so.bIsPlanet = true;
+		so.mass = RandFloat(PLANET_MASS, PLANET_MASS * 2);
+		so.radius = PLANET_RADIUS;
+		so.pEntity = GET_SCENE()->addEntityToScene();
+		so.col = genColour();
+		so.pEntity->setTag(L"Planet_" + to_wstring(i + 1));
+
+
+		const Vec2f bounds(2.0f * PLANET_RADIUS, 2.0f * PLANET_RADIUS);
+
+		so.pEntity->addComponent(new KCSprite(so.pEntity, bounds));
+		so.pEntity->m_pTransform->setOrigin(Vec2f(PLANET_RADIUS, PLANET_RADIUS));
+
+		so.pEntity->m_pTransform->setPosition(Vec2f(
+			RandFloat(100, 1700),
+			RandFloat(100, 900)
+		));
+
+		so.pEntity->addComponent(new KCCircleCollider(so.pEntity, PLANET_RADIUS));
+		KBodyDef bodyDef;
+		KMatDef matDef;
+		matDef.restitution = 0.56f;
+		bodyDef.bodyType = BodyType::Dynamic_Body;
+		bodyDef.position = so.pEntity->m_pTransform->getPosition() / m_pPhysicsWorld->getPPM();
+		matDef.density = so.getDensity();
+		so.pPhysicsBody = new KCBody(*so.pEntity, bounds, bodyDef, matDef);
+		so.pEntity->addComponent(so.pPhysicsBody);
+		m_spaceThings.push_back(so);
 	}
 
+	for (int i = 0; i < OBJECTS_COUNT; ++i)
 	{
-		auto p = &BlockedMap::getInstance();
-		KFREE(p);
+		SpaceObject so;
+		so.bIsPlanet = false;
+		so.mass = OBJECT_MASS;
+		so.radius = OBJECT_RADIUS;
+		so.pEntity = GET_SCENE()->addEntityToScene();
+		so.pEntity->setTag(L"Object_" + to_wstring(i + 1));
+		so.col = genColour();
+		const Vec2f bounds(2.0f * OBJECT_RADIUS, 2.0f * OBJECT_RADIUS);
+
+		so.pEntity->setActive(false);
+		so.pEntity->addComponent(new KCSprite(so.pEntity, bounds));
+		so.pEntity->m_pTransform->setOrigin(Vec2f(OBJECT_RADIUS, OBJECT_RADIUS));
+		so.pEntity->addComponent(new KCCircleCollider(so.pEntity, OBJECT_RADIUS));
+		//so.pPhysicsBody->setActivity(false);
+
+		KBodyDef bodyDef;
+		KMatDef matDef;
+		matDef.restitution = 0.65f;
+		bodyDef.bodyType = BodyType::Dynamic_Body;
+		bodyDef.position = so.pEntity->m_pTransform->getPosition() / m_pPhysicsWorld->getPPM();
+		matDef.density = so.getDensity();
+		so.pPhysicsBody = new KCBody(*so.pEntity, bounds, bodyDef, matDef);
+
+		so.pEntity->addComponent(so.pPhysicsBody);
+		m_spaceThings.push_back(so);
+
 	}
 
-	if (m_serverPoll.isServerRunning())
+	GET_APP()->getRenderer()->addDebugShape(&line);
+	GET_APP()->getRenderer()->showDebugDrawables(true);
+	line.setCol(Colour::Magenta);
+
+
+	m_pBackground = GET_SCENE()->addEntityToScene();
+	m_pBackground->addComponent(new KCSprite(m_pBackground, Vec2f(GET_APP()->getWindowSize())));
+
+
+	return KInitStatus::Success;
+}
+
+void GameSetup::onEnterScene()
+{
+	auto PlanetA = ASSET().getTexture(L"planet_a");
+	auto PlanetB = ASSET().getTexture(L"planet_b");
+
+	for (auto& so : m_spaceThings)
 	{
-		m_serverPoll.closeServer();
-		chrono::milliseconds s(0);
-		do
+		auto pSprite = so.pEntity->getComponent<KCSprite>();
+		if (so.bIsPlanet)
 		{
-			this_thread::sleep_for(chrono::milliseconds(5));
-			s += chrono::milliseconds(5);
-		} while (!m_serverPoll.hasFinishedClosingConnections());
-		auto i = (int)s.count();
-		KPrintf(L"I slept for %d ms\n", i);
-		m_serverPollThread.join();
+			pSprite->setTexture(PlanetA);
+		}
+		else
+		{
+			pSprite->setTexture(PlanetB);
+			so.pPhysicsBody->setActivity(false);
+		}
+		pSprite->setColour(so.col);
 	}
+
+	m_pBackgroundShader = ASSET().getShader(L"heatmap");
+	m_pBackground->getComponent<KCRenderableBase>()->setShader(m_pBackgroundShader);
+	m_pBackground->getComponent<KCRenderableBase>()->setRenderLayer(-1);
+
+	m_defaultView = GET_APP()->getRenderWindow()->getView();
 }
 
 void GameSetup::tick()
 {
-	// running as client 
-	if (!m_serverPoll.isServerRunning())
+	for (auto& so : m_spaceThings)
 	{
-		handleSpawnInForClient();
+		if (so.bIsPlanet)
+			so.mass = PLANET_MASS;
+		else
+			so.mass = OBJECT_MASS;
+
+		so.pEntity->getComponent<KCBody>()->setDensity(so.getDensity());
 	}
-	else // if running as server
+	static int idx = PLANETS_COUNT;
+	if (KInput::MouseJustPressed(KMouseButton::Right))
 	{
-		handleSpawnInForServer();
+		if (idx < m_spaceThings.size())
+		{
+			m_spaceThings[idx].pEntity->setActive(true);
+			m_spaceThings[idx].pEntity->m_pTransform->setPosition(KInput::GetMouseWorldPosition());
+			m_spaceThings[idx].pEntity->m_pTransform->setRotation(0.0f);
+			const Vec2f Position(m_spaceThings[idx].pEntity->m_pTransform->getPosition());
+			m_spaceThings[idx].pPhysicsBody->setPosition(Position);
+			float randAngle = Radians(RandFloat(0, 360.0f));
+
+			Vec2f dir = m_spaceThings[0].pEntity->m_pTransform->getPosition() - Position;
+			float length = GetLength(dir);
+			dir /= length; // normalise dir 
+			length /= PPM; // convert to Metres
+			const Vec2f tangential = RotateVector(dir, 90.0f);
+
+			// V = ¬/( G * M / r^2);
+			float vel = sqrtf((G * m_spaceThings[0].mass) / length);
+			KPrintf(L"Orbital Velocity is %f m/s\n", vel);
+			float accel = vel / (GET_APP()->getPhysicsDelta());
+			float forceMangitude = m_spaceThings[idx].mass * accel;
+
+			Vec2f force = tangential * forceMangitude;
+			m_spaceThings[idx].pPhysicsBody->setLinearVelocity(vel * tangential);
+			m_spaceThings[idx].pPhysicsBody->setActivity(true);
+			m_spaceThings[idx].pPhysicsBody->setRotation(0.0f);
+			++idx;
+		}
+
 	}
+	static bool bTailObject = false;
+	static bool bHasZoomed = false;
+	static uint32 objIdx = 0;
+
+	if (bTailObject)
+	{
+		if (objIdx + (unsigned)(PLANETS_COUNT) > m_spaceThings.size())
+		{
+			objIdx = 0;
+		}
+
+		if (m_spaceThings[(unsigned)(PLANETS_COUNT)+objIdx].pEntity->isActive())
+		{
+			auto& thing = m_spaceThings[(unsigned)(PLANETS_COUNT)+objIdx];
+			bHasZoomed = true;
+			constexpr float ZoomAmount = 1.3f;
+			auto f = KInput::GetMouseScrollDelta();
+			if (f > 0.0f)
+			{
+				zoomAt(Vec2f(thing.pEntity->m_pTransform->getPosition()), 1.0f / ZoomAmount);
+			}
+			else if (f < 0.0f)
+			{
+				zoomAt(Vec2f(thing.pEntity->m_pTransform->getPosition()), ZoomAmount);
+			}
+			sf::View v = GET_APP()->getRenderWindow()->getView();
+			v.setCenter(thing.pEntity->m_pTransform->getPosition());
+			GET_APP()->getRenderWindow()->setView(v);
+		}
+
+		if (KInput::JustPressed(KKey::Right))
+		{
+			++objIdx;
+		}
+
+		if (KInput::JustPressed(KKey::Left))
+		{
+			--objIdx;
+		}
+
+	}
+	else
+	{
+		GET_APP()->getRenderWindow()->setView(m_defaultView);
+	}
+
+	if (KInput::JustPressed(KKey::Space))
+	{
+		bTailObject = !bTailObject;
+		bHasZoomed = false;
+	}
+
+	setBackgroundShaderParams();
+}
+
+void GameSetup::fixedTick()
+{
+
+	for (auto& so : m_spaceThings)
+	{
+		if (so.bIsPlanet || !so.pEntity->isActive())
+		{
+			continue;
+		}
+
+		Vec2f dir = m_spaceThings[0].pEntity->m_pTransform->getPosition() - so.pEntity->m_pTransform->getPosition();
+		float length = GetLength(dir);
+		dir /= length; // normalise dir 
+		length /= PPM; // convert to Metres
+		const Vec2f tangential = RotateVector(dir, 90.0f);
+
+		// V = ¬/( G * M / r^2);
+		float vel = sqrtf((G * m_spaceThings[0].mass) / length);
+		float accel = vel / (GET_APP()->getPhysicsDelta());
+
+		so.pPhysicsBody->setLinearVelocity(vel * tangential);
+	}
+	for (int32 i = 0; i < m_spaceThings.size(); ++i)
+	{
+		for (int32 j = i + 1; j < m_spaceThings.size(); ++j)
+		{
+
+			m_spaceThings[i];
+			m_spaceThings[j];
+
+			if (!m_spaceThings[i].pEntity->isActive() || !m_spaceThings[j].pEntity->isActive())
+			{
+				continue;
+			}
+
+			if ((!m_spaceThings[i].bIsPlanet && !m_spaceThings[j].bIsPlanet) || (m_spaceThings[i].bIsPlanet && m_spaceThings[j].bIsPlanet))
+			{
+				continue;
+			}
+
+			std::pair <SpaceObject*, SpaceObject*> pair;
+			pair.first = &m_spaceThings[i];
+			pair.second = &m_spaceThings[j];
+
+			if (m_spaceThings[j].bIsPlanet)
+			{
+				pair.first = &m_spaceThings[i];
+				pair.second = &m_spaceThings[j];
+			}
+			else
+			{
+				pair.first = &m_spaceThings[j];
+				pair.second = &m_spaceThings[i];
+			}
+
+			Vec2f dir = pair.second->pEntity->m_pTransform->getPosition() - pair.first->pEntity->m_pTransform->getPosition();
+
+			float distance = GetLength(dir) / m_pPhysicsWorld->getPPM();
+
+			const float FORCE = G * pair.first->mass * pair.second->mass / ((distance * distance));
+			if (!pair.first->bIsPlanet)
+			{
+				m_pPath->addPathPoint(pair.first->pEntity->m_pTransform->getPosition(), pair.first->col);
+				//pair.first->pPhysicsBody->applyForceToCentre(FORCE * Normalise(dir));
+			}
+
+			if (!pair.second->bIsPlanet)
+			{
+				m_pPath->addPathPoint(pair.second->pEntity->m_pTransform->getPosition(), pair.second->col);
+				//pair.second->pPhysicsBody->applyForceToCentre(FORCE * Normalise(-dir));
+
+			}
+		}
+	}
+}
+
+void GameSetup::cleanUp()
+{
+	m_spaceThings.clear();
 }
 
 void GameSetup::createGod()
 {
-	auto entity = GET_SCENE()->addEntityToScene();
+	auto entity = getEntity();
 	entity->setTag(L"God");
 	entity->addComponent(new imguicomp(entity));
-	entity->addComponent(new GodDebugComp(entity, this, &m_serverPoll, &m_clientPoll));
-
-	// if the server is running, we didn't create a player
-	// which means we should create a camera
-	if (m_serverPoll.isServerRunning())
-	{
-		entity->addComponent(new Camera(entity));
-	}
+	entity->addComponent(new GodDebugComp(entity));
+	m_pPath = new ProjectilePath(entity);
+	entity->addComponent(m_pPath);
 }
 
-void GameSetup::createMap()
+void GameSetup::zoomAt(const Krawler::Vec2f& pos, float zoom)
 {
-	const auto LevelName = L"new_assets_map";
-	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(L"Map");
-	entity->addComponent(new KCTileMapSplit(entity, LevelName));
-
-	//entity->getTransform()->setScale(2, 2);
-	entity->addComponent(new Spawner(entity, Vec2f(Maths::RandFloat(100, 200), Maths::RandFloat(100, 200)), 5));
-
-	BlockedMap::getInstance().setup(LevelName, entity);
+	sf::View v = GET_APP()->getRenderWindow()->getView();
+	v.zoom(zoom);
+	v.setCenter(pos);
+	GET_APP()->getRenderWindow()->setView(v);
 }
 
-void GameSetup::createPlayer()
+void GameSetup::setBackgroundShaderParams()
 {
-	auto entity = GET_SCENE()->addEntityToScene();
-	entity->setTag(L"Player");
-	entity->addComponent(new PlayerLocomotive(entity, &m_clientPoll));
-	entity->addComponent(new PlayerRenderableComp(entity));
-	entity->addComponent(new Camera(entity));
-}
-
-void GameSetup::createNetworkedPlayers()
-{
-	for (auto& np : m_networkedPlayers)
+	std::vector<Vec2f> planetPositions;
+	std::vector<Vec3f> planetCols;
+	for (auto& so : m_spaceThings)
 	{
-		np.pEntity = GET_SCENE()->addEntityToScene();
-		np.pEntity->getTransform()->setOrigin(16, 16);
-		np.pEntity->addComponent(new PlayerRenderableComp(np.pEntity));
-		np.pEntity->setActive(false);
-	}
-
-	if (!m_serverPoll.isServerRunning())
-	{
-		m_clientPoll.subscribeToPacketType(MessageType::Move, &m_func);
-	}
-}
-
-void GameSetup::createServer()
-{
-	if (!m_serverPoll.loadServer())
-	{
-		return;
-	}
-
-	m_serverPollThread = std::thread(&ServerPoll::runServer, &m_serverPoll);
-}
-
-void GameSetup::createClient()
-{
-	if (!m_serverPoll.isServerRunning())
-	{
-		m_clientPoll.loadClient();
-	}
-}
-
-void GameSetup::handleSpawnInForClient()
-{
-	//TODO all of the code below needs to be migrated to a networkedplayer
-	// component
-	if (m_bShouldSpawnNetworkedPlayer)
-	{
-		while (!m_toSpawnQueue.empty() && m_networkedPlayerIdx < MAX_NETWORKED_PLAYERS)
+		if (so.bIsPlanet)
 		{
-			auto pFont = ASSET().getFont(L"Seriphim");
-			MoveInWorld miw = m_toSpawnQueue.front();
-
-			auto& networkedPlayer = m_networkedPlayers[m_networkedPlayerIdx];
-			networkedPlayer.pEntity->setActive(true);
-			networkedPlayer.pEntity->getTransform()->setPosition(miw.playerPosition);
-			networkedPlayer.playerName = TO_WSTR(miw.playerName);
-			networkedPlayer.bSpawned = true;
-			networkedPlayer.pPlayerNameText = new sf::Text(miw.playerName, *pFont);
-			networkedPlayer.pPlayerNameText->setCharacterSize(16);
-
-			const Vec2f halfBounds(networkedPlayer.pPlayerNameText->getGlobalBounds().width / 2, networkedPlayer.pPlayerNameText->getGlobalBounds().height);
-			networkedPlayer.pPlayerNameText->setOrigin(halfBounds);
-
-			networkedPlayer.pPlayerNameText->setPosition(miw.playerPosition - Vec2f(0,
-				networkedPlayer.pEntity->getComponent<KCAnimatedSprite>()->getOnscreenBounds().height / 2.0f - halfBounds.y));
-			GET_APP()->getRenderer()->addDebugShape(networkedPlayer.pPlayerNameText);
-
-			m_bShouldSpawnNetworkedPlayer = false;
-			++m_networkedPlayerIdx;
-			m_toSpawnQueue.pop();
+			const Vec2f screenPos(GET_APP()->getRenderWindow()->mapCoordsToPixel(so.pEntity->m_pTransform->getPosition()));
+			planetPositions.push_back(screenPos);
+			planetCols.push_back(Vec3f((float)(so.col.r) / 256.0f, (float)(so.col.g) / 256.0f, (float)(so.col.b) / 256.0f));
 		}
 	}
 
-
-	lock_guard<mutex>lock(m_spawnInMutex);
-	for (auto& np : m_networkedPlayers)
-	{
-		// if positions to move
-		// and we're not moving
-		// and we're spawned in
-		if (np.positions.size() > 1 && np.bSpawned && !np.bIsMoving)
-		{
-			np.lastPos = np.positions.front();
-			np.lastTimestamp = np.timeStamps.front();
-			np.positions.pop();
-			np.timeStamps.pop();
-
-			np.bIsMoving = true;
-		}
-		else if (np.positions.size() == 1 && np.bSpawned && !np.bIsMoving)
-		{
-			if (np.positions.front() == np.pEntity->getTransform()->getPosition())
-			{
-				np.positions.pop();
-				np.timeStamps.pop();
-			}
-			else
-			{
-				np.pEntity->getTransform()->setPosition(np.positions.front());
-			}
-		}
-
-		if (np.bIsMoving)
-		{
-			np.lerpT += GET_APP()->getDeltaTime();
-			float dt = (float)(np.timeStamps.front() - np.lastTimestamp);
-			//dt = (float)(np.timeStamps.front() - np.lastTimestamp);
-
-			dt /= 1000;
-			if (np.lerpT <= dt)
-			{
-				Vec2f lerped = Maths::Lerp(np.lastPos, np.positions.front(), np.lerpT / dt);
-				np.pEntity->getTransform()->setPosition(lerped);
-			}
-			else
-			{
-				np.lerpT = 0.0f;
-				np.bIsMoving = false;
-			}
-		}
-
-		if (np.bSpawned)
-		{
-			const Vec2f halfBounds(np.pPlayerNameText->getGlobalBounds().width, np.pPlayerNameText->getGlobalBounds().height);
-			np.pPlayerNameText->setPosition(np.pEntity->getTransform()->getPosition() - Vec2f(0, 16));
-		}
-	}
+	m_pBackgroundShader->setUniform("planetCount", PLANETS_COUNT);
+	m_pBackgroundShader->setUniformArray("planetPositions", &planetPositions[0], PLANETS_COUNT);
+	m_pBackgroundShader->setUniformArray("planetColours", &planetCols[0], PLANETS_COUNT);
+	
+	int h = GET_APP()->getRenderWindow()->getView().getSize().y;
+	m_pBackgroundShader->setUniform("windowHeight", (int)GET_APP()->getRenderWindow()->getView().getSize().y);
+	m_pBackgroundShader->setUniform("colScale", colScale);
+	
 }
 
-void GameSetup::handleSpawnInForServer()
+float GameSetup::SpaceObject::getDensity()
 {
-	//TODO implement spawn in for server
-}
-
-void GameSetup::handleMoveInWorld(ServerClientMessage* pMessage)
-{
-	const MoveInWorld& miw = (*static_cast<MoveInWorld*>(pMessage));
-
-	lock_guard<mutex>lock(m_spawnInMutex);
-
-	auto b = begin(m_networkedPlayers);
-	auto e = end(m_networkedPlayers);
-	auto result = find_if(b, e, [&miw](const NetworkedPlayer& np) -> bool
-		{
-			return np.playerName == TO_WSTR(miw.playerName);
-		});
-
-	if (result == e)
-	{
-		m_bShouldSpawnNetworkedPlayer = true;
-		m_toSpawnQueue.push(miw);
-	}
-	else
-	{
-		result->positions.push(miw.playerPosition);
-		result->timeStamps.push(miw.timeStamp);
-		//m_toMove.push(pair<Vec2f, NetworkedPlayer*>(miw.playerPosition, result));
-	}
+	const float pmm = GET_APP()->getPhysicsWorld().getPPM();
+	// Density is mass per unit area in Box2D
+	// Area of space objects is calculated as a circle 
+	// and Pixels per metre ratio is factored in
+	return mass / (Maths::PI * (radius * radius) / pmm);
 }

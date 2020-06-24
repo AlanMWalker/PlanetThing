@@ -31,7 +31,7 @@ void Camera::tick()
 {
 	if (getEntity()->getTag() != L"God")
 	{
-		Vec2f playerPos(m_pPlayer->getTransform()->getPosition());
+		Vec2f playerPos(m_pPlayer->m_pTransform->getPosition());
 		Vec2f windowSize(GET_APP()->getWindowSize());
 		sf::View v(playerPos, windowSize);
 		GET_APP()->getRenderWindow()->setView(v);
