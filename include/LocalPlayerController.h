@@ -5,7 +5,7 @@ class LocalPlayerController :
 {
 public:
 
-	LocalPlayerController(Krawler::KEntity* pEntity);
+	LocalPlayerController();
 	~LocalPlayerController() = default;
 
 	
