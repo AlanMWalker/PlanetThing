@@ -11,7 +11,7 @@
 #include <SFML/System/Clock.hpp>
 
 constexpr Krawler::uint32 PARTICLE_COUNT = 50000;//10000;
-constexpr Krawler::uint32 PARTICLE_ALIVE_TIME = 60; // seconds
+constexpr Krawler::uint32 PARTICLE_ALIVE_TIME = 5; // seconds
 
 class ProjectilePath :
 	public Krawler::Components::KCRenderableBase

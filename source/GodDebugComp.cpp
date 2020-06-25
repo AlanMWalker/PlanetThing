@@ -1,12 +1,13 @@
-#include "GodDebugComp.h"
 #include <Input\KInput.h>
 #include <KApplication.h>
 
-#include "ClientPoll.h"
-#include "PlayerLocomotive.h"
-#include "GameSetup.h"
-#include "ServerPoll.h"
-#include "ClientPoll.h"
+#include "GodDebugComp.hpp"
+#include "PlayerLocomotive.hpp"
+#include "GameSetup.hpp"
+
+//#include "ServerPoll.hpp"
+//#include "ClientPoll.hpp"
+
 using namespace Krawler;
 using namespace Krawler::Input;
 
@@ -26,9 +27,7 @@ void GodDebugComp::onEnterScene()
 	auto pRenderer = GET_APP()->getRenderer();
 	auto list = GET_SCENE()->getAllocatedEntityList();
 
-	// Sorry if there's any errors here, I translated this back by hand.
-	auto& io = ImGui::GetIO();
-	m_pImguiFont = io.Fonts->AddFontFromFileTTF("res/font//ChakraPetch-SemiBold.ttf", 15.0f);
+
 	ImGui::SFML::UpdateFontTexture();
 
 }
@@ -60,23 +59,23 @@ void GodDebugComp::handleImgui()
 	static bool bShowTileNodes = false;
 
 	m_pImgui->update();
-	ImGui::PushFont(m_pImguiFont);
+	ImGui::PushFont(m_pImgui->getImguiFont());
 	m_pImgui->begin("-- God Debug Tools --");
-	ImGui::SliderFloat("Planet Mass (KG)", &gameSetup->PLANET_MASS, 9.8e13 / 2, 9.8e13 * 2);
-	ImGui::SliderFloat("Object Mass (KG)", &gameSetup->OBJECT_MASS, 200 / 10.0f, 200 * 10.0f);
-	double x = gameSetup->G;
-	ImGui::InputDouble("Big G (m^3 kg^-1 s^-2)", &x);//, 6.67e-11, 6.67e-9);
-	gameSetup->G = x;
+	//ImGui::SliderFloat("Planet Mass (KG)", &gameSetup->PLANET_MASS, 9.8e13 / 2, 9.8e13 * 2);
+	//ImGui::SliderFloat("Object Mass (KG)", &gameSetup->OBJECT_MASS, 200 / 10.0f, 200 * 10.0f);
+	//double x = gameSetup->G;
+	//ImGui::InputDouble("Big G (m^3 kg^-1 s^-2)", &x);//, 6.67e-11, 6.67e-9);
+	//gameSetup->G = x;
 	//ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
 
 	ImGui::Separator();
-	static sf::Clock c;
-	for (auto& so : gameSetup->getSpaceThings())
-	{
+	//static sf::Clock c;
+	//for (auto& so : gameSetup->getSpaceThings())
+	//{
 
-		//if (!so.bIsPlanet)
-			ImGui::Text("%s is travelling at %f m/s", TO_ASTR(so.pEntity->getTag()).c_str(), GetLength(so.pPhysicsBody->getLinearVelocity()));
-	}
+	//	//if (!so.bIsPlanet)
+	//		ImGui::Text("%s is travelling at %f m/s", TO_ASTR(so.pEntity->getTag()).c_str(), GetLength(so.pPhysicsBody->getLinearVelocity()));
+	//}
 	ImGui::Separator();
 	ImGui::SliderFloat("Gravity map colour multiplier", &gameSetup->colScale, 1.0f, 100000.0f);
 	ImGui::PopFont();

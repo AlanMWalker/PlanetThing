@@ -1,4 +1,4 @@
-#include "GameClient.h"
+#include "GameClient.hpp"
 
 GameClient::GameClient(const sf::IpAddress& ip, unsigned short portNum)
 	: ip(ip), port(portNum), bStillConnected(false), bConnectionEstablished(false)

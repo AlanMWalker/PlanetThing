@@ -6,7 +6,9 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "ProjectilePath.h"
+#include "ProjectilePath.hpp"
+#include "NewtonianGravity.hpp"
+#include "LocalPlayerController.hpp"
 
 namespace sf
 {
@@ -45,21 +47,13 @@ struct DbgLineDraw
 
 };
 
+class CelestialBody;
+
 class GameSetup :
 	public Krawler::KComponentBase
 {
 public:
-	struct SpaceObject
-	{
-		float mass;
-		float radius;
-		Krawler::Components::KCBody* pPhysicsBody;
-		Krawler::KEntity* pEntity;
-		bool bIsPlanet;
-		Krawler::Colour col = Krawler::Colour::White;
-		float getDensity();
-	};
-
+	
 	GameSetup(Krawler::KEntity* pEntity);
 	~GameSetup();
 
@@ -69,11 +63,8 @@ public:
 	virtual void fixedTick() override; 
 	virtual void cleanUp() override;
 
-	float OBJECT_MASS = 200.0f;
-	float PLANET_MASS = 9.8e13f;
-	float G = 6.67e-11;
 	float colScale = 10000;
-	std::vector<SpaceObject>& getSpaceThings() { return m_spaceThings; }
+	std::vector<Krawler::KEntity*>& getCelestialBodies() { return m_entities; }
 
 private:
 
@@ -83,23 +74,18 @@ private:
 	void createGod();
 	void zoomAt(const Krawler::Vec2f& pos, float zoom);
 	void setBackgroundShaderParams();
-
-	const float PLANET_RADIUS = 1;
-	const float OBJECT_RADIUS = 0.5f;//8.0f;
-
-
-	const int32 PLANETS_COUNT = 2;
-	const int32 OBJECTS_COUNT = 20;
+	std::vector<Krawler::KEntity*> m_entities;
 
 	DbgLineDraw line;
 	ProjectilePath* m_pPath = nullptr; 
-	std::vector<SpaceObject> m_spaceThings;
 	sf::View m_defaultView;
 
-	Krawler::KEntity* m_pObject;
-	Krawler::KEntity* m_pBackground;
-
+	Krawler::KEntity* m_pObject = nullptr;
+	Krawler::KEntity* m_pBackground = nullptr;
 	sf::Shader* m_pBackgroundShader = nullptr;
-
 	Krawler::Physics::KPhysicsWorld2D* m_pPhysicsWorld = nullptr;
+	LocalPlayerController* m_playerController = nullptr;
+	
+	NewtonianGravity m_newton;
+
 };

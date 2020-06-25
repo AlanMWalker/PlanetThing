@@ -1,4 +1,4 @@
-#include "ProjectilePath.h"
+#include "ProjectilePath.hpp"
 #include <KEntity.h>
 
 using namespace Krawler;

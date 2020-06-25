@@ -87,15 +87,17 @@
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\GameClient.cpp" />
-    <ClCompile Include="src\PathFinder\AStar.cpp" />
-    <ClCompile Include="src\PathFinder\Dijkstra.cpp" />
-    <ClCompile Include="src\PathFinder\Node.cpp" />
-    <ClCompile Include="MountainLobster.cpp" />
-    <ClCompile Include="src\GameSetup.cpp" />
-    <ClCompile Include="src\GodDebugComp.cpp" />
-    <ClCompile Include="src\ProjectilePath.cpp" />
+    <ClCompile Include="PlanetThing.cpp" />
+    <ClCompile Include="source\Camera.cpp" />
+    <ClCompile Include="source\CelestialBody.cpp" />
+    <ClCompile Include="source\LocalPlayerController.cpp" />
+    <ClCompile Include="source\NewtonianGravity.cpp" />
+    <ClCompile Include="source\PathFinder\AStar.cpp" />
+    <ClCompile Include="source\PathFinder\Dijkstra.cpp" />
+    <ClCompile Include="source\PathFinder\Node.cpp" />
+    <ClCompile Include="source\GameSetup.cpp" />
+    <ClCompile Include="source\GodDebugComp.cpp" />
+    <ClCompile Include="source\ProjectilePath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -110,19 +112,20 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
-    <ClInclude Include="include\Camera.h" />
-    <ClInclude Include="include\DbgImgui.h" />
-    <ClInclude Include="include\GameClient.h" />
-    <ClInclude Include="include\GameSetup.h" />
-    <ClInclude Include="include\GodDebugComp.h" />
-    <ClInclude Include="include\NetworkUtils.h" />
+    <ClInclude Include="include\Blackboard.hpp" />
+    <ClInclude Include="include\Camera.hpp" />
+    <ClInclude Include="include\CelestialBody.hpp" />
+    <ClInclude Include="include\DbgImgui.hpp" />
+    <ClInclude Include="include\GameSetup.hpp" />
+    <ClInclude Include="include\GodDebugComp.hpp" />
+    <ClInclude Include="include\LocalPlayerController.hpp" />
+    <ClInclude Include="include\NewtonianGravity.hpp" />
     <ClInclude Include="include\PathFinder\AStar.h" />
     <ClInclude Include="include\PathFinder\Dijkstra.h" />
     <ClInclude Include="include\PathFinder\Node.h" />
     <ClInclude Include="include\PathFinder\PathAlgorithm.h" />
     <ClInclude Include="include\PathFinder\PathFinder.h" />
-    <ClInclude Include="include\ProjectilePath.h" />
-    <ClInclude Include="include\ServerPackets.h" />
+    <ClInclude Include="include\ProjectilePath.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
