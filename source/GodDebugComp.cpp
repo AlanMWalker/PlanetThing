@@ -1,12 +1,13 @@
-#include "GodDebugComp.h"
 #include <Input\KInput.h>
 #include <KApplication.h>
 
-#include "ClientPoll.h"
-#include "PlayerLocomotive.h"
-#include "GameSetup.h"
-#include "ServerPoll.h"
-#include "ClientPoll.h"
+#include "GodDebugComp.hpp"
+#include "PlayerLocomotive.hpp"
+#include "GameSetup.hpp"
+
+//#include "ServerPoll.hpp"
+//#include "ClientPoll.hpp"
+
 using namespace Krawler;
 using namespace Krawler::Input;
 

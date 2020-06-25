@@ -1,3 +1,5 @@
+#pragma once 
+
 #include <KComponent.h>
 
 class LocalPlayerController :

@@ -6,7 +6,7 @@
 #include <KApplication.h>
 #include <Utilities\KDebug.h>
 
-#include "GameSetup.h"
+#include "GameSetup.hpp"
 
 #ifdef _DEBUG
 // CRT 

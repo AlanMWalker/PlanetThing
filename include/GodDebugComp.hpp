@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DbgImgui.h"
+#include "DbgImgui.hpp"
 
 #include <Krawler.h>
 #include <Components\KCSprite.h>

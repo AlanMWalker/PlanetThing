@@ -1,6 +1,5 @@
-#include <Camera.h>
-
 #include <KApplication.h>
+#include "Camera.hpp"
 
 using namespace Krawler;
 

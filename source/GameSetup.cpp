@@ -1,4 +1,4 @@
-#include <GameSetup.h>
+#include "GameSetup.hpp"
 // STD LIB
 #include <chrono>
 
@@ -6,13 +6,13 @@
 #include <Krawler.h>
 #include <KApplication.h>
 #include <AssetLoader\KAssetLoader.h>
-#include "DbgImgui.h"
+#include "DbgImgui.hpp"
 
 #include <Components/KCBody.h>
 #include <Components/KCCircleCollider.h>
 
 // components
-#include "GodDebugComp.h"
+#include "GodDebugComp.hpp"
 
 #include <SFML\Graphics\Text.hpp>
 

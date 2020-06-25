@@ -1,6 +1,5 @@
-#include "LocalPlayerController.h"
-
 #include <KApplication.h>
+#include "LocalPlayerController.hpp"
 
 using namespace Krawler;
 

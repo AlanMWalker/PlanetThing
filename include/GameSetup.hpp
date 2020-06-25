@@ -6,7 +6,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "ProjectilePath.h"
+#include "ProjectilePath.hpp"
 
 namespace sf
 {
