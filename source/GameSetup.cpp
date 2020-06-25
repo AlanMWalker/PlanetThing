@@ -33,9 +33,9 @@ static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
 
 Colour genColour()
 {
-	const float r = roundf((Maths::RandFloat() * 127) + 127);
-	const float g = roundf((Maths::RandFloat() * 127) + 127);
-	const float b = roundf((Maths::RandFloat() * 127) + 127);
+	const uint8 r = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
+	const uint8 g = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
+	const uint8 b = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
 
 	return Colour(r, g, b, 255);
 }

@@ -79,8 +79,8 @@ private:
 	ProjectilePath* m_pPath = nullptr; 
 	sf::View m_defaultView;
 
-	Krawler::KEntity* m_pObject;
-	Krawler::KEntity* m_pBackground;
+	Krawler::KEntity* m_pObject = nullptr;
+	Krawler::KEntity* m_pBackground = nullptr;
 	sf::Shader* m_pBackgroundShader = nullptr;
 	Krawler::Physics::KPhysicsWorld2D* m_pPhysicsWorld = nullptr;
 	
