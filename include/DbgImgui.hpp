@@ -27,10 +27,16 @@ public:
 		Krawler::KApplication::getApp()->subscribeToEventQueue(processEvent);
 		Krawler::KApplication::getApp()->getRenderer()->subscribeLastDrawCallback(subLastDraw);
 		m_bWasInitSuccessful = true;
+
+		// Sorry if there's any errors here, I translated this back by hand.
+		auto& io = ImGui::GetIO();
+		m_pImguiFont = io.Fonts->AddFontFromFileTTF("res/font//ChakraPetch-SemiBold.ttf", 15.0f);
 		setStyle();
 
 		return Krawler::KInitStatus::Success;
 	}
+
+	ImFont* getImguiFont() { return m_pImguiFont; }
 
 	virtual void cleanUp() override
 	{
@@ -214,4 +220,7 @@ private:
 	bool m_bWasInitSuccessful = false;
 	bool m_bBeginCalled = false;
 	bool m_bEndCalled = false;
+
+	ImFont* m_pImguiFont = nullptr;
+
 };
