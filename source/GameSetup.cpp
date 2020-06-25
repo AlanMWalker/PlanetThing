@@ -98,6 +98,9 @@ KInitStatus GameSetup::init()
 	m_pBackground = GET_SCENE()->addEntityToScene();
 	m_pBackground->addComponent(new KCSprite(m_pBackground, Vec2f(GET_APP()->getWindowSize())));
 
+
+	m_playerController = new LocalPlayerController(m_entities[0]->getComponent<CelestialBody>());
+
 	return KInitStatus::Success;
 }
 

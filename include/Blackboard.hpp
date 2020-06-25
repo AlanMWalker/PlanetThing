@@ -12,7 +12,7 @@ namespace Blackboard
 	 // Distances 
 	 constexpr float PLANET_RADIUS = 64.0f;
 	 constexpr float OBJECT_RADIUS = 8.0f;
-	 constexpr float PLAYER_ORBIT_RADIUS = 20.0f;
+	 constexpr float PLAYER_ORBIT_RADIUS = 50.0f;
 
 	 // Populations 
 	 constexpr Krawler::int32 PLANETS_COUNT = 2;

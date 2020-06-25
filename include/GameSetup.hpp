@@ -8,6 +8,7 @@
 
 #include "ProjectilePath.hpp"
 #include "NewtonianGravity.hpp"
+#include "LocalPlayerController.hpp"
 
 namespace sf
 {
@@ -83,6 +84,8 @@ private:
 	Krawler::KEntity* m_pBackground = nullptr;
 	sf::Shader* m_pBackgroundShader = nullptr;
 	Krawler::Physics::KPhysicsWorld2D* m_pPhysicsWorld = nullptr;
+	LocalPlayerController* m_playerController = nullptr;
 	
 	NewtonianGravity m_newton;
+
 };

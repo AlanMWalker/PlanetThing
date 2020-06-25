@@ -22,7 +22,8 @@ public:
 	virtual void onEnterScene() override;
 	virtual void fixedTick() override;
 
-	float getMass();
+	float getMass() const;
+	float getRadius() const;
 	Krawler::Vec2f getCentre();
 	bool isActive();
 	BodyType getBodyType() const;

@@ -62,9 +62,14 @@ void CelestialBody::fixedTick()
 
 }
 
-float CelestialBody::getMass()
+float CelestialBody::getMass() const
 {
 	return m_mass;
+}
+
+float CelestialBody::getRadius() const
+{
+	return m_radius;
 }
 
 Vec2f CelestialBody::getCentre()
