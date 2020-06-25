@@ -31,14 +31,6 @@ static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
 	d.entityB->getComponent<KCSprite>()->setColour(Colour::Magenta);
 };
 
-Colour genColour()
-{
-	const uint8 r = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
-	const uint8 g = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
-	const uint8 b = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
-
-	return Colour(r, g, b, 255);
-}
 
 GameSetup::GameSetup(Krawler::KEntity* pEntity)
 	: KComponentBase(pEntity)
@@ -73,13 +65,16 @@ KInitStatus GameSetup::init()
 		if (i < PLANETS_COUNT)
 		{
 			celestial = new CelestialBody(m_entities[i],
-				CelestialBody::BodyType::Planet
+				CelestialBody::BodyType::Planet,
+				*m_pPath
+
 			);
 		}
 		else
 		{
 			celestial = new CelestialBody(m_entities[i],
-				CelestialBody::BodyType::Satellite
+				CelestialBody::BodyType::Satellite,
+				*m_pPath
 			);
 		}
 
@@ -110,7 +105,11 @@ void GameSetup::onEnterScene()
 	//m_pBackground->getComponent<KCRenderableBase>()->setShader(m_pBackgroundShader);
 	m_pBackground->getComponent<KCRenderableBase>()->setRenderLayer(-1);
 	m_pBackground->getComponent<KCSprite>()->setColour(Colour::Black);
+
+
 	m_defaultView = GET_APP()->getRenderWindow()->getView();
+	m_defaultView.setCenter(m_entities[0]->m_pTransform->getPosition());
+	GET_APP()->getRenderWindow()->setView(m_defaultView);
 }
 
 void GameSetup::tick()

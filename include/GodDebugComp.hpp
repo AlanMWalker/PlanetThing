@@ -31,7 +31,6 @@ private:
 	void handleImgui();
 
 	imguicomp* m_pImgui = nullptr;
-	ImFont* m_pImguiFont = nullptr;
 
 	float m_freeCameraMoveSpeed = 50.0f;
 

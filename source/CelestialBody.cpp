@@ -5,19 +5,31 @@
 
 #include "CelestialBody.hpp"
 #include "Blackboard.hpp"
+#include "ProjectilePath.hpp" 
 
 using namespace Krawler;
 using namespace Krawler::Components;
 using namespace Blackboard;
 
-CelestialBody::CelestialBody(Krawler::KEntity* pEntity, CelestialBody::BodyType bodyType)
-	: KComponentBase(pEntity), m_bodyType(bodyType)
+Colour genColour()
+{
+	const uint8 r = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
+	const uint8 g = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
+	const uint8 b = static_cast<int8>(roundf((Maths::RandFloat() * 127) + 127));
+
+	return Colour(r, g, b, 255);
+}
+
+
+CelestialBody::CelestialBody(Krawler::KEntity* pEntity, CelestialBody::BodyType bodyType, ProjectilePath& projPath)
+	: KComponentBase(pEntity), m_bodyType(bodyType), m_projPath(projPath)
 {
 
 }
 
 KInitStatus CelestialBody::init()
 {
+	m_colour = genColour();
 	switch (m_bodyType)
 	{
 	default:
@@ -60,6 +72,11 @@ void CelestialBody::fixedTick()
 	// Handle putting path on screen
 	// every certain time period
 
+	if (m_bodyType != BodyType::Planet || m_bodyType != BodyType::Moon)
+	{
+		m_projPath.addPathPoint(getEntity()->m_pTransform->getPosition(), m_colour);
+	}
+
 }
 
 float CelestialBody::getMass() const
@@ -82,7 +99,7 @@ bool CelestialBody::isActive()
 	return getEntity()->isActive();
 }
 
-void CelestialBody::spawnAtPoint(const Vec2f& position)
+void CelestialBody::spawnAtPoint(const Vec2f& position, const Vec2f& velocity)
 {
 	// Grab spawn code from GameSetup
 
@@ -92,7 +109,7 @@ void CelestialBody::spawnAtPoint(const Vec2f& position)
 
 	m_pBody->setRotation(0.0f);
 	m_pBody->setPosition(position);
-	m_pBody->setLinearVelocity(Vec2f(0.0f, 0.0f));
+	m_pBody->setLinearVelocity(velocity);
 	m_pBody->setActivity(true);
 
 	//const Vec2f Position(getEntity()->m_pTransform->getPosition());

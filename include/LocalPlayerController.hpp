@@ -4,6 +4,9 @@
 
 #include "CelestialBody.hpp"
 
+
+class imguicomp;
+
 class LocalPlayerController :
 	public Krawler::KComponentBase
 {
@@ -13,12 +16,20 @@ public:
 	~LocalPlayerController() = default;
 
 	virtual Krawler::KInitStatus init() override;
-	virtual void onEnterScene() override; 
-	virtual void tick() override; 
+	virtual void onEnterScene() override;
+	virtual void tick() override;
 
-private: 
+	float m_shotStrength = 50.0f;
+
+private:
 	void updatePos();
+	void constructProjectileList();
 
-	float theta = 0.0f;
+	imguicomp* m_pImgui = nullptr;
+	float m_theta = -90.0f;
 	CelestialBody* m_pHostPlanet = nullptr;
+
+
+	std::vector<std::reference_wrapper<CelestialBody>> m_celestialbodies;
+
 };

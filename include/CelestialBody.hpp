@@ -3,6 +3,7 @@
 #include <KComponent.h>
 #include <Components/KCBody.h>
 
+class ProjectilePath;
 
 class CelestialBody :
 	public Krawler::KComponentBase
@@ -15,7 +16,7 @@ public:
 		Planet = 2
 	};
 
-	CelestialBody(Krawler::KEntity* pEntity, BodyType bodyType);
+	CelestialBody(Krawler::KEntity* pEntity, BodyType bodyType, ProjectilePath& projPath);
 	~CelestialBody() = default;
 
 	virtual Krawler::KInitStatus init() override;
@@ -28,12 +29,12 @@ public:
 	bool isActive();
 	BodyType getBodyType() const;
 
-	void spawnAtPoint(const Krawler::Vec2f& position);
+	void spawnAtPoint(const Krawler::Vec2f& position, const Krawler::Vec2f& velocity = Krawler::Vec2f());
 	void applyForce(const Krawler::Vec2f& v);
 
 	float getDensity();
 
-	Krawler::Vec2f getVelocityInPixels(); 
+	Krawler::Vec2f getVelocityInPixels();
 	Krawler::Vec2f getVelocityInMetres();
 
 private:
@@ -44,9 +45,11 @@ private:
 
 	const BodyType m_bodyType;
 	float m_mass = 0.0f;
-	float m_radius = 0.0f; 
+	float m_radius = 0.0f;
 
 	Krawler::Components::KCBody* m_pBody = nullptr;
-
+	ProjectilePath& m_projPath;
 	sf::Clock c;
+	Krawler::Colour m_colour;
+
 };

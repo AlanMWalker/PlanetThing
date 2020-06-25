@@ -27,9 +27,7 @@ void GodDebugComp::onEnterScene()
 	auto pRenderer = GET_APP()->getRenderer();
 	auto list = GET_SCENE()->getAllocatedEntityList();
 
-	// Sorry if there's any errors here, I translated this back by hand.
-	auto& io = ImGui::GetIO();
-	m_pImguiFont = io.Fonts->AddFontFromFileTTF("res/font//ChakraPetch-SemiBold.ttf", 15.0f);
+
 	ImGui::SFML::UpdateFontTexture();
 
 }
@@ -61,7 +59,7 @@ void GodDebugComp::handleImgui()
 	static bool bShowTileNodes = false;
 
 	m_pImgui->update();
-	ImGui::PushFont(m_pImguiFont);
+	ImGui::PushFont(m_pImgui->getImguiFont());
 	m_pImgui->begin("-- God Debug Tools --");
 	//ImGui::SliderFloat("Planet Mass (KG)", &gameSetup->PLANET_MASS, 9.8e13 / 2, 9.8e13 * 2);
 	//ImGui::SliderFloat("Object Mass (KG)", &gameSetup->OBJECT_MASS, 200 / 10.0f, 200 * 10.0f);
