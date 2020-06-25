@@ -91,6 +91,7 @@
     <ClCompile Include="source\Camera.cpp" />
     <ClCompile Include="source\CelestialBody.cpp" />
     <ClCompile Include="source\LocalPlayerController.cpp" />
+    <ClCompile Include="source\MenuSetup.cpp" />
     <ClCompile Include="source\NewtonianGravity.cpp" />
     <ClCompile Include="source\PathFinder\AStar.cpp" />
     <ClCompile Include="source\PathFinder\Dijkstra.cpp" />
@@ -119,6 +120,7 @@
     <ClInclude Include="include\GameSetup.hpp" />
     <ClInclude Include="include\GodDebugComp.hpp" />
     <ClInclude Include="include\LocalPlayerController.hpp" />
+    <ClInclude Include="include\MenuSetup.h" />
     <ClInclude Include="include\NewtonianGravity.hpp" />
     <ClInclude Include="include\PathFinder\AStar.h" />
     <ClInclude Include="include\PathFinder\Dijkstra.h" />

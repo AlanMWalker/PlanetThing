@@ -12,7 +12,7 @@ using namespace Krawler::Input;
 using namespace Krawler::Components;
 
 LocalPlayerController::LocalPlayerController(CelestialBody* pHost)
-	: KComponentBase(GET_APP()->getCurrentScene()->addEntityToScene()), m_pHostPlanet(pHost)
+	: KComponentBase(GET_SCENE_NAMED(Blackboard::GameScene)->addEntityToScene()), m_pHostPlanet(pHost)
 {
 	getEntity()->setTag(L"Player_Satellite");
 	getEntity()->addComponent(this);
@@ -24,7 +24,7 @@ KInitStatus LocalPlayerController::init()
 	getEntity()->addComponent(new KCSprite(getEntity(), Vec2f(24, 24)));
 	getEntity()->m_pTransform->setOrigin(12, 12);
 
-	auto God = GET_SCENE()->findEntity(L"God");
+	auto God = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
 	KCHECK(God);
 	m_pImgui = God->getComponent<imguicomp>();
 

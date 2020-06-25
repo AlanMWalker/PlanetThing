@@ -6,6 +6,7 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "Blackboard.hpp"
 #include "ProjectilePath.hpp"
 #include "NewtonianGravity.hpp"
 #include "LocalPlayerController.hpp"
@@ -54,7 +55,7 @@ class GameSetup :
 {
 public:
 	
-	GameSetup(Krawler::KEntity* pEntity);
+	GameSetup();
 	~GameSetup();
 
 	virtual Krawler::KInitStatus init() override;
@@ -65,6 +66,9 @@ public:
 
 	float colScale = 10000;
 	std::vector<Krawler::KEntity*>& getCelestialBodies() { return m_entities; }
+
+	// Invoked by MenuSetup before it transitions into the singleplayer game
+	void setAIPlayerCount(Krawler::int32 count);
 
 private:
 
@@ -88,4 +92,5 @@ private:
 	
 	NewtonianGravity m_newton;
 
+	Krawler::int32 m_aiCount = Blackboard::MIN_AI;
 };

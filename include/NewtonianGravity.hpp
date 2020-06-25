@@ -19,4 +19,6 @@ private:
 
 	std::vector<std::reference_wrapper<CelestialBody>> m_celestialBodies;
 
+	
+
 };

@@ -7,6 +7,8 @@
 #include <Utilities\KDebug.h>
 
 #include "GameSetup.hpp"
+#include "MenuSetup.h"
+#include "Blackboard.hpp"
 
 #ifdef _DEBUG
 // CRT 
@@ -38,12 +40,26 @@ int main(void)
 	StartupEngine(&initApp);
 
 	auto app = KApplication::getApp();
-	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Main_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));
-	app->getSceneDirector().addScene(new KScene(std::wstring(KTEXT("Menu_Scene")), Rectf(0, 0, (70 * 32), (40 * 32))));
-	app->getSceneDirector().setStartScene(KTEXT("Main_Scene"));
-	auto& entity = *app->getSceneDirector().getCurrentScene()->addEntityToScene();
-	
-	entity.addComponent(new GameSetup(&entity));
+	app->getSceneDirector().addScene(new KScene(Blackboard::MenuScene, Rectf(0, 0, (70 * 32), (40 * 32))));
+	app->getSceneDirector().addScene(new KScene(Blackboard::GameScene, Rectf(0, 0, (70 * 32), (40 * 32))));
+	app->getSceneDirector().setStartScene(Blackboard::MenuScene);
+
+	// Create menu and game setup
+	// (don't need to delete as they will
+	// be destroyed by KRAWLER)
+	GameSetup* g = new GameSetup;
+	MenuSetup* m = new MenuSetup(*g);
+
+	//{
+	//	auto& entity = *app->getSceneDirector().getSceneByName(L"Menu_Scene")->addEntityToScene();
+	//	entity.addComponent(new GameSetup(&entity));
+	//	
+	//}
+
+	//{ // Setup the main game
+	//	auto& entity = *app->getSceneDirector().getSceneByName(L"Main_Scene")->addEntityToScene();
+	//	entity.addComponent(new GameSetup(&entity));
+	//}
 
 	InitialiseSubmodules();
 	RunApplication();
