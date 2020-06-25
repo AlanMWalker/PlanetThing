@@ -1,8 +1,14 @@
+
 #pragma once
 #include "Krawler.h"
 
 namespace Blackboard
 {
+	// Scene Names
+
+	static const wchar_t* MenuScene = L"Menu_Scene";
+	static const wchar_t* GameScene = L"Main_Scene";
+
 	const float G = 6.67e-11;
 
 	// Masses
@@ -17,7 +23,7 @@ namespace Blackboard
 	constexpr float PLAYER_ORBIT_RADIUS = 50.0f;
 
 	// Populations 
-	constexpr Krawler::int32 PLANETS_COUNT = 2;
+	constexpr Krawler::int32 PLANETS_COUNT = 5;
 	constexpr Krawler::int32 OBJECTS_COUNT = 20;
 
 	constexpr float PLAYER_ENTITY_ROTATION_SPEED = 50.0f;

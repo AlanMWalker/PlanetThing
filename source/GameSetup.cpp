@@ -32,10 +32,10 @@ static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
 };
 
 
-GameSetup::GameSetup(Krawler::KEntity* pEntity)
-	: KComponentBase(pEntity)
+GameSetup::GameSetup()
+	: KComponentBase(GET_APP()->getSceneDirector().getSceneByName(Blackboard::GameScene)->addEntityToScene())
 {
-
+	getEntity()->addComponent(this);
 }
 
 GameSetup::~GameSetup()
@@ -55,7 +55,8 @@ KInitStatus GameSetup::init()
 	m_pPhysicsWorld->setPPM(PPM);
 
 	const uint32 TotalCelestial = PLANETS_COUNT + OBJECTS_COUNT;
-	auto created = GET_SCENE()->addMultipleEntitiesToScene(TotalCelestial, m_entities);
+	auto scene = GET_SCENE_NAMED(Blackboard::GameScene);
+	auto created = scene->addMultipleEntitiesToScene(TotalCelestial, m_entities);
 
 	KCHECK(created);
 
@@ -90,7 +91,7 @@ KInitStatus GameSetup::init()
 	line.setCol(Colour::Magenta);
 
 
-	m_pBackground = GET_SCENE()->addEntityToScene();
+	m_pBackground = scene->addEntityToScene();
 	m_pBackground->addComponent(new KCSprite(m_pBackground, Vec2f(GET_APP()->getWindowSize())));
 
 

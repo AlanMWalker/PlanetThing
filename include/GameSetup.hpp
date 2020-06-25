@@ -54,7 +54,7 @@ class GameSetup :
 {
 public:
 	
-	GameSetup(Krawler::KEntity* pEntity);
+	GameSetup();
 	~GameSetup();
 
 	virtual Krawler::KInitStatus init() override;
@@ -87,5 +87,4 @@ private:
 	LocalPlayerController* m_playerController = nullptr;
 	
 	NewtonianGravity m_newton;
-
 };
