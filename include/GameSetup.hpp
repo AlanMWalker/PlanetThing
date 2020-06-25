@@ -69,9 +69,6 @@ public:
 	virtual void fixedTick() override; 
 	virtual void cleanUp() override;
 
-	float OBJECT_MASS = 200.0f;
-	float PLANET_MASS = 9.8e13f;
-	float G = 6.67e-11;
 	float colScale = 10000;
 	std::vector<SpaceObject>& getSpaceThings() { return m_spaceThings; }
 
@@ -83,13 +80,7 @@ private:
 	void createGod();
 	void zoomAt(const Krawler::Vec2f& pos, float zoom);
 	void setBackgroundShaderParams();
-
-	const float PLANET_RADIUS = 1;
-	const float OBJECT_RADIUS = 0.5f;//8.0f;
-
-
-	const int32 PLANETS_COUNT = 2;
-	const int32 OBJECTS_COUNT = 20;
+	std::vector<Krawler::KEntity*> m_entities;
 
 	DbgLineDraw line;
 	ProjectilePath* m_pPath = nullptr; 

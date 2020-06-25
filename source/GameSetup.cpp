@@ -16,12 +16,16 @@
 
 #include <SFML\Graphics\Text.hpp>
 
+#include "Blackboard.hpp"
+
 using namespace Krawler;
 using namespace Krawler::Input;
 using namespace Krawler::Components;
 using namespace Krawler::Maths;
 
 using namespace std;
+
+using namespace Blackboard;
 
 static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
 {
@@ -59,6 +63,8 @@ KInitStatus GameSetup::init()
 	m_pPhysicsWorld = &GET_APP()->getPhysicsWorld();
 	m_pPhysicsWorld->setGravity(Vec2f(0.0f, 0.0f));
 	m_pPhysicsWorld->setPPM(PPM);
+
+	GET_SCENE()->addMultipleEntitiesToScene(PLANETS_COUNT + OBJECTS_COUNT, m_entities);
 
 	for (int i = 0; i < PLANETS_COUNT; ++i)
 	{

@@ -63,11 +63,11 @@ void GodDebugComp::handleImgui()
 	m_pImgui->update();
 	ImGui::PushFont(m_pImguiFont);
 	m_pImgui->begin("-- God Debug Tools --");
-	ImGui::SliderFloat("Planet Mass (KG)", &gameSetup->PLANET_MASS, 9.8e13 / 2, 9.8e13 * 2);
-	ImGui::SliderFloat("Object Mass (KG)", &gameSetup->OBJECT_MASS, 200 / 10.0f, 200 * 10.0f);
-	double x = gameSetup->G;
-	ImGui::InputDouble("Big G (m^3 kg^-1 s^-2)", &x);//, 6.67e-11, 6.67e-9);
-	gameSetup->G = x;
+	//ImGui::SliderFloat("Planet Mass (KG)", &gameSetup->PLANET_MASS, 9.8e13 / 2, 9.8e13 * 2);
+	//ImGui::SliderFloat("Object Mass (KG)", &gameSetup->OBJECT_MASS, 200 / 10.0f, 200 * 10.0f);
+	//double x = gameSetup->G;
+	//ImGui::InputDouble("Big G (m^3 kg^-1 s^-2)", &x);//, 6.67e-11, 6.67e-9);
+	//gameSetup->G = x;
 	//ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
 
 	ImGui::Separator();
