@@ -9,6 +9,11 @@
 using namespace Krawler;
 using namespace Blackboard;
 
+NewtonianGravity::~NewtonianGravity()
+{
+	m_celestialBodies.clear();
+}
+
 void NewtonianGravity::addCelestialBody(CelestialBody& celestialBody)
 {
 	m_celestialBodies.push_back(celestialBody);
@@ -50,14 +55,14 @@ void NewtonianGravity::applyForces()
 
 			const float FORCE = G * pair.first.getMass() * pair.second.getMass() / ((distance * distance));
 			if (pair.first.getBodyType() != CelestialBody::BodyType::Planet &&
-				pair.first.getBodyType() == CelestialBody::BodyType::Moon)
+				pair.first.getBodyType() != CelestialBody::BodyType::Moon)
 			{
 				//m_pPath->addPathPoint(pair.first->pEntity->m_pTransform->getPosition(), pair.first->col);
 				pair.first.applyForce(FORCE * Normalise(dir));
 			}
 
 			if (pair.second.getBodyType() != CelestialBody::BodyType::Planet &&
-				pair.second.getBodyType() == CelestialBody::BodyType::Moon)
+				pair.second.getBodyType() != CelestialBody::BodyType::Moon)
 			{
 				//m_pPath->addPathPoint(pair.second->pEntity->m_pTransform->getPosition(), pair.second->col);
 				pair.second.applyForce(-FORCE * Normalise(dir));

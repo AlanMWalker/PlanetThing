@@ -71,13 +71,13 @@ void GodDebugComp::handleImgui()
 	//ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
 
 	ImGui::Separator();
-	static sf::Clock c;
-	for (auto& so : gameSetup->getSpaceThings())
-	{
+	//static sf::Clock c;
+	//for (auto& so : gameSetup->getSpaceThings())
+	//{
 
-		//if (!so.bIsPlanet)
-			ImGui::Text("%s is travelling at %f m/s", TO_ASTR(so.pEntity->getTag()).c_str(), GetLength(so.pPhysicsBody->getLinearVelocity()));
-	}
+	//	//if (!so.bIsPlanet)
+	//		ImGui::Text("%s is travelling at %f m/s", TO_ASTR(so.pEntity->getTag()).c_str(), GetLength(so.pPhysicsBody->getLinearVelocity()));
+	//}
 	ImGui::Separator();
 	ImGui::SliderFloat("Gravity map colour multiplier", &gameSetup->colScale, 1.0f, 100000.0f);
 	ImGui::PopFont();

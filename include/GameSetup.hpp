@@ -7,6 +7,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "ProjectilePath.hpp"
+#include "NewtonianGravity.hpp"
 
 namespace sf
 {
@@ -45,21 +46,13 @@ struct DbgLineDraw
 
 };
 
+class CelestialBody;
+
 class GameSetup :
 	public Krawler::KComponentBase
 {
 public:
-	struct SpaceObject
-	{
-		float mass;
-		float radius;
-		Krawler::Components::KCBody* pPhysicsBody;
-		Krawler::KEntity* pEntity;
-		bool bIsPlanet;
-		Krawler::Colour col = Krawler::Colour::White;
-		float getDensity();
-	};
-
+	
 	GameSetup(Krawler::KEntity* pEntity);
 	~GameSetup();
 
@@ -70,7 +63,7 @@ public:
 	virtual void cleanUp() override;
 
 	float colScale = 10000;
-	std::vector<SpaceObject>& getSpaceThings() { return m_spaceThings; }
+	std::vector<Krawler::KEntity*>& getCelestialBodies() { return m_entities; }
 
 private:
 
@@ -84,13 +77,12 @@ private:
 
 	DbgLineDraw line;
 	ProjectilePath* m_pPath = nullptr; 
-	std::vector<SpaceObject> m_spaceThings;
 	sf::View m_defaultView;
 
 	Krawler::KEntity* m_pObject;
 	Krawler::KEntity* m_pBackground;
-
 	sf::Shader* m_pBackgroundShader = nullptr;
-
 	Krawler::Physics::KPhysicsWorld2D* m_pPhysicsWorld = nullptr;
+	
+	NewtonianGravity m_newton;
 };

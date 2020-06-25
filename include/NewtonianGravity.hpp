@@ -9,6 +9,9 @@ class NewtonianGravity
 {
 public:
 
+	NewtonianGravity() = default; 
+	~NewtonianGravity();
+
 	void addCelestialBody(CelestialBody& celestialBody);
 	void applyForces();
 
