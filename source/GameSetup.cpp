@@ -13,7 +13,6 @@
 // components
 #include "GodDebugComp.hpp"
 #include "DbgImgui.hpp"
-#include "Blackboard.hpp"
 #include "CelestialBody.hpp"
 
 using namespace Krawler;
@@ -46,7 +45,7 @@ GameSetup::~GameSetup()
 KInitStatus GameSetup::init()
 {
 	createGod();
-	GET_APP()->setPrintFPS(false);
+	GET_APP()->setPrintFPS(true);
 	GET_APP()->getRenderer()->setSortType(Renderer::KRenderSortType::LayerSort);
 
 	// No gravity pls 
@@ -97,6 +96,11 @@ KInitStatus GameSetup::init()
 
 	m_playerController = new LocalPlayerController(m_entities[0]->getComponent<CelestialBody>());
 
+	auto testMoon = scene->addEntityToScene();
+	auto celestial = new CelestialBody(testMoon, CelestialBody::BodyType::Moon, *m_pPath,
+		m_entities[1]->getComponent<CelestialBody>());
+	testMoon->addComponent(celestial);
+	m_newton.addCelestialBody(*celestial);
 	return KInitStatus::Success;
 }
 
@@ -109,8 +113,78 @@ void GameSetup::onEnterScene()
 
 
 	m_defaultView = GET_APP()->getRenderWindow()->getView();
-	m_defaultView.setCenter(m_entities[0]->m_pTransform->getPosition());
+	//m_defaultView.setCenter(m_entities[0]->m_pTransform->getPosition());
 	GET_APP()->getRenderWindow()->setView(m_defaultView);
+
+
+	std::vector<CelestialBody*> planetsFound;
+	int count = 0;
+	for (auto e : m_entities)
+	{
+		auto celestial = e->getComponent<CelestialBody>();
+		if (celestial)
+		{
+			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
+			{
+				if (count > m_aiCount)
+				{
+					celestial->setInActive();
+				}
+				else
+				{
+					planetsFound.push_back(celestial);
+					++count;
+				}
+			}
+		}
+	}
+
+
+	const float boundRadius = Blackboard::PLANET_RADIUS * 3.5f;
+	std::vector<Vec2f> points;
+	points.resize(planetsFound.size());
+
+	auto doesOverlap = [&points, &boundRadius](const Vec2f& p) -> bool
+	{
+		for (auto& v : points)
+		{
+			if (&v == &p)
+			{
+				continue;
+			}
+
+			const bool isBelow = GetSquareLength(v - p) < boundRadius * boundRadius;
+			if (isBelow)
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+
+	auto randPoint = [&boundRadius]() -> Vec2f
+	{
+		return Vec2f(RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().x - boundRadius * 2),
+			RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().y - boundRadius * 2));
+	};
+
+	for (auto& v : points)
+	{
+		v = randPoint();
+	}
+
+	for (auto& v : points)
+	{
+		while (doesOverlap(v))
+		{
+			v = randPoint();
+		}
+	}
+
+	for (uint32 i = 0; i < planetsFound.size(); ++i)
+	{
+		planetsFound[i]->spawnAtPoint(points[i]);
+	}
 }
 
 void GameSetup::tick()
@@ -131,7 +205,7 @@ void GameSetup::tick()
 
 	if (bTailObject)
 	{
-		if (objIdx + (unsigned)(PLANETS_COUNT) > m_entities.size())
+		if (objIdx + (unsigned)(PLANETS_COUNT) >= m_entities.size())
 		{
 			objIdx = 0;
 		}
@@ -188,6 +262,11 @@ void GameSetup::fixedTick()
 void GameSetup::cleanUp()
 {
 	m_entities.clear();
+}
+
+void GameSetup::setAIPlayerCount(int32 count)
+{
+	m_aiCount = count;
 }
 
 void GameSetup::createGod()

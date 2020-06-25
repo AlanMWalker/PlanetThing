@@ -16,7 +16,7 @@ public:
 		Planet = 2
 	};
 
-	CelestialBody(Krawler::KEntity* pEntity, BodyType bodyType, ProjectilePath& projPath);
+	CelestialBody(Krawler::KEntity* pEntity, BodyType bodyType, ProjectilePath& projPath, CelestialBody* pHostPlanet = nullptr);
 	~CelestialBody() = default;
 
 	virtual Krawler::KInitStatus init() override;
@@ -37,17 +37,30 @@ public:
 	Krawler::Vec2f getVelocityInPixels();
 	Krawler::Vec2f getVelocityInMetres();
 
+	void setInActive();
+
+	CelestialBody* getHostPlanet() { return m_pHostPlanet; }
+
+	float getOrbitTheta() const { return m_orbitTheta; }
+	void setOrbitTheta(float theta) { m_orbitTheta = theta; }
+
+	void setPosition(const Krawler::Vec2f& pos);
+
 private:
 
 	void setupPlanet();
 	void setupSatellite();
+	void setupMoon();
 	//void setupMoon(); Not yet implemented
 
 	const BodyType m_bodyType;
+
 	float m_mass = 0.0f;
 	float m_radius = 0.0f;
+	float m_orbitTheta = 0.0f; // only for moons
 
 	Krawler::Components::KCBody* m_pBody = nullptr;
+	CelestialBody* m_pHostPlanet;
 	ProjectilePath& m_projPath;
 	sf::Clock c;
 	Krawler::Colour m_colour;

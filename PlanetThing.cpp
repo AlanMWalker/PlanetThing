@@ -48,7 +48,7 @@ int main(void)
 	// (don't need to delete as they will
 	// be destroyed by KRAWLER)
 	GameSetup* g = new GameSetup;
-	MenuSetup* m = new MenuSetup;
+	MenuSetup* m = new MenuSetup(*g);
 
 	//{
 	//	auto& entity = *app->getSceneDirector().getSceneByName(L"Menu_Scene")->addEntityToScene();

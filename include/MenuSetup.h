@@ -9,12 +9,14 @@
 #include "DbgImgui.hpp"
 
 
+class GameSetup; 
+
 class MenuSetup :
 	public Krawler::KComponentBase
 {
 public:
 
-	MenuSetup();
+	MenuSetup(GameSetup& gs);
 	~MenuSetup() = default;
 	
 	virtual Krawler::KInitStatus init() override;
@@ -23,5 +25,5 @@ public:
 private:
 
 	imguicomp* m_pImguiComp = nullptr;
-
+	GameSetup& m_gs;
 };
