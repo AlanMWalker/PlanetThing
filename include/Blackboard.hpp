@@ -26,7 +26,7 @@ namespace Blackboard
 
 	// Populations 
 	constexpr Krawler::int32 PLANETS_COUNT = 5;
-	constexpr Krawler::int32 OBJECTS_COUNT = 100;
+	constexpr Krawler::int32 OBJECTS_COUNT = 10;
 
 	constexpr Krawler::int32 MIN_AI = 1;
 	constexpr Krawler::int32 MAX_AI = 3;
