@@ -26,13 +26,15 @@ namespace Blackboard
 
 	// Populations 
 	constexpr Krawler::int32 PLANETS_COUNT = 5;
+	constexpr Krawler::int32 NETWORKED_PLANETS_COUNT = 3;
+	constexpr Krawler::int32 AI_PLANETS_COUNT = 3;
 	constexpr Krawler::int32 OBJECTS_COUNT = 10;
 
 	constexpr Krawler::int32 MIN_AI = 1;
 	constexpr Krawler::int32 MAX_AI = 3;
 
 	// Time Values
-	constexpr float SATELLITE_ALIVE_TIME = 5.0f; // 5 seconds of alive time
+	constexpr float SATELLITE_ALIVE_TIME = 8.0f; // 5 seconds of alive time
 
 	constexpr float PLAYER_ENTITY_ROTATION_SPEED = 50.0f;
 

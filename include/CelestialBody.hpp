@@ -1,5 +1,7 @@
 #pragma once 
 
+#include <SFML/Audio.hpp>
+
 #include <KComponent.h>
 #include <Components/KCBody.h>
 
@@ -53,8 +55,6 @@ private:
 	void setupSatellite();
 	void setupMoon();
 
-	//void setupMoon(); Not yet implemented
-
 	const BodyType m_bodyType;
 	
 	Krawler::Components::KCColliderBaseCallback m_callBack;
@@ -69,5 +69,8 @@ private:
 	ProjectilePath& m_projPath;
 	sf::Clock m_satelliteAliveClock;
 	Krawler::Colour m_colour;
+
+	sf::Sound m_explosion;
+	sf::Sound m_slightHit;
 
 };

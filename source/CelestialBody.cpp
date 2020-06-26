@@ -39,6 +39,11 @@ CelestialBody::CelestialBody(Krawler::KEntity* pEntity, CelestialBody::BodyType 
 		if (type == BodyType::Moon || type == BodyType::Planet)
 		{
 			setInActive();
+			m_explosion.play();
+		}
+		else
+		{
+			m_slightHit.play();
 		}
 	};
 }
@@ -84,6 +89,12 @@ void CelestialBody::onEnterScene()
 	{
 		getEntity()->getComponent<KCColliderBase>()->subscribeCollisionCallback(&m_callBack);
 	}
+
+	auto sound = ASSET().getSound(L"rock_collide");
+	m_explosion.setBuffer(*sound);
+
+	sound = ASSET().getSound(L"glancing_collide");
+	m_slightHit.setBuffer(*sound);
 }
 
 void CelestialBody::tick()
