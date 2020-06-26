@@ -24,7 +24,25 @@ Colour genColour()
 CelestialBody::CelestialBody(Krawler::KEntity* pEntity, CelestialBody::BodyType bodyType, ProjectilePath& projPath, CelestialBody* pHostPlanet)
 	: KComponentBase(pEntity), m_bodyType(bodyType), m_projPath(projPath), m_pHostPlanet(pHostPlanet)
 {
-
+	m_callBack = [this](const Krawler::KCollisionDetectionData& data) -> void
+	{
+		if (data.entityA != getEntity())
+		{
+			auto type = data.entityA->getComponent<CelestialBody>()->getBodyType();
+			if (type == BodyType::Moon || type == BodyType::Planet)
+			{
+				setInActive();
+			}
+		}
+		else
+		{
+			auto type = data.entityB->getComponent<CelestialBody>()->getBodyType();
+			if (type == BodyType::Moon || type == BodyType::Planet)
+			{
+				setInActive();
+			}
+		}
+	};
 }
 
 KInitStatus CelestialBody::init()
@@ -62,6 +80,11 @@ void CelestialBody::onEnterScene()
 	{
 		pSprite->setTexture(PlanetB);
 		m_pBody->setActivity(false);
+	}
+
+	if (m_bodyType == BodyType::Satellite)
+	{
+		getEntity()->getComponent<KCColliderBase>()->subscribeCollisionCallback(&m_callBack);
 	}
 
 	//pSprite->setColour(so.col);
