@@ -21,6 +21,7 @@ public:
 
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
+	virtual void tick() override;
 	virtual void fixedTick() override;
 
 	float getMass() const;
@@ -66,7 +67,7 @@ private:
 	Krawler::Components::KCBody* m_pBody = nullptr;
 	CelestialBody* m_pHostPlanet;
 	ProjectilePath& m_projPath;
-	sf::Clock c;
+	sf::Clock m_satelliteAliveClock;
 	Krawler::Colour m_colour;
 
 };

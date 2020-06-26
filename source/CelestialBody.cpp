@@ -20,27 +20,25 @@ Colour genColour()
 	return Colour(r, g, b, 255);
 }
 
-
 CelestialBody::CelestialBody(Krawler::KEntity* pEntity, CelestialBody::BodyType bodyType, ProjectilePath& projPath, CelestialBody* pHostPlanet)
 	: KComponentBase(pEntity), m_bodyType(bodyType), m_projPath(projPath), m_pHostPlanet(pHostPlanet)
 {
 	m_callBack = [this](const Krawler::KCollisionDetectionData& data) -> void
 	{
+		BodyType type;
 		if (data.entityA != getEntity())
 		{
-			auto type = data.entityA->getComponent<CelestialBody>()->getBodyType();
-			if (type == BodyType::Moon || type == BodyType::Planet)
-			{
-				setInActive();
-			}
+			type = data.entityA->getComponent<CelestialBody>()->getBodyType();
+
 		}
 		else
 		{
-			auto type = data.entityB->getComponent<CelestialBody>()->getBodyType();
-			if (type == BodyType::Moon || type == BodyType::Planet)
-			{
-				setInActive();
-			}
+			type = data.entityB->getComponent<CelestialBody>()->getBodyType();
+		}
+
+		if (type == BodyType::Moon || type == BodyType::Planet)
+		{
+			setInActive();
 		}
 	};
 }
@@ -86,8 +84,17 @@ void CelestialBody::onEnterScene()
 	{
 		getEntity()->getComponent<KCColliderBase>()->subscribeCollisionCallback(&m_callBack);
 	}
+}
 
-	//pSprite->setColour(so.col);
+void CelestialBody::tick()
+{
+	if (m_bodyType == BodyType::Satellite)
+	{
+		if (m_satelliteAliveClock.getElapsedTime().asSeconds() > SATELLITE_ALIVE_TIME)
+		{
+			setInActive();
+		}
+	}
 }
 
 void CelestialBody::fixedTick()
@@ -125,7 +132,6 @@ bool CelestialBody::isActive()
 void CelestialBody::spawnAtPoint(const Vec2f& position, const Vec2f& velocity)
 {
 	// Grab spawn code from GameSetup
-
 	getEntity()->setActive(true);
 	getEntity()->m_pTransform->setPosition(position);
 	getEntity()->m_pTransform->setRotation(0.0f);
@@ -135,25 +141,7 @@ void CelestialBody::spawnAtPoint(const Vec2f& position, const Vec2f& velocity)
 	m_pBody->setLinearVelocity(velocity);
 	m_pBody->setActivity(true);
 
-	//const Vec2f Position(getEntity()->m_pTransform->getPosition());
-	//m_spaceThings[idx].pPhysicsBody->setPosition(Position);
-	//float randAngle = Radians(RandFloat(0, 360.0f));
-
-	//Vec2f dir = m_spaceThings[0].pEntity->m_pTransform->getPosition() - Position;
-	//float length = GetLength(dir);
-	//dir /= length; // normalise dir 
-	//length /= PPM; // convert to Metres
-	//const Vec2f tangential = RotateVector(dir, 90.0f);
-
-	//// V = ¬/( G * M / r^2);
-	//float vel = sqrtf((G * m_spaceThings[0].mass) / length);
-	//KPrintf(L"Orbital Velocity is %f m/s\n", vel);
-	//float accel = vel / (GET_APP()->getPhysicsDelta());
-	//float forceMangitude = m_spaceThings[idx].mass * accel;
-
-	//Vec2f force = tangential * forceMangitude;
-	//m_spaceThings[idx].pPhysicsBody->setLinearVelocity(vel * tangential);
-	//m_spaceThings[idx].pPhysicsBody->setActivity(true);
+	m_satelliteAliveClock.restart();
 }
 
 CelestialBody::BodyType CelestialBody::getBodyType() const
@@ -204,7 +192,7 @@ void CelestialBody::setupPlanet()
 {
 	m_mass = Maths::RandFloat(PLANET_MASS, PLANET_MASS * 2);
 	m_radius = PLANET_RADIUS;
-	//so.col = genColour();
+
 	getEntity()->setTag(L"Planet");
 
 	const Vec2f bounds(2.0f * PLANET_RADIUS, 2.0f * PLANET_RADIUS);
@@ -235,15 +223,15 @@ void CelestialBody::setupSatellite()
 	m_mass = OBJECT_MASS;
 	m_radius = OBJECT_RADIUS;
 
-	getEntity()->setTag(L"Object");
-	//so.col = genColour();
+	getEntity()->setTag(L"Satellite");
+
 	const Vec2f bounds(2.0f * OBJECT_RADIUS, 2.0f * OBJECT_RADIUS);
 
 	getEntity()->setActive(false);
 	getEntity()->addComponent(new KCSprite(getEntity(), bounds));
 	getEntity()->m_pTransform->setOrigin(Vec2f(OBJECT_RADIUS, OBJECT_RADIUS));
 	getEntity()->addComponent(new KCCircleCollider(getEntity(), OBJECT_RADIUS));
-	//so.pPhysicsBody->setActivity(false);
+
 	const float pmm = GET_APP()->getPhysicsWorld().getPPM();
 
 	KBodyDef bodyDef;
@@ -263,14 +251,13 @@ void CelestialBody::setupMoon()
 	m_radius = MOON_RADIUS;
 
 	getEntity()->setTag(L"Moon");
-	//so.col = genColour();
+
 	const Vec2f bounds(2.0f * MOON_RADIUS, 2.0f * MOON_RADIUS);
 
 	getEntity()->setActive(false);
 	getEntity()->addComponent(new KCSprite(getEntity(), bounds));
 	getEntity()->m_pTransform->setOrigin(Vec2f(MOON_RADIUS, MOON_RADIUS));
 	getEntity()->addComponent(new KCCircleCollider(getEntity(), MOON_RADIUS));
-	//so.pPhysicsBody->setActivity(false);
 	const float pmm = GET_APP()->getPhysicsWorld().getPPM();
 
 	KBodyDef bodyDef;

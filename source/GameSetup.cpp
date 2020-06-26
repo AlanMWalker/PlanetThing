@@ -91,6 +91,7 @@ KInitStatus GameSetup::init()
 
 
 	m_pBackground = scene->addEntityToScene();
+	m_pBackground->setTag(L"Background");
 	m_pBackground->addComponent(new KCSprite(m_pBackground, Vec2f(GET_APP()->getWindowSize())));
 
 
@@ -107,9 +108,11 @@ KInitStatus GameSetup::init()
 void GameSetup::onEnterScene()
 {
 	m_pBackgroundShader = ASSET().getShader(L"heatmap");
+	auto backgroundTex = ASSET().getTexture(L"space_bg");
 	//m_pBackground->getComponent<KCRenderableBase>()->setShader(m_pBackgroundShader);
 	m_pBackground->getComponent<KCRenderableBase>()->setRenderLayer(-1);
-	m_pBackground->getComponent<KCSprite>()->setColour(Colour::Black);
+	//m_pBackground->getComponent<KCSprite>()->setColour(Colour::Black);
+	m_pBackground->getComponent<KCSprite>()->setTexture(backgroundTex);
 
 
 	m_defaultView = GET_APP()->getRenderWindow()->getView();

@@ -31,6 +31,9 @@ namespace Blackboard
 	constexpr Krawler::int32 MIN_AI = 1;
 	constexpr Krawler::int32 MAX_AI = 3;
 
+	// Time Values
+	constexpr float SATELLITE_ALIVE_TIME = 5.0f; // 5 seconds of alive time
+
 	constexpr float PLAYER_ENTITY_ROTATION_SPEED = 50.0f;
 
 }
