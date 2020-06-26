@@ -12,7 +12,7 @@ namespace Blackboard
 	const float G = 6.67e-11;
 
 	// Masses
-	constexpr float OBJECT_MASS = 200.0f;
+	constexpr float SATELLITE_MAS = 200.0f;
 	constexpr float PLANET_MASS = 9.8e13f;
 	constexpr float MOON_MASS = PLANET_MASS / 10.0f;
 
@@ -20,7 +20,7 @@ namespace Blackboard
 	// Distances 
 	constexpr float PLANET_RADIUS = 64.0;
 	constexpr float MOON_RADIUS = 24.0f;
-	constexpr float OBJECT_RADIUS = 8.0f;
+	constexpr float SATELLITE_RADIUS = 8.0f;
 	constexpr float PLAYER_ORBIT_RADIUS = 50.0f;
 	constexpr float MOON_ORBIT_RADIUS = 75.0f;
 
@@ -28,7 +28,9 @@ namespace Blackboard
 	constexpr Krawler::int32 PLANETS_COUNT = 5;
 	constexpr Krawler::int32 NETWORKED_PLANETS_COUNT = 3;
 	constexpr Krawler::int32 AI_PLANETS_COUNT = 3;
-	constexpr Krawler::int32 OBJECTS_COUNT = 10;
+	constexpr Krawler::int32 SATELLITES_COUNT = 10;
+	constexpr Krawler::int32 MOON_COUNT = 2;
+
 
 	constexpr Krawler::int32 MIN_AI = 1;
 	constexpr Krawler::int32 MAX_AI = 3;

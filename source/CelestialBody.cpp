@@ -231,17 +231,17 @@ void CelestialBody::setupPlanet()
 
 void CelestialBody::setupSatellite()
 {
-	m_mass = OBJECT_MASS;
-	m_radius = OBJECT_RADIUS;
+	m_mass = SATELLITE_MAS;
+	m_radius = SATELLITE_RADIUS;
 
 	getEntity()->setTag(L"Satellite");
 
-	const Vec2f bounds(2.0f * OBJECT_RADIUS, 2.0f * OBJECT_RADIUS);
+	const Vec2f bounds(2.0f * SATELLITE_RADIUS, 2.0f * SATELLITE_RADIUS);
 
 	getEntity()->setActive(false);
 	getEntity()->addComponent(new KCSprite(getEntity(), bounds));
-	getEntity()->m_pTransform->setOrigin(Vec2f(OBJECT_RADIUS, OBJECT_RADIUS));
-	getEntity()->addComponent(new KCCircleCollider(getEntity(), OBJECT_RADIUS));
+	getEntity()->m_pTransform->setOrigin(Vec2f(SATELLITE_RADIUS, SATELLITE_RADIUS));
+	getEntity()->addComponent(new KCCircleCollider(getEntity(), SATELLITE_RADIUS));
 
 	const float pmm = GET_APP()->getPhysicsWorld().getPPM();
 

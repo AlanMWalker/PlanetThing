@@ -54,21 +54,27 @@ class GameSetup :
 	public Krawler::KComponentBase
 {
 public:
-	
+
+	enum class GameType
+	{
+		Local,
+		Networked
+	};
+
 	GameSetup();
 	~GameSetup();
 
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
 	virtual void tick() override;
-	virtual void fixedTick() override; 
+	virtual void fixedTick() override;
 	virtual void cleanUp() override;
 
 	float colScale = 10000;
-	std::vector<Krawler::KEntity*>& getCelestialBodies() { return m_entities; }
-
 	// Invoked by MenuSetup before it transitions into the singleplayer game
 	void setAIPlayerCount(Krawler::int32 count);
+
+	void setGameType(GameType type) { m_gameType = type; }
 
 private:
 
@@ -78,18 +84,30 @@ private:
 	void createGod();
 	void zoomAt(const Krawler::Vec2f& pos, float zoom);
 	void setBackgroundShaderParams();
-	std::vector<Krawler::KEntity*> m_entities;
+
+	void createCelestialBodies();
+
+	void setupLevel();
+
+	Krawler::KEntity* m_pPlayerPlanet = nullptr;
+	std::vector<Krawler::KEntity*> m_networkedPlanets;
+	std::vector<Krawler::KEntity*> m_aiPlanets;
+	std::vector<Krawler::KEntity*> m_satellites;
+	std::vector<Krawler::KEntity*> m_moons;
+
 
 	DbgLineDraw line;
-	ProjectilePath* m_pPath = nullptr; 
+	ProjectilePath* m_pPath = nullptr;
 	sf::View m_defaultView;
+
+	GameType m_gameType = GameType::Local;
 
 	Krawler::KEntity* m_pObject = nullptr;
 	Krawler::KEntity* m_pBackground = nullptr;
 	sf::Shader* m_pBackgroundShader = nullptr;
 	Krawler::Physics::KPhysicsWorld2D* m_pPhysicsWorld = nullptr;
 	LocalPlayerController* m_playerController = nullptr;
-	
+
 	NewtonianGravity m_newton;
 
 	Krawler::int32 m_aiCount = Blackboard::MIN_AI;
