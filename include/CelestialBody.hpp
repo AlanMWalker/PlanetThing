@@ -1,5 +1,7 @@
 #pragma once 
 
+#include <SFML/Audio.hpp>
+
 #include <KComponent.h>
 #include <Components/KCBody.h>
 
@@ -16,11 +18,12 @@ public:
 		Planet = 2
 	};
 
-	CelestialBody(Krawler::KEntity* pEntity, BodyType bodyType, ProjectilePath& projPath);
+	CelestialBody(Krawler::KEntity* pEntity, BodyType bodyType, ProjectilePath& projPath, CelestialBody* pHostPlanet = nullptr);
 	~CelestialBody() = default;
 
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
+	virtual void tick() override;
 	virtual void fixedTick() override;
 
 	float getMass() const;
@@ -37,19 +40,37 @@ public:
 	Krawler::Vec2f getVelocityInPixels();
 	Krawler::Vec2f getVelocityInMetres();
 
+	void setInActive();
+
+	CelestialBody* getHostPlanet() { return m_pHostPlanet; }
+
+	float getOrbitTheta() const { return m_orbitTheta; }
+	void setOrbitTheta(float theta) { m_orbitTheta = theta; }
+
+	void setPosition(const Krawler::Vec2f& pos);
+
 private:
 
 	void setupPlanet();
 	void setupSatellite();
-	//void setupMoon(); Not yet implemented
+	void setupMoon();
 
 	const BodyType m_bodyType;
+	
+	Krawler::Components::KCColliderBaseCallback m_callBack;
+
 	float m_mass = 0.0f;
 	float m_radius = 0.0f;
-
+	float m_orbitTheta = 0.0f; // only for moons
+	
+	
 	Krawler::Components::KCBody* m_pBody = nullptr;
+	CelestialBody* m_pHostPlanet;
 	ProjectilePath& m_projPath;
-	sf::Clock c;
+	sf::Clock m_satelliteAliveClock;
 	Krawler::Colour m_colour;
+
+	sf::Sound m_explosion;
+	sf::Sound m_slightHit;
 
 };

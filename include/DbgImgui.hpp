@@ -24,7 +24,16 @@ public:
 	{
 		ImGui::SFML::Init(*Krawler::KApplication::getApp()->getRenderWindow());
 		std::function<void(void)> subLastDraw = std::bind(&imguicomp::draw, this);
-		Krawler::KApplication::getApp()->subscribeToEventQueue(processEvent);
+
+
+		static bool bIsEventSubbed = false;
+		
+		if (!bIsEventSubbed)
+		{
+			Krawler::KApplication::getApp()->subscribeToEventQueue(processEvent);
+			bIsEventSubbed = true;
+		}
+		
 		Krawler::KApplication::getApp()->getRenderer()->subscribeLastDrawCallback(subLastDraw);
 		m_bWasInitSuccessful = true;
 
@@ -40,7 +49,13 @@ public:
 
 	virtual void cleanUp() override
 	{
-		ImGui::SFML::Shutdown();
+		static bool bHasShutDown = false;
+		if (!bHasShutDown)
+		{
+			ImGui::SFML::Shutdown();
+			bHasShutDown = true;
+		}
+
 	}
 
 	// call to invoke imgui::begin

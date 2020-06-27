@@ -70,4 +70,24 @@ void NewtonianGravity::applyForces()
 
 		}
 	}
+
+	float orbitSpeed = 50.0f;
+	for (auto& b : m_celestialBodies)
+	{
+		if (b.get().getBodyType() == CelestialBody::BodyType::Moon)
+		{
+			auto host = b.get().getHostPlanet();
+			float theta = b.get().getOrbitTheta();
+			float deltaTheta = Maths::Radians(orbitSpeed) * GET_APP()->getDeltaTime();
+			Vec2f centre = host->getCentre();
+
+			float x = centre.x + (cosf(theta) * (MOON_RADIUS + PLANET_RADIUS + Blackboard::MOON_ORBIT_RADIUS));
+			float y = centre.y + (sinf(theta) * (MOON_RADIUS + PLANET_RADIUS + Blackboard::MOON_ORBIT_RADIUS));
+			theta += deltaTheta;
+			b.get().setOrbitTheta(theta);
+			b.get().setPosition(Vec2f(x, y));
+
+
+		}
+	}
 }
