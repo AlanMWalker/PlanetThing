@@ -54,36 +54,6 @@ KInitStatus GameSetup::init()
 	m_pPhysicsWorld->setPPM(PPM);
 	auto scene = GET_SCENE_NAMED(Blackboard::GameScene);
 
-	/*const uint32 TotalCelestial = PLANETS_COUNT + OBJECTS_COUNT;
-	auto created = scene->addMultipleEntitiesToScene(TotalCelestial, m_entities);
-
-	KCHECK(created);
-
-	for (int i = 0; i < TotalCelestial; ++i)
-	{
-		CelestialBody* celestial = nullptr;
-		if (i < PLANETS_COUNT)
-		{
-			celestial = new CelestialBody(m_entities[i],
-				CelestialBody::BodyType::Planet,
-				*m_pPath
-
-			);
-		}
-		else
-		{
-			celestial = new CelestialBody(m_entities[i],
-				CelestialBody::BodyType::Satellite,
-				*m_pPath
-			);
-		}
-
-		KCHECK(celestial);
-
-		m_entities[i]->addComponent(celestial);
-		m_newton.addCelestialBody(*celestial);
-	}*/
-
 	GET_APP()->getRenderer()->addDebugShape(&line);
 	GET_APP()->getRenderer()->showDebugDrawables(true);
 	GET_APP()->getRenderer()->setSortType(Renderer::KRenderSortType::LayerSort);
@@ -110,6 +80,12 @@ void GameSetup::onEnterScene()
 	//m_pBackground->getComponent<KCSprite>()->setColour(Colour::Black);
 	m_pBackground->getComponent<KCSprite>()->setTexture(backgroundTex);
 	setupLevel();
+
+
+
+	m_defaultView = GET_APP()->getRenderWindow()->getView();
+	//m_defaultView.setCenter(m_entities[0]->m_pTransform->getPosition());
+	GET_APP()->getRenderWindow()->setView(m_defaultView);
 }
 
 void GameSetup::tick()
