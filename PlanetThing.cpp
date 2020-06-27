@@ -7,7 +7,7 @@
 #include <Utilities\KDebug.h>
 
 #include "GameSetup.hpp"
-#include "MenuSetup.h"
+#include "MenuSetup.hpp"
 #include "Blackboard.hpp"
 
 #ifdef _DEBUG
@@ -49,18 +49,7 @@ int main(void)
 	// be destroyed by KRAWLER)
 	GameSetup* g = new GameSetup;
 	MenuSetup* m = new MenuSetup(*g);
-
-	//{
-	//	auto& entity = *app->getSceneDirector().getSceneByName(L"Menu_Scene")->addEntityToScene();
-	//	entity.addComponent(new GameSetup(&entity));
-	//	
-	//}
-
-	//{ // Setup the main game
-	//	auto& entity = *app->getSceneDirector().getSceneByName(L"Main_Scene")->addEntityToScene();
-	//	entity.addComponent(new GameSetup(&entity));
-	//}
-
+	
 	InitialiseSubmodules();
 	RunApplication();
 	ShutdownEngine();

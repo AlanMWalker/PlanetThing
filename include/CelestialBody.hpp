@@ -1,5 +1,7 @@
 #pragma once 
 
+#include <SFML/Audio.hpp>
+
 #include <KComponent.h>
 #include <Components/KCBody.h>
 
@@ -21,6 +23,7 @@ public:
 
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
+	virtual void tick() override;
 	virtual void fixedTick() override;
 
 	float getMass() const;
@@ -52,8 +55,6 @@ private:
 	void setupSatellite();
 	void setupMoon();
 
-	//void setupMoon(); Not yet implemented
-
 	const BodyType m_bodyType;
 	
 	Krawler::Components::KCColliderBaseCallback m_callBack;
@@ -66,7 +67,10 @@ private:
 	Krawler::Components::KCBody* m_pBody = nullptr;
 	CelestialBody* m_pHostPlanet;
 	ProjectilePath& m_projPath;
-	sf::Clock c;
+	sf::Clock m_satelliteAliveClock;
 	Krawler::Colour m_colour;
+
+	sf::Sound m_explosion;
+	sf::Sound m_slightHit;
 
 };

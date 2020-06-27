@@ -14,6 +14,7 @@
 #include "GodDebugComp.hpp"
 #include "DbgImgui.hpp"
 #include "CelestialBody.hpp"
+#include "CPUPlayerController.hpp"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -52,37 +53,7 @@ KInitStatus GameSetup::init()
 	m_pPhysicsWorld = &GET_APP()->getPhysicsWorld();
 	m_pPhysicsWorld->setGravity(Vec2f(0.0f, 0.0f));
 	m_pPhysicsWorld->setPPM(PPM);
-
-	const uint32 TotalCelestial = PLANETS_COUNT + OBJECTS_COUNT;
 	auto scene = GET_SCENE_NAMED(Blackboard::GameScene);
-	auto created = scene->addMultipleEntitiesToScene(TotalCelestial, m_entities);
-
-	KCHECK(created);
-
-	for (int i = 0; i < TotalCelestial; ++i)
-	{
-		CelestialBody* celestial = nullptr;
-		if (i < PLANETS_COUNT)
-		{
-			celestial = new CelestialBody(m_entities[i],
-				CelestialBody::BodyType::Planet,
-				*m_pPath
-
-			);
-		}
-		else
-		{
-			celestial = new CelestialBody(m_entities[i],
-				CelestialBody::BodyType::Satellite,
-				*m_pPath
-			);
-		}
-
-		KCHECK(celestial);
-
-		m_entities[i]->addComponent(celestial);
-		m_newton.addCelestialBody(*celestial);
-	}
 
 	GET_APP()->getRenderer()->addDebugShape(&line);
 	GET_APP()->getRenderer()->showDebugDrawables(true);
@@ -91,49 +62,289 @@ KInitStatus GameSetup::init()
 
 
 	m_pBackground = scene->addEntityToScene();
+	m_pBackground->setTag(L"Background");
 	m_pBackground->addComponent(new KCSprite(m_pBackground, Vec2f(GET_APP()->getWindowSize())));
 
+	createCelestialBodies();
 
-	m_playerController = new LocalPlayerController(m_entities[0]->getComponent<CelestialBody>());
+	m_playerController = new LocalPlayerController(m_pPlayerPlanet->getComponent<CelestialBody>());
 
-	auto testMoon = scene->addEntityToScene();
-	auto celestial = new CelestialBody(testMoon, CelestialBody::BodyType::Moon, *m_pPath,
-		m_entities[1]->getComponent<CelestialBody>());
-	testMoon->addComponent(celestial);
-	m_newton.addCelestialBody(*celestial);
 	return KInitStatus::Success;
 }
 
 void GameSetup::onEnterScene()
 {
 	m_pBackgroundShader = ASSET().getShader(L"heatmap");
+	auto backgroundTex = ASSET().getTexture(L"space_bg");
 	//m_pBackground->getComponent<KCRenderableBase>()->setShader(m_pBackgroundShader);
 	m_pBackground->getComponent<KCRenderableBase>()->setRenderLayer(-1);
-	m_pBackground->getComponent<KCSprite>()->setColour(Colour::Black);
+	//m_pBackground->getComponent<KCSprite>()->setColour(Colour::Black);
+	m_pBackground->getComponent<KCSprite>()->setTexture(backgroundTex);
+	setupLevel();
+
 
 
 	m_defaultView = GET_APP()->getRenderWindow()->getView();
 	//m_defaultView.setCenter(m_entities[0]->m_pTransform->getPosition());
 	GET_APP()->getRenderWindow()->setView(m_defaultView);
+}
+
+void GameSetup::tick()
+{
+	static int idx = PLANETS_COUNT;
+	if (KInput::MouseJustPressed(KMouseButton::Right))
+	{
+		if (idx < m_satellites.size())
+		{
+			m_satellites[idx]->getComponent<CelestialBody>()->spawnAtPoint(KInput::GetMouseWorldPosition());
+			++idx;
+		}
+
+	}
+	static bool bTailObject = false;
+	static bool bHasZoomed = false;
+	static uint64 objIdx = 0;
+
+	if (bTailObject)
+	{
+		if (objIdx >= m_satellites.size())
+		{
+			objIdx = 0;
+		}
+
+		if (m_satellites[objIdx]->isActive())
+		{
+			auto& thing = m_satellites[objIdx];
+			bHasZoomed = true;
+			constexpr float ZoomAmount = 1.3f;
+			auto f = KInput::GetMouseScrollDelta();
+			if (f > 0.0f)
+			{
+				zoomAt(Vec2f(thing->m_pTransform->getPosition()), 1.0f / ZoomAmount);
+			}
+			else if (f < 0.0f)
+			{
+				zoomAt(Vec2f(thing->m_pTransform->getPosition()), ZoomAmount);
+			}
+			sf::View v = GET_APP()->getRenderWindow()->getView();
+			v.setCenter(thing->m_pTransform->getPosition());
+			GET_APP()->getRenderWindow()->setView(v);
+		}
+
+		if (KInput::JustPressed(KKey::Right))
+		{
+			++objIdx;
+		}
+
+		if (KInput::JustPressed(KKey::Left))
+		{
+			--objIdx;
+		}
+
+	}
+	else
+	{
+		GET_APP()->getRenderWindow()->setView(m_defaultView);
+	}
+
+	if (KInput::JustPressed(KKey::Space))
+	{
+		bTailObject = !bTailObject;
+		bHasZoomed = false;
+	}
+
+	setBackgroundShaderParams();
+}
+
+void GameSetup::fixedTick()
+{
+	m_newton.applyForces();
+}
+
+void GameSetup::cleanUp()
+{
+	m_pPlayerPlanet = nullptr;
+	m_aiPlanets.clear();
+	m_networkedPlanets.clear();
+}
+
+void GameSetup::setAIPlayerCount(int32 count)
+{
+	m_aiCount = count;
+}
+
+void GameSetup::createGod()
+{
+	auto entity = getEntity();
+	entity->setTag(L"God");
+	entity->addComponent(new imguicomp(entity));
+	entity->addComponent(new GodDebugComp(entity));
+	m_pPath = new ProjectilePath(entity);
+	entity->addComponent(m_pPath);
+}
+
+void GameSetup::zoomAt(const Krawler::Vec2f& pos, float zoom)
+{
+	sf::View v = GET_APP()->getRenderWindow()->getView();
+	v.zoom(zoom);
+	v.setCenter(pos);
+	GET_APP()->getRenderWindow()->setView(v);
+}
+
+void GameSetup::setBackgroundShaderParams()
+{
+	/*std::vector<Vec2f> planetPositions;
+	std::vector<Vec3f> planetCols;
+	for (auto& so : m_spaceThings)
+	{
+		if (so.bIsPlanet)
+		{
+			const Vec2f screenPos(GET_APP()->getRenderWindow()->mapCoordsToPixel(so.pEntity->m_pTransform->getPosition()));
+			planetPositions.push_back(screenPos);
+			planetCols.push_back(Vec3f((float)(so.col.r) / 256.0f, (float)(so.col.g) / 256.0f, (float)(so.col.b) / 256.0f));
+		}
+	}
+
+	m_pBackgroundShader->setUniform("planetCount", PLANETS_COUNT);
+	m_pBackgroundShader->setUniformArray("planetPositions", &planetPositions[0], PLANETS_COUNT);
+	m_pBackgroundShader->setUniformArray("planetColours", &planetCols[0], PLANETS_COUNT);
+
+	int h = GET_APP()->getRenderWindow()->getView().getSize().y;
+	m_pBackgroundShader->setUniform("windowHeight", (int)GET_APP()->getRenderWindow()->getView().getSize().y);
+	m_pBackgroundShader->setUniform("colScale", colScale);*/
+
+}
+
+void GameSetup::createCelestialBodies()
+{
+	auto scene = GET_SCENE_NAMED(Blackboard::GameScene);
+
+	const uint32 TotalCelestial = PLANETS_COUNT + SATELLITES_COUNT;
+	//auto created = scene->addMultipleEntitiesToScene(TotalCelestial, m_entities);
+	m_pPlayerPlanet = scene->addEntityToScene();
+	auto celestial = new CelestialBody(m_pPlayerPlanet,
+		CelestialBody::BodyType::Planet,
+		*m_pPath
+
+	);
+	KCHECK(celestial);
+	m_pPlayerPlanet->addComponent(celestial);
+	m_newton.addCelestialBody(*celestial);
+
+	bool bDidAllocate = scene->addMultipleEntitiesToScene(AI_PLANETS_COUNT, m_aiPlanets);
+	KCHECK(bDidAllocate);
+	for (auto& ai : m_aiPlanets)
+	{
+		auto celestial = new CelestialBody(ai,
+			CelestialBody::BodyType::Planet,
+			*m_pPath
+
+		);
+		KCHECK(celestial);
+		ai->addComponent(celestial);
+		new CPUPlayerController(celestial);
+		m_newton.addCelestialBody(*celestial);
+	}
+
+	bDidAllocate = scene->addMultipleEntitiesToScene(NETWORKED_PLANETS_COUNT, m_networkedPlanets);
+	KCHECK(bDidAllocate);
+	for (auto& np : m_networkedPlanets)
+	{
+		auto celestial = new CelestialBody(np,
+			CelestialBody::BodyType::Planet,
+			*m_pPath
+
+		);
+		KCHECK(celestial);
+		np->addComponent(celestial);
+		m_newton.addCelestialBody(*celestial);
+	}
+
+	bDidAllocate = scene->addMultipleEntitiesToScene(SATELLITES_COUNT, m_satellites);
+	KCHECK(bDidAllocate);
+	for (auto& sat : m_satellites)
+	{
+		auto celestial = new CelestialBody(sat,
+			CelestialBody::BodyType::Satellite,
+			*m_pPath
+
+		);
+		KCHECK(celestial);
+		sat->addComponent(celestial);
+		m_newton.addCelestialBody(*celestial);
+	}
 
 
+	bDidAllocate = scene->addMultipleEntitiesToScene(MOON_COUNT, m_moons);
+	KCHECK(bDidAllocate);
+	for (auto& moon : m_moons)
+	{
+		auto celestial = new CelestialBody(moon,
+			CelestialBody::BodyType::Satellite,
+			*m_pPath
+
+		);
+		KCHECK(celestial);
+		moon->addComponent(celestial);
+		m_newton.addCelestialBody(*celestial);
+	}
+}
+
+void GameSetup::setupLevel()
+{
 	std::vector<CelestialBody*> planetsFound;
 	int count = 0;
-	for (auto e : m_entities)
+	planetsFound.push_back(m_pPlayerPlanet->getComponent<CelestialBody>());
+	if (m_gameType == GameType::Local)
 	{
-		auto celestial = e->getComponent<CelestialBody>();
-		if (celestial)
+		for (auto& np : m_networkedPlanets)
 		{
-			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
+			np->getComponent<CelestialBody>()->setInActive();
+		}
+
+		for (auto ai : m_aiPlanets)
+		{
+			auto celestial = ai->getComponent<CelestialBody>();
+			if (celestial)
 			{
-				if (count > m_aiCount)
+				if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
 				{
-					celestial->setInActive();
+					if (count >= m_aiCount)
+					{
+						celestial->setInActive();
+					}
+					else
+					{
+						planetsFound.push_back(celestial);
+						++count;
+					}
 				}
-				else
+			}
+		}
+	}
+	else
+	{
+		for (auto& ai : m_aiPlanets)
+		{
+			ai->getComponent<CelestialBody>()->setInActive();
+		}
+
+		for (auto np : m_networkedPlanets)
+		{
+			auto celestial = np->getComponent<CelestialBody>();
+			if (celestial)
+			{
+				if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
 				{
-					planetsFound.push_back(celestial);
-					++count;
+					if (count > m_aiCount) // needs to be network count instead
+					{
+						celestial->setInActive();
+					}
+					else
+					{
+						planetsFound.push_back(celestial);
+						++count;
+					}
 				}
 			}
 		}
@@ -187,126 +398,3 @@ void GameSetup::onEnterScene()
 	}
 }
 
-void GameSetup::tick()
-{
-	static int idx = PLANETS_COUNT;
-	if (KInput::MouseJustPressed(KMouseButton::Right))
-	{
-		if (idx < m_entities.size())
-		{
-			m_entities[idx]->getComponent<CelestialBody>()->spawnAtPoint(KInput::GetMouseWorldPosition());
-			++idx;
-		}
-
-	}
-	static bool bTailObject = false;
-	static bool bHasZoomed = false;
-	static uint32 objIdx = 0;
-
-	if (bTailObject)
-	{
-		if (objIdx + (unsigned)(PLANETS_COUNT) >= m_entities.size())
-		{
-			objIdx = 0;
-		}
-
-		if (m_entities[(unsigned)(PLANETS_COUNT)+objIdx]->isActive())
-		{
-			auto& thing = m_entities[(unsigned)(PLANETS_COUNT)+objIdx];
-			bHasZoomed = true;
-			constexpr float ZoomAmount = 1.3f;
-			auto f = KInput::GetMouseScrollDelta();
-			if (f > 0.0f)
-			{
-				zoomAt(Vec2f(thing->m_pTransform->getPosition()), 1.0f / ZoomAmount);
-			}
-			else if (f < 0.0f)
-			{
-				zoomAt(Vec2f(thing->m_pTransform->getPosition()), ZoomAmount);
-			}
-			sf::View v = GET_APP()->getRenderWindow()->getView();
-			v.setCenter(thing->m_pTransform->getPosition());
-			GET_APP()->getRenderWindow()->setView(v);
-		}
-
-		if (KInput::JustPressed(KKey::Right))
-		{
-			++objIdx;
-		}
-
-		if (KInput::JustPressed(KKey::Left))
-		{
-			--objIdx;
-		}
-
-	}
-	else
-	{
-		GET_APP()->getRenderWindow()->setView(m_defaultView);
-	}
-
-	if (KInput::JustPressed(KKey::Space))
-	{
-		bTailObject = !bTailObject;
-		bHasZoomed = false;
-	}
-
-	setBackgroundShaderParams();
-}
-
-void GameSetup::fixedTick()
-{
-	m_newton.applyForces();
-}
-
-void GameSetup::cleanUp()
-{
-	m_entities.clear();
-}
-
-void GameSetup::setAIPlayerCount(int32 count)
-{
-	m_aiCount = count;
-}
-
-void GameSetup::createGod()
-{
-	auto entity = getEntity();
-	entity->setTag(L"God");
-	entity->addComponent(new imguicomp(entity));
-	entity->addComponent(new GodDebugComp(entity));
-	m_pPath = new ProjectilePath(entity);
-	entity->addComponent(m_pPath);
-}
-
-void GameSetup::zoomAt(const Krawler::Vec2f& pos, float zoom)
-{
-	sf::View v = GET_APP()->getRenderWindow()->getView();
-	v.zoom(zoom);
-	v.setCenter(pos);
-	GET_APP()->getRenderWindow()->setView(v);
-}
-
-void GameSetup::setBackgroundShaderParams()
-{
-	/*std::vector<Vec2f> planetPositions;
-	std::vector<Vec3f> planetCols;
-	for (auto& so : m_spaceThings)
-	{
-		if (so.bIsPlanet)
-		{
-			const Vec2f screenPos(GET_APP()->getRenderWindow()->mapCoordsToPixel(so.pEntity->m_pTransform->getPosition()));
-			planetPositions.push_back(screenPos);
-			planetCols.push_back(Vec3f((float)(so.col.r) / 256.0f, (float)(so.col.g) / 256.0f, (float)(so.col.b) / 256.0f));
-		}
-	}
-
-	m_pBackgroundShader->setUniform("planetCount", PLANETS_COUNT);
-	m_pBackgroundShader->setUniformArray("planetPositions", &planetPositions[0], PLANETS_COUNT);
-	m_pBackgroundShader->setUniformArray("planetColours", &planetCols[0], PLANETS_COUNT);
-
-	int h = GET_APP()->getRenderWindow()->getView().getSize().y;
-	m_pBackgroundShader->setUniform("windowHeight", (int)GET_APP()->getRenderWindow()->getView().getSize().y);
-	m_pBackgroundShader->setUniform("colScale", colScale);*/
-
-}

@@ -1,7 +1,7 @@
 #include <KApplication.h>
 #include <string>
 
-#include "MenuSetup.h"
+#include "MenuSetup.hpp"
 #include "Blackboard.hpp"
 #include "GameSetup.hpp"
 
@@ -72,6 +72,7 @@ void MenuSetup::tick()
 	if (bPlayPressed)
 	{
 		m_gs.setAIPlayerCount(aiCount);
+		m_gs.setGameType(GameSetup::GameType::Local);
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::GameScene);
 	}
 }
