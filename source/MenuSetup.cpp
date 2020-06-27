@@ -1,7 +1,7 @@
 #include <KApplication.h>
 #include <string>
 
-#include "MenuSetup.h"
+#include "MenuSetup.hpp"
 #include "Blackboard.hpp"
 #include "GameSetup.hpp"
 

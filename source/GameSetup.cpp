@@ -14,6 +14,7 @@
 #include "GodDebugComp.hpp"
 #include "DbgImgui.hpp"
 #include "CelestialBody.hpp"
+#include "CPUPlayerController.hpp"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -241,6 +242,7 @@ void GameSetup::createCelestialBodies()
 		);
 		KCHECK(celestial);
 		ai->addComponent(celestial);
+		new CPUPlayerController(celestial);
 		m_newton.addCelestialBody(*celestial);
 	}
 
