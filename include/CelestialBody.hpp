@@ -55,15 +55,17 @@ private:
 	void setupSatellite();
 	void setupMoon();
 
+
+	void satelliteCallback(const Krawler::KCollisionDetectionData& data);
 	const BodyType m_bodyType;
-	
+
 	Krawler::Components::KCColliderBaseCallback m_callBack;
 
 	float m_mass = 0.0f;
 	float m_radius = 0.0f;
 	float m_orbitTheta = 0.0f; // only for moons
-	
-	
+
+
 	Krawler::Components::KCBody* m_pBody = nullptr;
 	CelestialBody* m_pHostPlanet;
 	ProjectilePath& m_projPath;

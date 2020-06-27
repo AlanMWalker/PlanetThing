@@ -32,13 +32,13 @@ namespace Blackboard
 	constexpr Krawler::int32 AI_PLANETS_COUNT = 3;
 	constexpr Krawler::int32 SATELLITES_COUNT = 50;
 	constexpr Krawler::int32 MOON_COUNT = 2;
-
-
 	constexpr Krawler::int32 MIN_AI = 1;
 	constexpr Krawler::int32 MAX_AI = 3;
+	constexpr Krawler::uint64 TARGET_COUNT = 3;
 
-	static const Krawler::Vec2f PLAYER_SATELLITE_DIMENSION { 24, 24 };
-	static const Krawler::Vec2f AI_SATELLITE_DIMENSION { 24, 24 };
+	static const Krawler::Vec2f PLAYER_SATELLITE_DIMENSION{ 24, 24 };
+	static const Krawler::Vec2f AI_SATELLITE_DIMENSION{ 24, 24 };
+	static const Krawler::Vec2f TARGET_SIZE{ 16,16 };
 
 	// Time Values
 	constexpr float SATELLITE_ALIVE_TIME = 8.0f; // 5 seconds of alive time

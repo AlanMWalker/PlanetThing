@@ -27,8 +27,8 @@ using namespace Blackboard;
 
 static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
 {
-	d.entityA->getComponent<KCSprite>()->setColour(Colour::Magenta);
-	d.entityB->getComponent<KCSprite>()->setColour(Colour::Magenta);
+	//d.entityA->getComponent<KCSprite>()->setColour(Colour::Magenta);
+	//d.entityB->getComponent<KCSprite>()->setColour(Colour::Magenta);
 };
 
 

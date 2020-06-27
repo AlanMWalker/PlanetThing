@@ -2,6 +2,7 @@
 
 #include <KComponent.h>
 #include "CelestialBody.hpp"
+#include "Blackboard.hpp"
 
 
 class imguicomp;
@@ -18,7 +19,7 @@ public:
 	// Any child classes should invoke the base init
 	// at some stage during it's own implementation
 	virtual Krawler::KInitStatus init() override;
-	
+
 	// Any child classes should invoke the base onEnterScene 
 	// at some stage during it's own implementation
 	virtual void onEnterScene() override;
@@ -31,7 +32,8 @@ public:
 protected:
 
 	void fireProjectile();
-	
+	void setTargetsInactive();
+
 	CelestialBody* m_pHostPlanet = nullptr;
 
 
@@ -41,13 +43,26 @@ protected:
 
 private:
 
+	struct Target
+	{
+		Krawler::KEntity* pEntity = nullptr;
+		bool bAlive = true;
+		Krawler::Components::KCColliderBaseCallback callback;
+	};
+
+	void targetCollisionCallback(const Target& t, const Krawler::KCollisionDetectionData& data);
+
+	Target m_targets[Blackboard::TARGET_COUNT];
+
 	void updateTransform();
 	void constructProjectileList();
-	
+
 	sf::Clock m_shotCooldown;
 
 	Krawler::Vec2f m_dimension;
 	std::vector<std::reference_wrapper<CelestialBody>> m_objects;
 
 	bool m_bFirstShot = true;
+
+
 };

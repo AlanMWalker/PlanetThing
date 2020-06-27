@@ -1,7 +1,11 @@
 #include <Krawler.h>
 #include <KApplication.h>
+#include <AssetLoader/KAssetLoader.h>
+#include <functional>
 
-#include "Blackboard.hpp"
+#include <Components/KCBoxCollider.h>
+
+
 #include "BaseController.hpp"
 
 using namespace Krawler;
@@ -11,6 +15,7 @@ BaseController::BaseController(KEntity* pEntity, CelestialBody* pHost, const Kra
 	: KComponentBase(pEntity), m_pHostPlanet(pHost), m_dimension(size)
 {
 	KCHECK(m_pHostPlanet);
+	setComponentTag(L"BaseController");
 }
 
 KInitStatus BaseController::init()
@@ -20,6 +25,25 @@ KInitStatus BaseController::init()
 
 	auto God = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
 	KCHECK(God);
+
+
+	for (auto& t : m_targets)
+	{
+		t.pEntity = GET_SCENE_NAMED(Blackboard::GameScene)->addEntityToScene();
+		KCHECK(t.pEntity);
+		if (!t.pEntity)
+		{
+			KPrintf(L"Unable to allocate entity for targets within %s init \n", getComponentTag().c_str());
+			return KInitStatus::Nullptr;
+		}
+
+		t.pEntity->addComponent(new KCSprite(t.pEntity, Blackboard::TARGET_SIZE));
+		t.pEntity->m_pTransform->setOrigin(Blackboard::TARGET_SIZE * 0.5f);
+		t.pEntity->addComponent(new KCBoxCollider(t.pEntity, Blackboard::TARGET_SIZE));
+
+		t.pEntity->setTag(L"Target");
+	}
+
 	return KInitStatus::Success;
 }
 
@@ -27,6 +51,33 @@ void BaseController::onEnterScene()
 {
 	updateTransform();
 	constructProjectileList();
+
+	constexpr float delta = 360.0f / (float)(Blackboard::TARGET_COUNT);
+	int i = 0;
+	Vec2f pos;
+
+	auto tex = ASSET().getTexture(L"target");
+	tex->setSmooth(true);
+	tex->generateMipmap();
+
+	for (auto& t : m_targets)
+	{
+		pos.x = m_pHostPlanet->getCentre().x + cosf(Maths::Radians(delta * (float)(i))) * m_pHostPlanet->getRadius();
+		pos.y = m_pHostPlanet->getCentre().y + sinf(Maths::Radians(delta * (float)(i))) * m_pHostPlanet->getRadius();
+
+		t.pEntity->m_pTransform->setPosition(pos);
+		++i;
+
+		t.pEntity->getComponent<KCSprite>()->setTexture(tex);
+		KCColliderFilteringData data;
+		data.collisionMask = 0x0010;
+		data.collisionFilter = 0x0001;
+		t.callback = [this, t](const KCollisionDetectionData& d)->void {targetCollisionCallback(t, d); };
+
+		t.pEntity->getComponent<KCBoxCollider>()->setCollisionFilteringData(data);
+		t.pEntity->getComponent<KCBoxCollider>()->subscribeCollisionCallback(&t.callback);
+	}
+
 }
 
 void BaseController::tick()
@@ -58,6 +109,20 @@ void BaseController::fireProjectile()
 			break;
 		}
 	}
+}
+
+void BaseController::setTargetsInactive()
+{
+	for (auto t : m_targets)
+	{
+		t.pEntity->setActive(false);
+	}
+}
+
+void BaseController::targetCollisionCallback(const Target& t, const Krawler::KCollisionDetectionData& data)
+{
+	KPrintf(L"Target was hit by %s\n", &data.entity->getTag()[0]);
+	t.pEntity->setActive(false);
 }
 
 void BaseController::updateTransform()

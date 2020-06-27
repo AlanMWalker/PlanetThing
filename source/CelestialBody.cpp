@@ -23,29 +23,7 @@ Colour genColour()
 CelestialBody::CelestialBody(Krawler::KEntity* pEntity, CelestialBody::BodyType bodyType, ProjectilePath& projPath, CelestialBody* pHostPlanet)
 	: KComponentBase(pEntity), m_bodyType(bodyType), m_projPath(projPath), m_pHostPlanet(pHostPlanet)
 {
-	m_callBack = [this](const Krawler::KCollisionDetectionData& data) -> void
-	{
-		BodyType type;
-		if (data.entityA != getEntity())
-		{
-			type = data.entityA->getComponent<CelestialBody>()->getBodyType();
-
-		}
-		else
-		{
-			type = data.entityB->getComponent<CelestialBody>()->getBodyType();
-		}
-
-		if (type == BodyType::Moon || type == BodyType::Planet)
-		{
-			setInActive();
-			m_explosion.play();
-		}
-		else
-		{
-			m_slightHit.play();
-		}
-	};
+	m_callBack = [this](const KCollisionDetectionData& data) -> void {	satelliteCallback(data); };
 }
 
 KInitStatus CelestialBody::init()
@@ -87,7 +65,24 @@ void CelestialBody::onEnterScene()
 
 	if (m_bodyType == BodyType::Satellite)
 	{
-		getEntity()->getComponent<KCColliderBase>()->subscribeCollisionCallback(&m_callBack);
+		auto collider = getEntity()->getComponent<KCColliderBase>();
+		collider->subscribeCollisionCallback(&m_callBack);
+		KCColliderFilteringData filter;
+		switch (m_bodyType)
+		{
+		default:
+		case CelestialBody::BodyType::Satellite:
+			filter.collisionMask = 0x0011;
+			filter.collisionFilter = 0x0011;
+			break;
+
+
+		case CelestialBody::BodyType::Planet:
+			filter.collisionMask = 0x0010;
+			filter.collisionFilter = 0x0001;
+			break;
+		}
+		collider->setCollisionFilteringData(filter);
 	}
 
 	auto sound = ASSET().getSound(L"rock_collide");
@@ -280,4 +275,28 @@ void CelestialBody::setupMoon()
 	m_pBody = new KCBody(*getEntity(), bounds, bodyDef, matDef);
 
 	getEntity()->addComponent(m_pBody);
+}
+
+void CelestialBody::satelliteCallback(const KCollisionDetectionData& data)
+{
+	auto celestial = data.entity->getComponent<CelestialBody>();
+	if (!celestial)
+	{
+		// must've hit a target, so we die now
+		setInActive();
+		m_explosion.play();
+	}
+	else
+	{
+		BodyType type = celestial->getBodyType();
+		if (type == BodyType::Moon || type == BodyType::Planet)
+		{
+			setInActive();
+			m_explosion.play();
+		}
+		else
+		{
+			m_slightHit.play();
+		}
+	}
 }
