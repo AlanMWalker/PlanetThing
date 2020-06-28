@@ -74,6 +74,11 @@ void NewtonianGravity::applyForces()
 	float orbitSpeed = 50.0f;
 	for (auto& b : m_celestialBodies)
 	{
+		if (!b.get().isActive())
+		{
+			continue;
+		}
+
 		if (b.get().getBodyType() == CelestialBody::BodyType::Moon)
 		{
 			auto host = b.get().getHostPlanet();
