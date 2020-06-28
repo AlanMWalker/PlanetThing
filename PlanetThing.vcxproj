@@ -97,9 +97,6 @@
     <ClCompile Include="source\LocalPlayerController.cpp" />
     <ClCompile Include="source\MenuSetup.cpp" />
     <ClCompile Include="source\NewtonianGravity.cpp" />
-    <ClCompile Include="source\PathFinder\AStar.cpp" />
-    <ClCompile Include="source\PathFinder\Dijkstra.cpp" />
-    <ClCompile Include="source\PathFinder\Node.cpp" />
     <ClCompile Include="source\GameSetup.cpp" />
     <ClCompile Include="source\GodDebugComp.cpp" />
     <ClCompile Include="source\ProjectilePath.cpp" />
@@ -129,11 +126,6 @@
     <ClInclude Include="include\LocalPlayerController.hpp" />
     <ClInclude Include="include\MenuSetup.hpp" />
     <ClInclude Include="include\NewtonianGravity.hpp" />
-    <ClInclude Include="include\PathFinder\AStar.h" />
-    <ClInclude Include="include\PathFinder\Dijkstra.h" />
-    <ClInclude Include="include\PathFinder\Node.h" />
-    <ClInclude Include="include\PathFinder\PathAlgorithm.h" />
-    <ClInclude Include="include\PathFinder\PathFinder.h" />
     <ClInclude Include="include\ProjectilePath.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
