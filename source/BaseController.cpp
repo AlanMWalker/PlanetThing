@@ -12,7 +12,7 @@ using namespace Krawler;
 using namespace Krawler::Components;
 
 BaseController::BaseController(KEntity* pEntity, CelestialBody* pHost, const Krawler::Vec2f& size)
-	: KComponentBase(pEntity), m_pHostPlanet(pHost), m_dimension(size)
+	: KComponentBase(pEntity), m_pHostPlanet(pHost), m_dimension(size), m_uuid(GenerateUUID())
 {
 	KCHECK(m_pHostPlanet);
 	setComponentTag(L"BaseController");
@@ -104,7 +104,7 @@ void BaseController::fireProjectile()
 			Vec2f dir;
 			dir = getEntity()->m_pTransform->getPosition() - m_pHostPlanet->getCentre();
 			const float strength = (m_shotStrength / 100.0f) * Blackboard::BOX2D_CAP;
-			cb.get().spawnAtPoint(getEntity()->m_pTransform->getPosition(), Normalise(dir) * strength);
+			cb.get().spawnAtPoint(getEntity()->m_pTransform->getPosition(), Normalise(dir) * strength, m_uuid);
 			m_shotCooldown.restart();
 			break;
 		}
@@ -122,7 +122,21 @@ void BaseController::setTargetsInactive()
 void BaseController::targetCollisionCallback(const Target& t, const Krawler::KCollisionDetectionData& data)
 {
 	KPrintf(L"Target was hit by %s\n", &data.entity->getTag()[0]);
-	t.pEntity->setActive(false);
+	auto celestial = data.entity->getComponent<CelestialBody>();
+	if (!celestial)
+	{
+		// Unexpected collision, just ignore it
+		return;
+	}
+
+	auto spawnedBy = celestial->getSpawnedBy();
+	if (spawnedBy.size() > 0)
+	{
+		if (spawnedBy != m_uuid)
+		{
+			t.pEntity->setActive(false);
+		}
+	}
 }
 
 void BaseController::updateTransform()

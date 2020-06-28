@@ -135,7 +135,7 @@ bool CelestialBody::isActive()
 	return getEntity()->isActive();
 }
 
-void CelestialBody::spawnAtPoint(const Vec2f& position, const Vec2f& velocity)
+void CelestialBody::spawnAtPoint(const Vec2f& position, const Vec2f& velocity, const std::wstring& spawnedByUUID)
 {
 	// Grab spawn code from GameSetup
 	getEntity()->setActive(true);
@@ -148,6 +148,7 @@ void CelestialBody::spawnAtPoint(const Vec2f& position, const Vec2f& velocity)
 	m_pBody->setActivity(true);
 
 	m_satelliteAliveClock.restart();
+	m_spawnedByUUID = spawnedByUUID;
 }
 
 CelestialBody::BodyType CelestialBody::getBodyType() const
@@ -196,7 +197,7 @@ void CelestialBody::setPosition(const Vec2f& pos)
 
 void CelestialBody::setupPlanet()
 {
-	m_mass = Maths::RandFloat(PLANET_MASS, PLANET_MASS * 2);
+	m_mass = Maths::RandFloat(PLANET_MASS, PLANET_MASS * 3.0f);
 	m_radius = PLANET_RADIUS;
 
 	getEntity()->setTag(L"Planet");

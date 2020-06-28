@@ -32,7 +32,7 @@ public:
 	bool isActive();
 	BodyType getBodyType() const;
 
-	void spawnAtPoint(const Krawler::Vec2f& position, const Krawler::Vec2f& velocity = Krawler::Vec2f());
+	void spawnAtPoint(const Krawler::Vec2f& position, const Krawler::Vec2f& velocity = Krawler::Vec2f(), const std::wstring& spawnedByUUID = L"");
 	void applyForce(const Krawler::Vec2f& v);
 
 	float getDensity();
@@ -48,6 +48,11 @@ public:
 	void setOrbitTheta(float theta) { m_orbitTheta = theta; }
 
 	void setPosition(const Krawler::Vec2f& pos);
+
+	// Can be empty if the entity spawning
+	// did not specify its ownership of
+	// the objects lifetime
+	std::wstring getSpawnedBy() const { return m_spawnedByUUID; }
 
 private:
 
@@ -65,6 +70,7 @@ private:
 	float m_radius = 0.0f;
 	float m_orbitTheta = 0.0f; // only for moons
 
+	std::wstring m_spawnedByUUID;
 
 	Krawler::Components::KCBody* m_pBody = nullptr;
 	CelestialBody* m_pHostPlanet;

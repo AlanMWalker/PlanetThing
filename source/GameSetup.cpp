@@ -280,9 +280,8 @@ void GameSetup::createCelestialBodies()
 	for (auto& moon : m_moons)
 	{
 		auto celestial = new CelestialBody(moon,
-			CelestialBody::BodyType::Satellite,
+			CelestialBody::BodyType::Moon,
 			*m_pPath
-
 		);
 		KCHECK(celestial);
 		moon->addComponent(celestial);
@@ -351,7 +350,7 @@ void GameSetup::setupLevel()
 	}
 
 
-	const float boundRadius = Blackboard::PLANET_RADIUS * 3.5f;
+	const float boundRadius = Blackboard::PLANET_RADIUS * 4.0f;
 	std::vector<Vec2f> points;
 	points.resize(planetsFound.size());
 
@@ -375,8 +374,8 @@ void GameSetup::setupLevel()
 
 	auto randPoint = [&boundRadius]() -> Vec2f
 	{
-		return Vec2f(RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().x - boundRadius * 2),
-			RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().y - boundRadius * 2));
+		return Vec2f(RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().x - boundRadius),
+			RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().y - boundRadius));
 	};
 
 	for (auto& v : points)
@@ -392,9 +391,9 @@ void GameSetup::setupLevel()
 		}
 	}
 
-	for (uint32 i = 0; i < planetsFound.size(); ++i)
+	for (uint64 i = 0; i < points.size(); ++i)
 	{
-		planetsFound[i]->spawnAtPoint(points[i]);
+		planetsFound[i]->setPosition(points[i]);
 	}
 }
 

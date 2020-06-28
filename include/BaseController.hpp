@@ -63,6 +63,5 @@ private:
 	std::vector<std::reference_wrapper<CelestialBody>> m_objects;
 
 	bool m_bFirstShot = true;
-
-
+	std::wstring m_uuid;
 };

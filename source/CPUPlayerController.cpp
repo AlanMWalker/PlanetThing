@@ -50,7 +50,7 @@ void CPUPlayerController::tick()
 
 
 	m_shotStrength = Maths::RandFloat(0.0f, 100.0f);
-	fireProjectile();
+	//fireProjectile();
 
 }
 
