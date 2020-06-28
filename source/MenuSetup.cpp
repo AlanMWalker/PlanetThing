@@ -4,37 +4,41 @@
 #include "MenuSetup.hpp"
 #include "Blackboard.hpp"
 #include "GameSetup.hpp"
+#include "LobbySetup.hpp"
 
 using namespace Krawler;
 
 
-MenuSetup::MenuSetup(GameSetup& gs)
-	: KComponentBase(GET_SCENE_NAMED(Blackboard::MenuScene)->addEntityToScene()), m_gs(gs)
+MenuSetup::MenuSetup(GameSetup& gs, LobbySetup& ls)
+	: KComponentBase(GET_SCENE_NAMED(Blackboard::MenuScene)->addEntityToScene()), m_gs(gs), m_ls(ls)
 {
 	getEntity()->addComponent(this);
 }
 
 KInitStatus MenuSetup::init()
 {
-
 	auto entity = getEntity();
 	m_pImguiComp = new imguicomp(entity);
 	entity->setTag(L"God");
 	entity->addComponent(m_pImguiComp);
-
 	return KInitStatus::Success;
 }
 
 void MenuSetup::tick()
 {
-	static bool bMultiplayer = false;
+	static bool bJoinMultiplayer = false;
 	static bool bPlaySinglePlayer = false;
+	static bool bHostMultiplayer = false;
 	static std::string ip;
 	static std::string port;
 	//std::string f;
 
 	bool bPlayPressed = false;
+	bool bHostPressed = false;
+	bool bJoinPressed = false;
+
 	static int aiCount = 1;
+	static int playerLobbySize = 1;
 
 	ip.resize(16);
 	port.resize(6);
@@ -44,27 +48,33 @@ void MenuSetup::tick()
 	auto before = bPlaySinglePlayer;
 	ImGui::Checkbox("Play Single Player", &bPlaySinglePlayer);
 
-	ImGui::Checkbox("Join Multiplayer Game", &bMultiplayer);
-	if (bMultiplayer)
+	ImGui::Checkbox("Join Multiplayer Game", &bJoinMultiplayer);
+
+	ImGui::Checkbox("Host Multiplayer Game", &bHostMultiplayer);
+
+	if (bJoinMultiplayer)
 	{
 		if (before == bPlaySinglePlayer)
 			bPlaySinglePlayer = false;
 		ImGui::InputText("Host IP", &ip[0], ip.size());
 		ImGui::InputText("Host Port", &port[0], port.size());
-		bool bTryLogin = ImGui::Button("Connect");
-		if (bTryLogin)
-		{
-			KPrintf(L"User trying to connect to %s %s \n", TO_WSTR(ip).c_str(), TO_WSTR(port).c_str());
-		}
+		bJoinPressed = ImGui::Button("Connect");
 	}
-
-
 
 	if (bPlaySinglePlayer)
 	{
-		bMultiplayer = false;
+		bJoinMultiplayer = false;
+		bHostMultiplayer = false;
 		ImGui::SliderInt("Number of AI", &aiCount, Blackboard::MIN_AI, Blackboard::MAX_AI);
 		bPlayPressed = ImGui::Button("Play");
+	}
+
+	if (bHostMultiplayer)
+	{
+		ImGui::InputText("Port to host on", &port[0], port.size());
+		ImGui::SliderInt("Number of AI", &playerLobbySize, Blackboard::MIN_NETWORKED, Blackboard::MAX_NETWORKED);
+
+		bHostPressed = ImGui::Button("Host Lobby");
 	}
 
 	m_pImguiComp->end();
@@ -74,5 +84,28 @@ void MenuSetup::tick()
 		m_gs.setAIPlayerCount(aiCount);
 		m_gs.setGameType(GameSetup::GameType::Local);
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::GameScene);
+		bJoinMultiplayer = false;
+		bPlaySinglePlayer = false;
+		bHostMultiplayer = false;
 	}
+
+	if (bJoinPressed)
+	{
+		m_ls.setNetworkNodeType(LobbySetup::NetworkNodeType::Client);
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
+		bJoinMultiplayer = false;
+		bPlaySinglePlayer = false;
+		bHostMultiplayer = false;
+	}
+	
+	if (bHostPressed)
+	{
+		m_ls.setHostLobbySize(playerLobbySize);
+		m_ls.setNetworkNodeType(LobbySetup::NetworkNodeType::Host);
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
+		bJoinMultiplayer = false;
+		bPlaySinglePlayer = false;
+		bHostMultiplayer = false;
+	}
+
 }

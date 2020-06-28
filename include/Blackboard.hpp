@@ -8,6 +8,7 @@ namespace Blackboard
 
 	static const wchar_t* MenuScene = L"Menu_Scene";
 	static const wchar_t* GameScene = L"Main_Scene";
+	static const wchar_t* LobbyScene = L"Lobby_Scene";
 
 	// Constants for physics
 	const float G = 6.67e-11; // m^3 kg^–1 s^–2
@@ -34,6 +35,10 @@ namespace Blackboard
 	constexpr Krawler::int32 MOON_COUNT = 2;
 	constexpr Krawler::int32 MIN_AI = 1;
 	constexpr Krawler::int32 MAX_AI = 3;
+
+	constexpr Krawler::int32 MIN_NETWORKED = 1;
+	constexpr Krawler::int32 MAX_NETWORKED = 3;
+
 	constexpr Krawler::uint64 TARGET_COUNT = 3;
 
 	static const Krawler::Vec2f PLAYER_SATELLITE_DIMENSION{ 24, 24 };
