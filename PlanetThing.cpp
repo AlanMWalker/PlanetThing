@@ -36,7 +36,20 @@ int main(void)
 	initApp.width = 1920;//1024;
 	initApp.height = 1080;//768;
 	initApp.windowStyle = KWindowStyle::Windowed_Resizeable;
-	initApp.windowTitle = KTEXT("Demo");
+
+	std::wifstream input;
+	input.open(L"version.txt");
+	if (input.fail())
+	{
+		initApp.windowTitle = KTEXT("Planet Thing");
+	}
+	else
+	{
+		std::wstring version; 
+		version.resize(20);
+		input.getline(&version[0], 20, '\n');
+		initApp.windowTitle = L"Planet Thing - " + version;
+	}
 	StartupEngine(&initApp);
 
 	auto app = KApplication::getApp();
