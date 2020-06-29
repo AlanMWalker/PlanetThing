@@ -30,7 +30,8 @@ void MenuSetup::tick()
 	static bool bPlaySinglePlayer = false;
 	static bool bHostMultiplayer = false;
 	static std::string ip;
-	static std::string port;
+	//static std::string port;
+	static int port;
 	//std::string f;
 
 	bool bPlayPressed = false;
@@ -41,7 +42,7 @@ void MenuSetup::tick()
 	static int playerLobbySize = 1;
 
 	ip.resize(16);
-	port.resize(6);
+	//port.resize(6);
 	m_pImguiComp->update();
 	m_pImguiComp->begin("Planet Thing -- Menu");
 	ImGuiWindowFlags f;
@@ -57,7 +58,7 @@ void MenuSetup::tick()
 		if (before == bPlaySinglePlayer)
 			bPlaySinglePlayer = false;
 		ImGui::InputText("Host IP", &ip[0], ip.size());
-		ImGui::InputText("Host Port", &port[0], port.size());
+		ImGui::InputInt("Host Port (max port 65535)", &port);
 		bJoinPressed = ImGui::Button("Connect");
 	}
 
@@ -71,8 +72,8 @@ void MenuSetup::tick()
 
 	if (bHostMultiplayer)
 	{
-		ImGui::InputText("Port to host on", &port[0], port.size());
-		ImGui::SliderInt("Number of AI", &playerLobbySize, Blackboard::MIN_NETWORKED, Blackboard::MAX_NETWORKED);
+		ImGui::InputInt("Port to host on (max port 65535)", &port);
+		ImGui::SliderInt("Number of players", &playerLobbySize, Blackboard::MIN_NETWORKED, Blackboard::MAX_NETWORKED);
 
 		bHostPressed = ImGui::Button("Host Lobby");
 	}
@@ -91,7 +92,8 @@ void MenuSetup::tick()
 
 	if (bJoinPressed)
 	{
-		m_ls.setNetworkNodeType(LobbySetup::NetworkNodeType::Client);
+		m_ls.setHostLobbyDetails(ip, port);
+		m_ls.setNetworkNodeType(NetworkNodeType::Client);
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
 		bJoinMultiplayer = false;
 		bPlaySinglePlayer = false;
@@ -101,7 +103,8 @@ void MenuSetup::tick()
 	if (bHostPressed)
 	{
 		m_ls.setHostLobbySize(playerLobbySize);
-		m_ls.setNetworkNodeType(LobbySetup::NetworkNodeType::Host);
+		m_ls.setMyLobbyPort((uint16)port);
+		m_ls.setNetworkNodeType(NetworkNodeType::Host);
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
 		bJoinMultiplayer = false;
 		bPlaySinglePlayer = false;

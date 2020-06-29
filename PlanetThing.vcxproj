@@ -100,6 +100,7 @@
     <ClCompile Include="source\GameSetup.cpp" />
     <ClCompile Include="source\GodDebugComp.cpp" />
     <ClCompile Include="source\ProjectilePath.cpp" />
+    <ClCompile Include="source\SockSmeller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -125,8 +126,11 @@
     <ClInclude Include="include\LobbySetup.hpp" />
     <ClInclude Include="include\LocalPlayerController.hpp" />
     <ClInclude Include="include\MenuSetup.hpp" />
+    <ClInclude Include="include\NetworkUtils.hpp" />
     <ClInclude Include="include\NewtonianGravity.hpp" />
     <ClInclude Include="include\ProjectilePath.hpp" />
+    <ClInclude Include="include\ServerPackets.hpp" />
+    <ClInclude Include="include\SockSmeller.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

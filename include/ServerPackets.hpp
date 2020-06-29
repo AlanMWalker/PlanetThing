@@ -11,7 +11,6 @@ enum class MessageType : Krawler::int32
 	KeepAlive,
 	Establish,
 	Disconnect,
-	Move = 20
 };
 
 #pragma region Server Client Base Struct
@@ -23,6 +22,20 @@ struct ServerClientMessage
 
 #pragma endregion 
 
+static void write_base_out(sf::Packet& p, ServerClientMessage* scm)
+{
+	p << static_cast<Krawler::int32>(scm->type) << scm->timeStamp;
+}
+
+static void read_base_in(sf::Packet& p, ServerClientMessage* scm)
+{
+	int a;
+	p >> a;
+	scm->type = (MessageType)(a);
+	p >> scm->timeStamp;
+}
+
+
 //--------------------------------------------------------------------------------
 #pragma region Keep Alive Struct
 struct KeepAlive : public ServerClientMessage
@@ -33,15 +46,14 @@ struct KeepAlive : public ServerClientMessage
 
 static sf::Packet& operator <<(sf::Packet& p, const KeepAlive& keepAlive)
 {
-	return p << static_cast<Krawler::int32>(keepAlive.type) << keepAlive.timeStamp << keepAlive.message;
+	write_base_out(p, (ServerClientMessage*)&keepAlive);
+	return p << keepAlive.message;
 }
 
 
 static sf::Packet& operator >>(sf::Packet& p, KeepAlive& keepAlive)
 {
-	int a;
-	p >> a;
-	keepAlive.type = static_cast<MessageType>(a);
+	read_base_in(p, (ServerClientMessage*)&keepAlive);
 	return p >> keepAlive.timeStamp >> keepAlive.message;
 }
 #pragma endregion
@@ -57,15 +69,15 @@ struct EstablishConnection : public ServerClientMessage
 
 static sf::Packet& operator <<(sf::Packet& p, const EstablishConnection& establishStruct)
 {
-	return p << static_cast<Krawler::int32>(establishStruct.type) << establishStruct.clientVersion;
+	write_base_out(p, (ServerClientMessage*)&establishStruct);
+
+	return p << establishStruct.clientVersion;
 }
 
 
 static sf::Packet& operator >>(sf::Packet& p, EstablishConnection& establishStruct)
 {
-	int a;
-	p >> a;
-	establishStruct.type = static_cast<MessageType>(a);
+	read_base_in(p, (ServerClientMessage*)&establishStruct);
 	return p >> establishStruct.clientVersion;
 }
 #pragma endregion
@@ -80,44 +92,14 @@ struct DisconnectConnection : public ServerClientMessage
 
 static sf::Packet& operator <<(sf::Packet& p, const DisconnectConnection& dc)
 {
-	return p << static_cast<Krawler::int32>(dc.type);
+	write_base_out(p, (ServerClientMessage*)&dc);
+	return p;
 }
 
 static sf::Packet& operator >>(sf::Packet& p, DisconnectConnection& dc)
 {
-	int a;
-	p >> a;
-	dc.type = static_cast<MessageType>(a);
+	read_base_in(p, (ServerClientMessage*)&dc);
 	return p;
 }
 
 #pragma endregion
-
-//--------------------------------------------------------------------------------
-
-#pragma region MoveInWorld
-struct MoveInWorld : public ServerClientMessage
-{
-	MoveInWorld() { type = MessageType::Move; }
-	Krawler::Vec2f playerPosition;
-	std::string playerName;
-};
-
-static sf::Packet& operator <<(sf::Packet& p, const MoveInWorld& moveInWorld)
-{
-	return p << static_cast<Krawler::int32>(moveInWorld.type) <<
-		moveInWorld.playerPosition.x << moveInWorld.playerPosition.y <<
-		moveInWorld.playerName << moveInWorld.timeStamp;
-}
-
-static sf::Packet& operator >>(sf::Packet& p, MoveInWorld& moveInWorld)
-{
-	int a;
-	p >> a;
-	moveInWorld.type = static_cast<MessageType>(a);
-	p >> moveInWorld.playerPosition.x >> moveInWorld.playerPosition.y >> moveInWorld.playerName >> moveInWorld.timeStamp;
-	return p;
-}
-#pragma endregion
-
-//--------------------------------------------------------------------------------

@@ -46,7 +46,7 @@ namespace Blackboard
 	static const Krawler::Vec2f TARGET_SIZE{ 16,16 };
 
 	// Time Values
-	constexpr float SATELLITE_ALIVE_TIME = 8.0f; // 5 seconds of alive time
+	constexpr float SATELLITE_ALIVE_TIME = 100.0f;//8.0f; // 5 seconds of alive time
 
 	constexpr float PLAYER_ENTITY_ROTATION_SPEED = 50.0f;
 

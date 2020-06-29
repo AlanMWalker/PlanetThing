@@ -5,20 +5,17 @@
 #include <Components/KCBody.h>
 
 #include <SFML/Graphics.hpp>
-#include <SFML/Network.hpp>
 
+#include "SockSmeller.hpp"
 #include "DbgImgui.hpp"
+
 
 
 class LobbySetup :
 	public Krawler::KComponentBase
 {
 public:
-	enum class NetworkNodeType : Krawler::int8
-	{
-		Host = 0,
-		Client
-	};
+
 
 	LobbySetup();
 	~LobbySetup() = default;
@@ -28,6 +25,8 @@ public:
 	virtual void tick() override;
 	void setNetworkNodeType(NetworkNodeType type);
 	void setHostLobbySize(Krawler::uint32 size);
+	void setMyLobbyPort(Krawler::uint16 port);
+	void setHostLobbyDetails(const sf::IpAddress& ip, Krawler::uint16 port);
 
 private:
 
@@ -39,4 +38,7 @@ private:
 	imguicomp* m_pImguiComp = nullptr;
 	NetworkNodeType m_nodeType = NetworkNodeType::Client;
 	Krawler::uint32 m_lobbySize;
+
+	void handleClientEstablish(ServerClientMessage*);
+	void handleClientDisconnect(ServerClientMessage*);
 };
