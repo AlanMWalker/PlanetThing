@@ -41,9 +41,9 @@ namespace Blackboard
 
 	constexpr Krawler::uint64 TARGET_COUNT = 3;
 
-	static const Krawler::Vec2f PLAYER_SATELLITE_DIMENSION{ 24, 24 };
-	static const Krawler::Vec2f AI_SATELLITE_DIMENSION{ 24, 24 };
-	static const Krawler::Vec2f TARGET_SIZE{ 16,16 };
+	static const Krawler::Vec2f PLAYER_SATELLITE_DIMENSION{ 24.0f, 24.0f };
+	static const Krawler::Vec2f AI_SATELLITE_DIMENSION{ 24.0f, 24.0f };
+	static const Krawler::Vec2f TARGET_SIZE{ 16.0f, 16.0f };
 
 	// Time Values
 	constexpr float SATELLITE_ALIVE_TIME = 100.0f;//8.0f; // 5 seconds of alive time

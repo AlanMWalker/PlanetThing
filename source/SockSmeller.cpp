@@ -112,6 +112,8 @@ void SockSmeller::runClient()
 	p << e;
 	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
 	m_clientEstablishClock.restart();
+	m_keepAliveClock.restart();
+	m_keepAliveReplyClock.restart();
 
 	while (m_bIsRunning)
 	{
@@ -127,6 +129,29 @@ void SockSmeller::runClient()
 			p << e;
 			m_clientSocket.send(p, m_outboundIp, m_outboundPort);
 			m_clientEstablishClock.restart();
+		}
+
+		if (m_keepAliveClock.getElapsedTime().asSeconds() > KeepAliveTime)
+		{
+			if (!m_bKeepAliveSent)
+			{
+				KPRINTF("Sending keep alive\n");
+				m_keepAliveClock.restart();
+				clientSendKeepAlive();
+				m_bKeepAliveSent = true;
+
+				m_keepAliveReplyClock.restart();
+				m_bReplyCountdownReset = true;
+			}
+			else
+			{
+
+				if (m_keepAliveReplyClock.getElapsedTime().asSeconds() > ServerReplyTime)
+				{
+					KPRINTF("Seems like the server hasn't been replying to my keep alives...\n");
+					m_bIsRunning = false;
+				}
+			}
 		}
 
 		switch (status)
@@ -183,7 +208,7 @@ void SockSmeller::runHost()
 
 void SockSmeller::hostCheckForDeadClients()
 {
-	const int64 MaxTimeDelta = sf::seconds(10).asMilliseconds();
+	const int64 MaxTimeDelta = sf::seconds(HostMaxDelta).asMilliseconds();
 	auto currentTimestamp = timestamp();
 	std::deque<std::deque<ConnectedClient>::iterator> toRemove;
 	for (auto it = m_connectedClients.begin(); it != m_connectedClients.end(); ++it)
@@ -206,6 +231,10 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 {
 	const MessageType type = getMessageTypeFromPacket(p);
 
+	ConnectedClient conClient;
+	conClient.ip = remoteIp;
+	conClient.port = remotePort;
+
 	switch (type)
 	{
 	case MessageType::Establish:
@@ -213,16 +242,32 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		EstablishConnection con;
 		p >> con;
 
-		ConnectedClient conClient;
-		conClient.ip = remoteIp;
-		conClient.port = remotePort;
 		conClient.lastTimestamp = timestamp();
 
 		replyEstablishHost(con, conClient);
 	}
 	break;
+	case MessageType::KeepAlive:
+	{
+		KeepAlive ka;
+		p >> ka;
+		KPrintf(L"Inbound keep alive from %s : %hu \n", &TO_WSTR(remoteIp.toString())[0], remotePort);
+		// we receieved a keep alive, so we'll send back 
+		// a keep alive
+		auto client = getConnectedClient(remoteIp, remotePort);
+		if (client)
+		{
+			client->lastTimestamp = ka.timeStamp;
+			sf::Packet reply;
+			ka.timeStamp = timestamp();
+			reply << ka;
+			m_hostSocket.send(reply, remoteIp, remotePort);
+		}
+	}
+	break;
 	case MessageType::None:
 	default:
+		KPRINTF("Unrecognised message sent to host..\n");
 		break;
 	}
 }
@@ -230,6 +275,14 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Krawler::uint16 remotePort)
 {
 	const MessageType type = getMessageTypeFromPacket(p);
+
+	KCHECK(remoteIp == m_outboundIp);
+	KCHECK(remotePort == m_outboundPort);
+
+	if (remoteIp != m_outboundIp || remotePort != m_outboundPort)
+	{
+		return;
+	}
 
 	switch (type)
 	{
@@ -247,7 +300,21 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		}
 	}
 	break;
-
+	case MessageType::KeepAlive:
+	{
+		KPrintf(L"Server replied to keep alive\n");
+		if (m_bKeepAliveSent)
+		{
+			if (m_bReplyCountdownReset)
+			{
+				m_bKeepAliveSent = false;
+				m_bReplyCountdownReset = false;
+				//m_keepAliveClock.restart();
+				//m_keepAliveReplyClock.restart();
+			}
+		}
+	}
+	break;
 	case MessageType::Disconnect:
 	{
 		if (m_subscribersMap.count(MessageType::Establish) > 0)
@@ -270,8 +337,8 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 
 void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const ConnectedClient& conClient)
 {
-	const bool bConnected = isClientAlreadyConnected(conClient.ip, conClient.port);
-	if (bConnected)
+	auto client = getConnectedClient(conClient.ip, conClient.port);
+	if (client)
 	{// Already connected, ignore this
 		return;
 	}
@@ -292,6 +359,15 @@ void SockSmeller::hostSendDisconnect(const ConnectedClient& c)
 	m_hostSocket.send(p, c.ip, c.port);
 }
 
+void SockSmeller::clientSendKeepAlive()
+{
+	KeepAlive ka;
+	ka.timeStamp = timestamp();
+	sf::Packet p;
+	p << ka;
+	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
+}
+
 MessageType SockSmeller::getMessageTypeFromPacket(const sf::Packet& p) const
 {
 	const char* const asBytes = (char*)p.getData();
@@ -303,13 +379,17 @@ MessageType SockSmeller::getMessageTypeFromPacket(const sf::Packet& p) const
 	return (MessageType)((asBytes[0] << 24) | (asBytes[1] << 16) | (asBytes[2] << 8) | (asBytes[3]));
 }
 
-bool SockSmeller::isClientAlreadyConnected(const sf::IpAddress& ip, Krawler::uint16 port) const
+SockSmeller::ConnectedClient* SockSmeller::getConnectedClient(const sf::IpAddress& ip, Krawler::uint16 port)
 {
 	auto result = std::find_if(m_connectedClients.begin(), m_connectedClients.end(), [&ip, &port](const ConnectedClient& test) -> bool
 		{
 			return port == test.port && ip == test.ip;
 		});
 
-	return result != m_connectedClients.end();
-}
+	if (result == m_connectedClients.end())
+	{
+		return nullptr;
+	}
 
+	return &(*result);
+}

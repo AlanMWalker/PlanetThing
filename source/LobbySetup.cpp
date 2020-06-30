@@ -29,7 +29,7 @@ void LobbySetup::onEnterScene()
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:
-		KPrintf(L"Setting up host lobby with port of %hu", m_myLobbyPort);
+		KPrintf(L"Setting up host lobby with port of %hu\n", m_myLobbyPort);
 		SockSmeller::get().setupAsHost(m_myLobbyPort);
 		break;
 

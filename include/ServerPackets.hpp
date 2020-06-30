@@ -41,20 +41,19 @@ static void read_base_in(sf::Packet& p, ServerClientMessage* scm)
 struct KeepAlive : public ServerClientMessage
 {
 	KeepAlive() { type = MessageType::KeepAlive; }
-	std::string message;
 };
 
 static sf::Packet& operator <<(sf::Packet& p, const KeepAlive& keepAlive)
 {
 	write_base_out(p, (ServerClientMessage*)&keepAlive);
-	return p << keepAlive.message;
+	return p;
 }
 
 
 static sf::Packet& operator >>(sf::Packet& p, KeepAlive& keepAlive)
 {
 	read_base_in(p, (ServerClientMessage*)&keepAlive);
-	return p >> keepAlive.timeStamp >> keepAlive.message;
+	return p;
 }
 #pragma endregion
 

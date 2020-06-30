@@ -59,14 +59,26 @@ private:
 	void receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Krawler::uint16 remotePort);
 
 	void replyEstablishHost(const EstablishConnection& establish, const ConnectedClient& conClient);
-
 	void hostSendDisconnect(const ConnectedClient& c);
 
+	void clientSendKeepAlive();
+
 	MessageType getMessageTypeFromPacket(const sf::Packet& p) const;
-	bool isClientAlreadyConnected(const sf::IpAddress& ip, Krawler::uint16 port) const; 
+	ConnectedClient* getConnectedClient(const sf::IpAddress& ip, Krawler::uint16 port);
 
 	const Krawler::uint16 SEND_PORT = 32001U;
+	const float KeepAliveTime = 5.0f; // seconds
+	const float ServerReplyTime = 10.0f; // seconds
+	const float HostMaxDelta = 12.0f;
 	bool m_bIsSetup = false;
+
+
+	bool m_bReplyCountdownReset = false;
+	bool m_bKeepAliveSent = false;
+	sf::Clock m_keepAliveClock;
+	sf::Clock m_keepAliveReplyClock;
+
+
 
 	sf::IpAddress m_outboundIp;
 	Krawler::uint16 m_outboundPort;
