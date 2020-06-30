@@ -52,10 +52,13 @@ void LobbySetup::onEnterScene()
 	default:
 		break;
 	}
+	SockSmeller::get().setLobbyState(m_lobbyState);
 }
 
 void LobbySetup::tick()
 {
+	SockSmeller::get().setLobbyState(m_lobbyState);
+
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:
@@ -125,6 +128,14 @@ void LobbySetup::tickClient()
 	case LobbyState::ClientDisconnected:
 	{
 		ImGui::Text("Disconnected..");
+		bool bTryAgain = ImGui::Button("Try again?");
+		if (bTryAgain)
+		{
+			SockSmeller::get().tearDown();
+			SockSmeller::get().setupAsClient(m_lobbyHostIp, m_lobbyHostPort);
+			m_lobbyState = LobbyState::ClientConnecting;
+		}
+
 	}
 	case LobbyState::None:
 	case LobbyState::HostWaiting:
@@ -146,6 +157,20 @@ void LobbySetup::tickHost()
 	for (auto& n : namesList)
 	{
 		ImGui::Text(&TO_ASTR(n)[0]);
+	}
+
+	bool bCancel = ImGui::Button("Cancel");
+	if (bCancel)
+	{
+		m_lobbyState = LobbyState::HostCancel;
+		SockSmeller::get().setLobbyState(m_lobbyState);
+		SockSmeller::get().tearDown();
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::MenuScene);
+	}
+	
+	if (m_lobbyNamesClient.size() == (uint64)m_lobbySize)
+	{
+		bool bCancel = ImGui::Button("Start");
 	}
 	m_pImguiComp->end();
 }

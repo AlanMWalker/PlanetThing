@@ -79,12 +79,12 @@ void SockSmeller::tearDown()
 	{
 	case NetworkNodeType::Host:
 		m_hostSocket.unbind();
-		m_inboundPort = 0;
+		//m_inboundPort = 0;
 		break;
 	default:
 	case NetworkNodeType::Client:
 		m_clientSocket.unbind();
-		m_outboundPort = 0;
+		//m_outboundPort = 0;
 		break;
 	}
 }
@@ -236,6 +236,14 @@ void SockSmeller::runHost()
 		// Send new packets
 	}
 	KPrintf(L"Bye..\n");
+
+	if (m_connectedClients.size() > 0)
+	{
+		for (auto& c : m_connectedClients)
+		{
+			hostSendDisconnect(c);
+		}
+	}
 }
 
 void SockSmeller::hostCheckForDeadClients()
@@ -413,7 +421,10 @@ void SockSmeller::hostSendDisconnect(const ConnectedClient& c)
 	m_hostSocket.send(p, c.ip, c.port);
 
 	// now the connected client list has changed, we should tell all clients
-	hostSendUpdatedNameList();
+	if (m_lobbyState == LobbyState::HostWaiting)
+	{
+		hostSendUpdatedNameList();
+	}
 }
 
 void SockSmeller::clientSendKeepAlive()

@@ -20,6 +20,17 @@ enum class NetworkNodeType : Krawler::int8
 	Client
 };
 
+enum class LobbyState : Krawler::int32
+{
+	None = -1,
+	ClientConnecting,
+	ClientConnected,
+	ClientDisconnected,
+	HostWaiting,
+	HostCancel,
+	InGame
+};
+
 class SockSmeller
 {
 public:
@@ -43,6 +54,9 @@ public:
 
 	bool isClientConnectionEstablished() const { return m_bConnEstablished.load(); }
 	std::vector<std::wstring> getConnectedUserDisplayNames();
+
+	void setLobbyState(LobbyState lobbyState) { m_lobbyState = lobbyState; }
+	LobbyState getLobbyState() const { return m_lobbyState; }
 
 private:
 
@@ -101,6 +115,7 @@ private:
 	sf::UdpSocket m_clientSocket; // client
 
 	NetworkNodeType m_nodeType = NetworkNodeType::Client;
+	LobbyState m_lobbyState = LobbyState::None;
 
 	sf::String m_displayName;
 

@@ -30,14 +30,6 @@ public:
 	void setDisplayName(const std::wstring& displayName);
 
 private:
-	enum class LobbyState : Krawler::int32
-	{
-		None = -1,
-		ClientConnecting,
-		ClientConnected,
-		ClientDisconnected,
-		HostWaiting,
-	};
 
 	void tickClient();
 	void tickHost();
