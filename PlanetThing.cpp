@@ -66,6 +66,9 @@ int main(void)
 	InitialiseSubmodules();
 	RunApplication();
 	ShutdownEngine();
+	SockSmeller::get().tearDown();
+	delete &SockSmeller::get();
+
 	_CrtDumpMemoryLeaks();
 
 	return 0;
