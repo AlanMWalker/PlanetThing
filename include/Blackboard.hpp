@@ -1,11 +1,16 @@
-
 #pragma once
 #include "Krawler.h"
+
+// Used to enable special code pathways
+// such as allowing multiple networked instances 
+//from 1 machine by opening up on ports beyond 32001
+#ifndef DEV_VER
+#define DEV_VER
+#endif
 
 namespace Blackboard
 {
 	// Scene Names
-
 	static const wchar_t* MenuScene = L"Menu_Scene";
 	static const wchar_t* GameScene = L"Main_Scene";
 	static const wchar_t* LobbyScene = L"Lobby_Scene";

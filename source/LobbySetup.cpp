@@ -167,6 +167,8 @@ void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)
 		return;
 	}
 
+	m_lobbyNamesClient.clear();
+
 	LobbyNameList& lnl = *((LobbyNameList*)(scm));
 	std::stringstream ss(lnl.nameList);
 	std::string name;

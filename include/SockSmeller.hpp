@@ -74,6 +74,8 @@ private:
 	void hostSendDisconnect(const ConnectedClient& c);
 
 	void clientSendKeepAlive();
+	
+	void hostSendUpdatedNameList();
 
 	MessageType getMessageTypeFromPacket(const sf::Packet& p) const;
 	ConnectedClient* getConnectedClient(const sf::IpAddress& ip, Krawler::uint16 port);

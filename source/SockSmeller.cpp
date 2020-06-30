@@ -1,4 +1,5 @@
 #include "SockSmeller.hpp"
+#include "Blackboard.hpp"
 #include <future>
 
 using namespace Krawler;
@@ -17,14 +18,26 @@ bool SockSmeller::setupAsClient(const sf::IpAddress& ip, uint16 port)
 	m_outboundPort = port;
 	m_outboundIp = ip;
 	m_nodeType = NetworkNodeType::Client;
-
+#ifndef DEV_VER
 	auto status = m_clientSocket.bind(SEND_PORT);
-	m_clientSocket.setBlocking(false);
 	if (status == sf::Socket::Status::Error)
 	{
 		KPrintf(L"Failed to bind to local port of %hu \n", SEND_PORT);
 		return false;
 	}
+#else 
+	sf::Socket::Status status;
+	uint16 i = 0;
+	do
+	{
+		status = m_clientSocket.bind(SEND_PORT + i);
+		++i;
+	} while (status == sf::Socket::Status::Error);
+
+	KPrintf(L"Bound on port %hu \n", SEND_PORT + i);
+
+#endif
+	m_clientSocket.setBlocking(false);
 
 	runSockSmeller();
 	return true;
@@ -208,9 +221,10 @@ void SockSmeller::runHost()
 			receiveHostPacket(p, remoteIp, remotePort);
 			break;
 		case sf::Socket::NotReady:
-			break;
 		case sf::Socket::Partial:
 		case sf::Socket::Disconnected:
+			break;
+
 		case sf::Socket::Error:
 		default:
 			KPrintf(L"Error found when listening on host port %hu, stopping host\n", m_inboundPort);
@@ -240,8 +254,9 @@ void SockSmeller::hostCheckForDeadClients()
 	for (auto& i : toRemove)
 	{
 		KPrintf(L"Client %s:%hu has timed out...\n", TO_WSTR(i->ip.toString()).c_str(), i->port);
-		hostSendDisconnect(*i);
+		ConnectedClient copy = *i;
 		m_connectedClients.erase(i);
+		hostSendDisconnect(copy);
 	}
 }
 
@@ -380,7 +395,35 @@ void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const
 	p << e;
 	m_hostSocket.send(p, conClient.ip, conClient.port);
 
+	// now the connected client list has changed, we should tell all clients
+	hostSendUpdatedNameList();
+}
+
+void SockSmeller::hostSendDisconnect(const ConnectedClient& c)
+{
+	DisconnectConnection dc;
+	sf::Packet p;
+	p << dc;
+	m_hostSocket.send(p, c.ip, c.port);
+
+	// now the connected client list has changed, we should tell all clients
+	hostSendUpdatedNameList();
+}
+
+void SockSmeller::clientSendKeepAlive()
+{
+	KeepAlive ka;
+	ka.timeStamp = timestamp();
+	sf::Packet p;
+	p << ka;
+	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
+}
+
+void SockSmeller::hostSendUpdatedNameList()
+{
 	// Send all clients an updated name list
+	// (Excluding the client we're communicating with
+	// from the list)
 	for (auto c : m_connectedClients)
 	{
 		LobbyNameList lnl;
@@ -407,23 +450,6 @@ void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const
 		p << lnl;
 		m_hostSocket.send(p, c.ip, c.port);
 	}
-}
-
-void SockSmeller::hostSendDisconnect(const ConnectedClient& c)
-{
-	DisconnectConnection dc;
-	sf::Packet p;
-	p << dc;
-	m_hostSocket.send(p, c.ip, c.port);
-}
-
-void SockSmeller::clientSendKeepAlive()
-{
-	KeepAlive ka;
-	ka.timeStamp = timestamp();
-	sf::Packet p;
-	p << ka;
-	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
 }
 
 MessageType SockSmeller::getMessageTypeFromPacket(const sf::Packet& p) const
