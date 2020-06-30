@@ -35,7 +35,7 @@ public:
 
 	bool isSetup() const;
 	bool setupAsClient(const sf::IpAddress& ip, Krawler::uint16 port);
-	bool setupAsHost(Krawler::uint16 port);
+	bool setupAsHost(Krawler::uint16 port, Krawler::uint32 playerCount);
 	void tearDown();
 	void subscribeToMessageType(MessageType type, Subscriber& s);
 	std::wstring getDisplayName() const { return m_displayName; }
@@ -74,7 +74,7 @@ private:
 	void hostSendDisconnect(const ConnectedClient& c);
 
 	void clientSendKeepAlive();
-	
+
 	void hostSendUpdatedNameList();
 
 	MessageType getMessageTypeFromPacket(const sf::Packet& p) const;
@@ -91,6 +91,8 @@ private:
 	sf::Clock m_keepAliveClock;
 	sf::Clock m_keepAliveReplyClock;
 
+	Krawler::uint32 m_hostLobbyplayerCount = 1;
+
 	sf::IpAddress m_outboundIp;
 	Krawler::uint16 m_outboundPort;
 	Krawler::uint16 m_inboundPort;
@@ -103,7 +105,7 @@ private:
 	sf::String m_displayName;
 
 	std::thread m_updateThread;
-	
+
 	atombool m_bIsRunning = false;
 	atombool m_bConnEstablished = false;
 

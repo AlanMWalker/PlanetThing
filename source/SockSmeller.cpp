@@ -43,7 +43,7 @@ bool SockSmeller::setupAsClient(const sf::IpAddress& ip, uint16 port)
 	return true;
 }
 
-bool SockSmeller::setupAsHost(uint16 port)
+bool SockSmeller::setupAsHost(uint16 port, uint32 playerCount)
 {
 	m_inboundPort = port;
 	m_nodeType = NetworkNodeType::Host;
@@ -55,7 +55,7 @@ bool SockSmeller::setupAsHost(uint16 port)
 		return false;
 	}
 	m_hostSocket.setBlocking(false);
-
+	m_hostLobbyplayerCount = playerCount;
 	runSockSmeller();
 	return true;
 }
@@ -385,6 +385,12 @@ void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const
 	auto client = getConnectedClient(conClient.ip, conClient.port);
 	if (client)
 	{// Already connected, ignore this
+		return;
+	}
+
+	if (m_connectedClients.size() + 1 > m_hostLobbyplayerCount)
+	{
+		hostSendDisconnect(conClient);
 		return;
 	}
 	m_connectedClients.push_back(conClient);

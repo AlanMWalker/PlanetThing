@@ -31,7 +31,7 @@ void LobbySetup::onEnterScene()
 	{
 	case NetworkNodeType::Host:
 		KPrintf(L"Setting up host lobby with port of %hu\n", m_myLobbyPort);
-		SockSmeller::get().setupAsHost(m_myLobbyPort);
+		SockSmeller::get().setupAsHost(m_myLobbyPort, m_lobbySize);
 		m_lobbyState = LobbyState::HostWaiting;
 		break;
 
@@ -107,11 +107,11 @@ void LobbySetup::tickClient()
 	m_pImguiComp->begin("Lobby");
 	switch (m_lobbyState)
 	{
-	case LobbySetup::LobbyState::ClientConnecting:
+	case LobbyState::ClientConnecting:
 		ImGui::Text("Establishing connection..");
 		break;
 
-	case LobbySetup::LobbyState::ClientConnected:
+	case LobbyState::ClientConnected:
 		ImGui::Text("Waiting for players to join..");
 		ImGui::Separator();
 		ImGui::Text(" -- Connected users --");
@@ -122,8 +122,12 @@ void LobbySetup::tickClient()
 		}
 		break;
 
-	case LobbySetup::LobbyState::None:
-	case LobbySetup::LobbyState::HostWaiting:
+	case LobbyState::ClientDisconnected:
+	{
+		ImGui::Text("Disconnected..");
+	}
+	case LobbyState::None:
+	case LobbyState::HostWaiting:
 	default:
 		break;
 	}
@@ -157,6 +161,7 @@ void LobbySetup::handleClientDisconnect(ServerClientMessage* scm)
 {
 	KCHECK(scm);
 	KPRINTF("Client was disconnected by host \n");
+	m_lobbyState = LobbyState::ClientDisconnected;
 }
 
 void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)

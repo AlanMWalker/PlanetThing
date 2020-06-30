@@ -35,6 +35,7 @@ private:
 		None = -1,
 		ClientConnecting,
 		ClientConnected,
+		ClientDisconnected,
 		HostWaiting,
 	};
 
