@@ -6,6 +6,7 @@
 #include <atomic>
 #include <deque>
 #include <functional>
+#include <mutex>
 
 #include "ServerPackets.hpp"
 #include "NetworkUtils.hpp"
@@ -37,6 +38,11 @@ public:
 	bool setupAsHost(Krawler::uint16 port);
 	void tearDown();
 	void subscribeToMessageType(MessageType type, Subscriber& s);
+	std::wstring getDisplayName() const { return m_displayName; }
+	void setDisplayName(const std::wstring& displayName) { m_displayName = displayName; }
+
+	bool isClientConnectionEstablished() const { return m_bConnEstablished.load(); }
+	std::vector<std::wstring> getConnectedUserDisplayNames();
 
 private:
 
@@ -44,9 +50,15 @@ private:
 
 	struct ConnectedClient
 	{
+		bool operator ==(const ConnectedClient& c)
+		{
+			return c.displayName == displayName && c.port == port && c.ip == ip;
+		}
+
 		sf::IpAddress ip;
 		Krawler::uint16 port;
 		Krawler::int64 lastTimestamp;
+		std::wstring displayName;
 	};
 
 	void runSockSmeller();
@@ -72,13 +84,10 @@ private:
 	const float HostMaxDelta = 12.0f;
 	bool m_bIsSetup = false;
 
-
 	bool m_bReplyCountdownReset = false;
 	bool m_bKeepAliveSent = false;
 	sf::Clock m_keepAliveClock;
 	sf::Clock m_keepAliveReplyClock;
-
-
 
 	sf::IpAddress m_outboundIp;
 	Krawler::uint16 m_outboundPort;
@@ -89,8 +98,10 @@ private:
 
 	NetworkNodeType m_nodeType = NetworkNodeType::Client;
 
-	std::thread m_updateThread;
+	sf::String m_displayName;
 
+	std::thread m_updateThread;
+	
 	atombool m_bIsRunning = false;
 	atombool m_bConnEstablished = false;
 
@@ -98,4 +109,6 @@ private:
 	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
 
 	sf::Clock m_clientEstablishClock;
+
+	std::mutex m_connectedClientMutex;
 };

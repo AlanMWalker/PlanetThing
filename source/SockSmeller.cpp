@@ -22,7 +22,7 @@ bool SockSmeller::setupAsClient(const sf::IpAddress& ip, uint16 port)
 	m_clientSocket.setBlocking(false);
 	if (status == sf::Socket::Status::Error)
 	{
-		KPrintf(L"Failed to bind to local port of %hu \n", port);
+		KPrintf(L"Failed to bind to local port of %hu \n", SEND_PORT);
 		return false;
 	}
 
@@ -81,6 +81,22 @@ void SockSmeller::subscribeToMessageType(MessageType type, Subscriber& s)
 	m_subscribersMap[type].push_back(s);
 }
 
+std::vector<std::wstring> SockSmeller::getConnectedUserDisplayNames()
+{
+	std::vector<std::wstring> names;
+	if (m_nodeType == NetworkNodeType::Host)
+	{
+		std::lock_guard<std::mutex> guard(m_connectedClientMutex);
+
+		names.reserve(m_connectedClients.size());
+		for (auto& c : m_connectedClients)
+		{
+			names.push_back(c.displayName);
+		}
+	}
+	return names;
+}
+
 SockSmeller::SockSmeller()
 	: m_outboundPort(0), m_inboundPort(0)
 {
@@ -107,6 +123,7 @@ void SockSmeller::runClient()
 	EstablishConnection e;
 	e.timeStamp = timestamp();
 	e.clientVersion = "0.3.0";
+	e.displayName = m_displayName.toAnsiString();
 
 	sf::Packet p;
 	p << e;
@@ -178,6 +195,7 @@ void SockSmeller::runHost()
 {
 	while (m_bIsRunning)
 	{
+		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
 		//Process receive messages
 		sf::Packet p;
 		sf::IpAddress remoteIp;
@@ -243,7 +261,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		p >> con;
 
 		conClient.lastTimestamp = timestamp();
-
+		conClient.displayName = TO_WSTR(con.displayName);
 		replyEstablishHost(con, conClient);
 	}
 	break;
@@ -329,6 +347,18 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		}
 	}
 	break;
+
+	case MessageType::LobbyNameList:
+	{
+		for (auto s : m_subscribersMap[MessageType::LobbyNameList])
+		{
+			LobbyNameList lnl;
+			p >> lnl;
+			s(&lnl);
+		}
+	}
+	break;
+
 	case MessageType::None:
 	default:
 		break;
@@ -349,6 +379,34 @@ void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const
 	sf::Packet p;
 	p << e;
 	m_hostSocket.send(p, conClient.ip, conClient.port);
+
+	// Send all clients an updated name list
+	for (auto c : m_connectedClients)
+	{
+		LobbyNameList lnl;
+		lnl.timeStamp = timestamp();
+
+		lnl.nameList += TO_ASTR(m_displayName);
+		lnl.nameList += ',';
+
+		for (int i = 0; i < m_connectedClients.size(); ++i)
+		{
+			if (c == m_connectedClients[i])
+			{
+				continue;
+			}
+
+			lnl.nameList += TO_ASTR(m_connectedClients[i].displayName);
+			if (i < m_connectedClients.size() - 1)
+			{
+				lnl.nameList += ',';
+			}
+		}
+
+		sf::Packet p;
+		p << lnl;
+		m_hostSocket.send(p, c.ip, c.port);
+	}
 }
 
 void SockSmeller::hostSendDisconnect(const ConnectedClient& c)

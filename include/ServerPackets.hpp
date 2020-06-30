@@ -11,6 +11,7 @@ enum class MessageType : Krawler::int32
 	KeepAlive,
 	Establish,
 	Disconnect,
+	LobbyNameList
 };
 
 #pragma region Server Client Base Struct
@@ -64,20 +65,20 @@ struct EstablishConnection : public ServerClientMessage
 {
 	EstablishConnection() { type = MessageType::Establish; }
 	std::string clientVersion;
+	std::string displayName;
 };
 
 static sf::Packet& operator <<(sf::Packet& p, const EstablishConnection& establishStruct)
 {
 	write_base_out(p, (ServerClientMessage*)&establishStruct);
-
-	return p << establishStruct.clientVersion;
+	return p << establishStruct.clientVersion << establishStruct.displayName;
 }
 
 
 static sf::Packet& operator >>(sf::Packet& p, EstablishConnection& establishStruct)
 {
 	read_base_in(p, (ServerClientMessage*)&establishStruct);
-	return p >> establishStruct.clientVersion;
+	return p >> establishStruct.clientVersion >> establishStruct.displayName;
 }
 #pragma endregion
 
@@ -99,6 +100,29 @@ static sf::Packet& operator >>(sf::Packet& p, DisconnectConnection& dc)
 {
 	read_base_in(p, (ServerClientMessage*)&dc);
 	return p;
+}
+
+#pragma endregion
+
+//--------------------------------------------------------------------------------
+#pragma region Lobby Name List Struct
+struct LobbyNameList : public ServerClientMessage
+{
+	LobbyNameList() { type = MessageType::LobbyNameList; }
+	std::string nameList; //csv list
+};
+
+
+static sf::Packet& operator <<(sf::Packet& p, const LobbyNameList& lnl)
+{
+	write_base_out(p, (ServerClientMessage*)&lnl);
+	return p << lnl.nameList;
+}
+
+static sf::Packet& operator >>(sf::Packet& p, LobbyNameList& lnl)
+{
+	read_base_in(p, (ServerClientMessage*)&lnl);
+	return p >> lnl.nameList;
 }
 
 #pragma endregion

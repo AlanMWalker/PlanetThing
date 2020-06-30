@@ -1,8 +1,9 @@
 #include "LobbySetup.hpp"
 #include "Blackboard.hpp"
+#include "ServerPackets.hpp"
 
 #include <string>
-
+#include <sstream>
 
 using namespace Krawler;
 
@@ -25,12 +26,13 @@ KInitStatus LobbySetup::init()
 void LobbySetup::onEnterScene()
 {
 	KPrintf(L"My network type is %s \n", m_nodeType == NetworkNodeType::Client ? L"Client" : L"Host");
-
+	SockSmeller::get().setDisplayName(m_displayName);
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:
 		KPrintf(L"Setting up host lobby with port of %hu\n", m_myLobbyPort);
 		SockSmeller::get().setupAsHost(m_myLobbyPort);
+		m_lobbyState = LobbyState::HostWaiting;
 		break;
 
 	case NetworkNodeType::Client:
@@ -40,9 +42,12 @@ void LobbySetup::onEnterScene()
 
 		SockSmeller::Subscriber establish = [this](ServerClientMessage* scm) { handleClientEstablish(scm); };
 		SockSmeller::Subscriber disconnect = [this](ServerClientMessage* scm) { handleClientDisconnect(scm); };
+		SockSmeller::Subscriber lnl = [this](ServerClientMessage* scm) { handleClientLobbyNameList(scm); };
 
 		SockSmeller::get().subscribeToMessageType(MessageType::Establish, establish);
 		SockSmeller::get().subscribeToMessageType(MessageType::Disconnect, disconnect);
+		SockSmeller::get().subscribeToMessageType(MessageType::LobbyNameList, lnl);
+		m_lobbyState = LobbyState::ClientConnecting;
 	}
 	default:
 		break;
@@ -51,20 +56,18 @@ void LobbySetup::onEnterScene()
 
 void LobbySetup::tick()
 {
-	m_pImguiComp->update();
-	m_pImguiComp->begin("Lobby");
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:
-		ImGui::Text("Waiting for players to join..");
+		tickHost();
 		break;
 
 	case NetworkNodeType::Client:
-		ImGui::Text("Establishing connection..");
+		tickClient();
 	default:
 		break;
 	}
-	m_pImguiComp->end();
+
 }
 
 void LobbySetup::setNetworkNodeType(NetworkNodeType type)
@@ -88,12 +91,87 @@ void LobbySetup::setHostLobbyDetails(const sf::IpAddress& ip, uint16 port)
 	m_lobbyHostPort = port;
 }
 
+void LobbySetup::setDisplayName(const std::wstring& displayName)
+{
+	m_displayName = displayName;
+}
+
+void LobbySetup::tickClient()
+{
+	if (SockSmeller::get().isClientConnectionEstablished() && m_lobbyState == LobbyState::ClientConnecting)
+	{
+		m_lobbyState = LobbyState::ClientConnected;
+	}
+
+	m_pImguiComp->update();
+	m_pImguiComp->begin("Lobby");
+	switch (m_lobbyState)
+	{
+	case LobbySetup::LobbyState::ClientConnecting:
+		ImGui::Text("Establishing connection..");
+		break;
+
+	case LobbySetup::LobbyState::ClientConnected:
+		ImGui::Text("Waiting for players to join..");
+		ImGui::Separator();
+		ImGui::Text(" -- Connected users --");
+		ImGui::Text(&TO_ASTR(m_displayName)[0]);
+		for (auto& name : m_lobbyNamesClient)
+		{
+			ImGui::Text(&name[0]);
+		}
+		break;
+
+	case LobbySetup::LobbyState::None:
+	case LobbySetup::LobbyState::HostWaiting:
+	default:
+		break;
+	}
+	m_pImguiComp->end();
+}
+
+void LobbySetup::tickHost()
+{
+	m_pImguiComp->update();
+	m_pImguiComp->begin("Lobby");
+	ImGui::Text("Waiting for players to join..");
+	ImGui::Separator();
+	ImGui::Text(" -- Connected users --");
+	ImGui::Text(&TO_ASTR(m_displayName)[0]);
+	auto namesList = SockSmeller::get().getConnectedUserDisplayNames();
+	for (auto& n : namesList)
+	{
+		ImGui::Text(&TO_ASTR(n)[0]);
+	}
+	m_pImguiComp->end();
+}
+
 void LobbySetup::handleClientEstablish(ServerClientMessage* scm)
 {
+	KCHECK(scm);
+
 	KPRINTF("Establish was replied to \n");
 }
 
 void LobbySetup::handleClientDisconnect(ServerClientMessage* scm)
 {
+	KCHECK(scm);
 	KPRINTF("Client was disconnected by host \n");
+}
+
+void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)
+{
+	KCHECK(scm);
+	if (!scm)
+	{
+		return;
+	}
+
+	LobbyNameList& lnl = *((LobbyNameList*)(scm));
+	std::stringstream ss(lnl.nameList);
+	std::string name;
+	while (std::getline(ss, name, ','))
+	{
+		m_lobbyNamesClient.push_back(name);
+	}
 }
