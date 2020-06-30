@@ -1,15 +1,16 @@
 #include "LobbySetup.hpp"
 #include "Blackboard.hpp"
 #include "ServerPackets.hpp"
+#include "GameSetup.hpp"
 
 #include <string>
 #include <sstream>
 
 using namespace Krawler;
 
-LobbySetup::LobbySetup()
+LobbySetup::LobbySetup(GameSetup& gs)
 	: KComponentBase(GET_SCENE_NAMED(Blackboard::LobbyScene)->addEntityToScene()), m_lobbySize((unsigned)Blackboard::MIN_NETWORKED),
-	m_lobbyHostPort(0), m_myLobbyPort(0)
+	m_lobbyHostPort(0), m_myLobbyPort(0), m_gameSetup(gs)
 {
 	getEntity()->addComponent(this);
 }
@@ -43,10 +44,14 @@ void LobbySetup::onEnterScene()
 		SockSmeller::Subscriber establish = [this](ServerClientMessage* scm) { handleClientEstablish(scm); };
 		SockSmeller::Subscriber disconnect = [this](ServerClientMessage* scm) { handleClientDisconnect(scm); };
 		SockSmeller::Subscriber lnl = [this](ServerClientMessage* scm) { handleClientLobbyNameList(scm); };
+		SockSmeller::Subscriber gen = [this](ServerClientMessage* scm) { handleClientGenLevel(scm); };
+
 
 		SockSmeller::get().subscribeToMessageType(MessageType::Establish, establish);
 		SockSmeller::get().subscribeToMessageType(MessageType::Disconnect, disconnect);
 		SockSmeller::get().subscribeToMessageType(MessageType::LobbyNameList, lnl);
+		SockSmeller::get().subscribeToMessageType(MessageType::GeneratedLevel, gen);
+
 		m_lobbyState = LobbyState::ClientConnecting;
 	}
 	default:
@@ -147,6 +152,7 @@ void LobbySetup::tickClient()
 
 void LobbySetup::tickHost()
 {
+	bool bStartLobby = false;
 	m_pImguiComp->update();
 	m_pImguiComp->begin("Lobby");
 	ImGui::Text("Waiting for players to join..");
@@ -167,12 +173,22 @@ void LobbySetup::tickHost()
 		SockSmeller::get().tearDown();
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::MenuScene);
 	}
-	
-	if (m_lobbyNamesClient.size() == (uint64)m_lobbySize)
+
+	if (SockSmeller::get().getConnectedUserDisplayNames().size() == (uint64)m_lobbySize)
 	{
-		bool bCancel = ImGui::Button("Start");
+		bStartLobby = ImGui::Button("Start");
+		if (bStartLobby)
+		{
+			m_gameSetup.setGameType(GameSetup::GameType::Networked);
+
+		}
 	}
 	m_pImguiComp->end();
+
+	if (bStartLobby)
+	{
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::GameScene);
+	}
 }
 
 void LobbySetup::handleClientEstablish(ServerClientMessage* scm)
@@ -206,4 +222,10 @@ void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)
 	{
 		m_lobbyNamesClient.push_back(name);
 	}
+}
+
+void LobbySetup::handleClientGenLevel(ServerClientMessage* scm)
+{
+	GeneratedLevel& gen = *((GeneratedLevel*)(scm));
+	m_gameSetup.setLevelGen(gen);
 }

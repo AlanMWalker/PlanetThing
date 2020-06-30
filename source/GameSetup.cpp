@@ -16,6 +16,8 @@
 #include "CelestialBody.hpp"
 #include "CPUPlayerController.hpp"
 
+#include "SockSmeller.hpp"
+
 using namespace Krawler;
 using namespace Krawler::Input;
 using namespace Krawler::Components;
@@ -80,9 +82,28 @@ void GameSetup::onEnterScene()
 	m_pBackground->getComponent<KCRenderableBase>()->setRenderLayer(-1);
 	//m_pBackground->getComponent<KCSprite>()->setColour(Colour::Black);
 	m_pBackground->getComponent<KCSprite>()->setTexture(backgroundTex);
-	setupLevel();
 
-
+	switch (m_gameType)
+	{
+	case GameSetup::GameType::Local:
+		setupLevelLocal();
+		break;
+	case GameSetup::GameType::Networked:
+		if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
+		{
+			setupLevelNetworkedHost();
+		}
+		else
+		{
+			setupLevelNetworkedClient();
+		}
+		
+		break;
+	default:
+		// Like seriously, this should never happen..
+		KCHECK(false);
+		break;
+	}
 
 	m_defaultView = GET_APP()->getRenderWindow()->getView();
 	//m_defaultView.setCenter(m_entities[0]->m_pTransform->getPosition());
@@ -289,7 +310,7 @@ void GameSetup::createCelestialBodies()
 	}
 }
 
-void GameSetup::setupLevel()
+void GameSetup::setupLevelLocal()
 {
 	std::vector<CelestialBody*> planetsFound;
 	int count = 0;
@@ -309,33 +330,6 @@ void GameSetup::setupLevel()
 				if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
 				{
 					if (count >= m_aiCount)
-					{
-						celestial->setInActive();
-					}
-					else
-					{
-						planetsFound.push_back(celestial);
-						++count;
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		for (auto& ai : m_aiPlanets)
-		{
-			ai->getComponent<CelestialBody>()->setInActive();
-		}
-
-		for (auto np : m_networkedPlanets)
-		{
-			auto celestial = np->getComponent<CelestialBody>();
-			if (celestial)
-			{
-				if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
-				{
-					if (count > m_aiCount) // needs to be network count instead
 					{
 						celestial->setInActive();
 					}
@@ -395,5 +389,116 @@ void GameSetup::setupLevel()
 	{
 		planetsFound[i]->setPosition(points[i]);
 	}
+}
+
+void GameSetup::setupLevelNetworkedHost()
+{
+	std::vector<CelestialBody*> planetsFound;
+	int count = 0;
+	planetsFound.push_back(m_pPlayerPlanet->getComponent<CelestialBody>());
+	for (auto& ai : m_aiPlanets)
+	{
+		ai->getComponent<CelestialBody>()->setInActive();
+	}
+
+	for (auto ai : m_networkedPlanets)
+	{
+		auto celestial = ai->getComponent<CelestialBody>();
+		if (celestial)
+		{
+			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
+			{
+				if (count >= m_aiCount)
+				{
+					celestial->setInActive();
+				}
+				else
+				{
+					planetsFound.push_back(celestial);
+					++count;
+				}
+			}
+		}
+	}
+
+
+	const float boundRadius = Blackboard::PLANET_RADIUS * 4.0f;
+	std::vector<Vec2f> points;
+	points.resize(planetsFound.size());
+
+	auto doesOverlap = [&points, &boundRadius](const Vec2f& p) -> bool
+	{
+		for (auto& v : points)
+		{
+			if (&v == &p)
+			{
+				continue;
+			}
+
+			const bool isBelow = GetSquareLength(v - p) < boundRadius * boundRadius;
+			if (isBelow)
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+
+	auto randPoint = [&boundRadius]() -> Vec2f
+	{
+		return Vec2f(RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().x - boundRadius),
+			RandFloat(boundRadius, GET_APP()->getRenderWindow()->getSize().y - boundRadius));
+	};
+
+	for (auto& v : points)
+	{
+		v = randPoint();
+	}
+
+	for (auto& v : points)
+	{
+		while (doesOverlap(v))
+		{
+			v = randPoint();
+		}
+	}
+
+	for (uint64 i = 0; i < points.size(); ++i)
+	{
+		planetsFound[i]->setPosition(points[i]);
+	}
+
+	std::stack<std::string> nameStack;
+	auto nameList = SockSmeller::get().getConnectedUserDisplayNames();
+	std::random_shuffle(nameList.begin(), nameList.end());
+	for (auto n : nameList)
+	{
+		nameStack.push(TO_ASTR(n));
+	}
+
+	// send planet mass & positions to other client
+	GeneratedLevel genLevel;
+	for (auto p : planetsFound)
+	{
+		genLevel.masses.push_back(p->getMass());
+		genLevel.positions.push_back(p->getCentre());
+
+		if (p->getEntity() == m_pPlayerPlanet)
+		{
+			genLevel.names.push_back(TO_ASTR(SockSmeller::get().getDisplayName()));
+		}
+		else
+		{
+			KCHECK(!nameStack.empty());
+			genLevel.names.push_back(nameStack.top());
+			nameStack.pop();
+		}
+	}
+	genLevel.numOfPlanets = planetsFound.size();
+	SockSmeller::get().hostSendGenLevel(genLevel);
+}
+
+void GameSetup::setupLevelNetworkedClient()
+{
 }
 

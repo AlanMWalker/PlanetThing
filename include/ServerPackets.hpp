@@ -2,8 +2,11 @@
 
 #include <string>
 #include <SFML/Network.hpp>
+#include <stdint.h>
 
 #include <Krawler.h>
+#include <vector>
+#include <memory.h>
 
 enum class MessageType : Krawler::int32
 {
@@ -11,7 +14,8 @@ enum class MessageType : Krawler::int32
 	KeepAlive,
 	Establish,
 	Disconnect,
-	LobbyNameList
+	LobbyNameList,
+	GeneratedLevel
 };
 
 #pragma region Server Client Base Struct
@@ -123,6 +127,92 @@ static sf::Packet& operator >>(sf::Packet& p, LobbyNameList& lnl)
 {
 	read_base_in(p, (ServerClientMessage*)&lnl);
 	return p >> lnl.nameList;
+}
+
+#pragma endregion
+
+//--------------------------------------------------------------------------------
+#pragma region Level Gen Struct
+struct GeneratedLevel : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	GeneratedLevel() { type = MessageType::GeneratedLevel; }
+
+	Krawler::uint64 numOfPlanets = 0;
+
+	std::vector<Krawler::Vec2f> positions;
+	std::vector<float> masses;
+	std::vector<std::string> names;
+};
+
+// Write out in this order
+// Num of planets
+// Planet positions 
+// Planet masses
+// Display Name Owners
+static sf::Packet& operator <<(sf::Packet& p, const GeneratedLevel& genLevel)
+{
+	write_base_out(p, (ServerClientMessage*)&genLevel);
+	p << genLevel.numOfPlanets;
+
+	const Krawler::uint64 PosBufferSize = sizeof(Krawler::Vec2f) * genLevel.numOfPlanets;
+	const Krawler::uint64 MassBufferSize = sizeof(float) * genLevel.numOfPlanets;
+
+	char* positionBuffer = new char[PosBufferSize];
+	KCHECK(positionBuffer);
+
+	char* massBuffer = new char[MassBufferSize];
+	KCHECK(massBuffer);
+
+	memcpy_s((void*)positionBuffer, PosBufferSize, (void*)&genLevel.positions[0], PosBufferSize);
+	memcpy_s((void*)massBuffer, MassBufferSize, (void*)&genLevel.masses[0], MassBufferSize);
+
+	p.append(positionBuffer, PosBufferSize);
+	p.append(massBuffer, MassBufferSize);
+
+	for (auto& name : genLevel.names)
+	{
+		p.append(name.c_str(), name.length());
+	}
+
+	delete[] positionBuffer;
+	delete[] massBuffer;
+	return p;
+}
+
+static sf::Packet& operator >>(sf::Packet& p, GeneratedLevel& genLevel)
+{
+	read_base_in(p, (ServerClientMessage*)&genLevel);
+	// Addon the offset for the number of planets var into the struct
+	
+	char* pData = (char*)p.getData() + sizeof(MessageType) + sizeof(long long);
+
+	memcpy_s(&genLevel.numOfPlanets, sizeof(Krawler::uint64), pData, sizeof(Krawler::uint64));
+	genLevel.numOfPlanets = _byteswap_uint64(genLevel.numOfPlanets);
+
+	const Krawler::uint64 PosBufferSize = sizeof(Krawler::Vec2f) * genLevel.numOfPlanets;
+	const Krawler::uint64 MassBufferSize = sizeof(float) * genLevel.numOfPlanets;
+
+	genLevel.positions.resize(genLevel.numOfPlanets);
+	genLevel.masses.resize(genLevel.numOfPlanets);
+	genLevel.names.resize(genLevel.numOfPlanets);
+
+	const Krawler::uint64 PositionOffset = sizeof(Krawler::uint64);
+	const Krawler::uint64 MassOffset = sizeof(Krawler::uint64) + PosBufferSize;
+	const Krawler::uint64 NamesOffset = sizeof(Krawler::uint64) + PosBufferSize + MassBufferSize;
+
+	memcpy_s((void*)&genLevel.positions[0], PosBufferSize, (void*)(pData + PositionOffset), PosBufferSize);
+	memcpy_s((void*)&genLevel.masses[0], MassBufferSize, (void*)(pData + MassOffset), MassBufferSize);
+
+	std::string tempName;
+
+	for (Krawler::uint64 i = 0; i < genLevel.numOfPlanets; ++i)
+	{
+		tempName = (pData + NamesOffset);
+		genLevel.names[i] = tempName;
+	}
+	return p;
 }
 
 #pragma endregion

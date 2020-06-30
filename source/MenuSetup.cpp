@@ -104,7 +104,7 @@ void MenuSetup::tick()
 		bPlaySinglePlayer = false;
 		bHostMultiplayer = false;
 	}
-	
+
 	if (bHostPressed)
 	{
 		m_ls.setHostLobbySize(playerLobbySize);
@@ -117,4 +117,6 @@ void MenuSetup::tick()
 		bHostMultiplayer = false;
 	}
 
+	aiCount = Maths::Clamp(Blackboard::MIN_AI, Blackboard::MAX_AI, aiCount);
+	playerLobbySize = Maths::Clamp(Blackboard::MIN_NETWORKED, Blackboard::MAX_NETWORKED, playerLobbySize);
 }

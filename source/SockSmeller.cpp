@@ -110,6 +110,18 @@ std::vector<std::wstring> SockSmeller::getConnectedUserDisplayNames()
 	return names;
 }
 
+void SockSmeller::hostSendGenLevel(GeneratedLevel& genLevel)
+{
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
+	genLevel.timeStamp = timestamp();
+	
+	sf::Packet p;
+	p << genLevel;
+
+	for (auto& c : m_connectedClients)
+		m_hostSocket.send(p, c.ip, c.port);
+}
+
 SockSmeller::SockSmeller()
 	: m_outboundPort(0), m_inboundPort(0)
 {
@@ -360,7 +372,7 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	{
 		if (m_subscribersMap.count(MessageType::Establish) > 0)
 		{
-			for (auto s : m_subscribersMap[MessageType::Disconnect])
+			for (auto& s : m_subscribersMap[MessageType::Disconnect])
 			{
 				DisconnectConnection dc;
 				p >> dc;
@@ -373,7 +385,7 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 
 	case MessageType::LobbyNameList:
 	{
-		for (auto s : m_subscribersMap[MessageType::LobbyNameList])
+		for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
 		{
 			LobbyNameList lnl;
 			p >> lnl;
@@ -382,6 +394,16 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	}
 	break;
 
+	case::MessageType::GeneratedLevel: 
+	{
+		for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
+		{
+			GeneratedLevel gen;
+			p >> gen;
+			s(&gen);
+		}
+	}
+	break;
 	case MessageType::None:
 	default:
 		break;

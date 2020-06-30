@@ -31,8 +31,8 @@ int main(void)
 	KApplicationInitialise initApp(false);
 	initApp.gameFps = 60;
 	initApp.physicsFps = 120;
-	initApp.width = 1920;//1024;
-	initApp.height = 1080;//768;
+	initApp.width = 1024;
+	initApp.height = 768;
 	initApp.windowStyle = KWindowStyle::Windowed_Resizeable;
 
 	std::wifstream input;
@@ -43,7 +43,7 @@ int main(void)
 	}
 	else
 	{
-		std::wstring version; 
+		std::wstring version;
 		version.resize(20);
 		input.getline(&version[0], 20, '\n');
 		initApp.windowTitle = L"Planet Thing - " + version;
@@ -60,14 +60,14 @@ int main(void)
 	// (don't need to delete as they will
 	// be destroyed by KRAWLER)
 	GameSetup* g = new GameSetup;
-	LobbySetup* ls = new LobbySetup;
+	LobbySetup* ls = new LobbySetup(*g);
 	MenuSetup* m = new MenuSetup(*g, *ls);
-	
+
 	InitialiseSubmodules();
 	RunApplication();
 	ShutdownEngine();
 	SockSmeller::get().tearDown();
-	delete &SockSmeller::get();
+	delete& SockSmeller::get();
 
 	_CrtDumpMemoryLeaks();
 

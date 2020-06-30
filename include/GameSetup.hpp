@@ -10,6 +10,7 @@
 #include "ProjectilePath.hpp"
 #include "NewtonianGravity.hpp"
 #include "LocalPlayerController.hpp"
+#include "ServerPackets.hpp"
 
 namespace sf
 {
@@ -50,6 +51,7 @@ struct DbgLineDraw
 
 class CelestialBody;
 
+
 class GameSetup :
 	public Krawler::KComponentBase
 {
@@ -74,7 +76,10 @@ public:
 	// Invoked by MenuSetup before it transitions into the singleplayer game
 	void setAIPlayerCount(Krawler::int32 count);
 
+	// Invoked by LobbySetup before it transitions into the networked game
+	void setNetworkPlayerCount(Krawler::int32 count) { m_networkedCount = count; }
 	void setGameType(GameType type) { m_gameType = type; }
+	void setLevelGen(const GeneratedLevel& level) { m_genLevel = level; }
 
 private:
 
@@ -87,7 +92,9 @@ private:
 
 	void createCelestialBodies();
 
-	void setupLevel();
+	void setupLevelLocal();
+	void setupLevelNetworkedHost();
+	void setupLevelNetworkedClient();
 
 	Krawler::KEntity* m_pPlayerPlanet = nullptr;
 	std::vector<Krawler::KEntity*> m_networkedPlanets;
@@ -109,6 +116,8 @@ private:
 	LocalPlayerController* m_playerController = nullptr;
 
 	NewtonianGravity m_newton;
+	GeneratedLevel m_genLevel;
 
 	Krawler::int32 m_aiCount = Blackboard::MIN_AI;
+	Krawler::int32 m_networkedCount = Blackboard::MIN_NETWORKED;
 };

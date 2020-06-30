@@ -58,6 +58,10 @@ public:
 	void setLobbyState(LobbyState lobbyState) { m_lobbyState = lobbyState; }
 	LobbyState getLobbyState() const { return m_lobbyState; }
 
+	NetworkNodeType getNetworkNodeType() const { return m_nodeType; }
+
+	void hostSendGenLevel(GeneratedLevel& genLevel);
+	
 private:
 
 	SockSmeller();
