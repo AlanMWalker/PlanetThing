@@ -1,6 +1,7 @@
+#include <future>
+
 #include "SockSmeller.hpp"
 #include "Blackboard.hpp"
-#include <future>
 
 using namespace Krawler;
 
@@ -114,7 +115,7 @@ void SockSmeller::hostSendGenLevel(GeneratedLevel& genLevel)
 {
 	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	genLevel.timeStamp = timestamp();
-	
+
 	sf::Packet p;
 	p << genLevel;
 
@@ -129,6 +130,7 @@ SockSmeller::SockSmeller()
 
 void SockSmeller::runSockSmeller()
 {
+
 	m_bIsRunning = true;
 	switch (m_nodeType)
 	{
@@ -159,6 +161,8 @@ void SockSmeller::runClient()
 
 	while (m_bIsRunning)
 	{
+		sf::Clock c;
+
 		//Process receive messages
 		sf::IpAddress remoteIp;
 		uint16 remotePort = 0u;
@@ -212,14 +216,19 @@ void SockSmeller::runClient()
 			m_bIsRunning = false;
 			break;
 		}
+		auto t = c.restart().asMilliseconds();
+		std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
 		// Send new packets
 	}
 }
 
 void SockSmeller::runHost()
 {
+
 	while (m_bIsRunning)
 	{
+		sf::Clock c;
+
 		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
 		//Process receive messages
 		sf::Packet p;
@@ -245,7 +254,9 @@ void SockSmeller::runHost()
 		}
 
 		hostCheckForDeadClients();
-		// Send new packets
+
+		auto t = c.restart().asMilliseconds();
+		std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
 	}
 	KPrintf(L"Bye..\n");
 
@@ -351,6 +362,7 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 				s(&e);
 			}
 		}
+		m_clientSocket.setBlocking(false);
 	}
 	break;
 	case MessageType::KeepAlive:
@@ -370,7 +382,7 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	break;
 	case MessageType::Disconnect:
 	{
-		if (m_subscribersMap.count(MessageType::Establish) > 0)
+		if (m_subscribersMap.count(MessageType::Disconnect) > 0)
 		{
 			for (auto& s : m_subscribersMap[MessageType::Disconnect])
 			{
@@ -385,22 +397,28 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 
 	case MessageType::LobbyNameList:
 	{
-		for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
+		if (m_subscribersMap.count(MessageType::LobbyNameList) > 0)
 		{
-			LobbyNameList lnl;
-			p >> lnl;
-			s(&lnl);
+			for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
+			{
+				LobbyNameList lnl;
+				p >> lnl;
+				s(&lnl);
+			}
 		}
 	}
 	break;
 
-	case::MessageType::GeneratedLevel: 
+	case::MessageType::GeneratedLevel:
 	{
-		for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
+		if (m_subscribersMap.count(MessageType::GeneratedLevel) > 0)
 		{
-			GeneratedLevel gen;
-			p >> gen;
-			s(&gen);
+			for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
+			{
+				GeneratedLevel gen;
+				p >> gen;
+				s(&gen);
+			}
 		}
 	}
 	break;

@@ -63,7 +63,7 @@ void LobbySetup::onEnterScene()
 void LobbySetup::tick()
 {
 	SockSmeller::get().setLobbyState(m_lobbyState);
-
+	std::lock_guard<std::mutex> g(m_gameStateMutex);
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:

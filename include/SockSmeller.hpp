@@ -79,6 +79,9 @@ private:
 		std::wstring displayName;
 	};
 
+	const uint32 REFRESH_RATE = static_cast<uint32>(((1.0f / 100.0f) * 1000));
+
+
 	void runSockSmeller();
 	void runClient();
 	void runHost();
