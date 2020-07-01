@@ -97,7 +97,7 @@ void GameSetup::onEnterScene()
 		{
 			setupLevelNetworkedClient();
 		}
-		
+
 		break;
 	default:
 		// Like seriously, this should never happen..
@@ -408,7 +408,7 @@ void GameSetup::setupLevelNetworkedHost()
 		{
 			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
 			{
-				if (count >= m_aiCount)
+				if (count >= m_networkedCount)
 				{
 					celestial->setInActive();
 				}
@@ -500,5 +500,44 @@ void GameSetup::setupLevelNetworkedHost()
 
 void GameSetup::setupLevelNetworkedClient()
 {
+	std::vector<CelestialBody*> planetsFound;
+	int count = 0;
+	planetsFound.push_back(m_pPlayerPlanet->getComponent<CelestialBody>());
+	for (auto& ai : m_aiPlanets)
+	{
+		ai->getComponent<CelestialBody>()->setInActive();
+	}
+
+	for (auto networkedPlayer : m_networkedPlanets)
+	{
+		auto celestial = networkedPlayer->getComponent<CelestialBody>();
+		if (celestial)
+		{
+			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
+			{
+				// -1 for players planet
+				if (count >= (m_genLevel.numOfPlanets - 1))
+				{
+					celestial->setInActive();
+				}
+				else
+				{
+					planetsFound.push_back(celestial);
+					++count;
+				}
+			}
+		}
+	}
+
+
+	for (uint64 i = 0; i < m_genLevel.positions.size(); ++i)
+	{
+		planetsFound[i]->setPosition(m_genLevel.positions[i]);
+		planetsFound[i]->setMass(m_genLevel.masses[i]);
+		if (TO_WSTR(m_genLevel.names[i]) == SockSmeller::get().getDisplayName())
+		{
+			m_pPlayerPlanet->getComponent<BaseController>()->setHostPlanet(planetsFound[i]);
+		}
+	}
 }
 

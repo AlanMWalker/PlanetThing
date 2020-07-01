@@ -54,4 +54,6 @@ private:
 
 	std::vector<std::string> m_lobbyNamesClient; // Filled in for client only. host will reqest 
 	GameSetup& m_gameSetup;
+
+	std::mutex m_gameStateMutex;
 };

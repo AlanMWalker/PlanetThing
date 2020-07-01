@@ -226,6 +226,9 @@ void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)
 
 void LobbySetup::handleClientGenLevel(ServerClientMessage* scm)
 {
+	std::lock_guard<std::mutex> g(m_gameStateMutex);
 	GeneratedLevel& gen = *((GeneratedLevel*)(scm));
 	m_gameSetup.setLevelGen(gen);
+	m_lobbyState = LobbyState::InGame;
+	GET_APP()->getSceneDirector().transitionToScene(Blackboard::GameScene);
 }

@@ -27,17 +27,18 @@ KInitStatus LocalPlayerController::init()
 		return result;
 	}
 
+	return KInitStatus::Success;
+}
+
+void LocalPlayerController::onEnterScene()
+{
 	auto God = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
 	KCHECK(God);
 	m_pImgui = God->getComponent<imguicomp>();
 
 	auto playerTex = ASSET().getTexture(L"player_ship");
 	getEntity()->getComponent<KCSprite>()->setTexture(playerTex);
-	return KInitStatus::Success;
-}
 
-void LocalPlayerController::onEnterScene()
-{
 	m_orbitRadius = Blackboard::PLAYER_ORBIT_RADIUS;
 	BaseController::onEnterScene();
 }
@@ -68,3 +69,4 @@ void LocalPlayerController::tick()
 		fireProjectile();
 	}
 }
+

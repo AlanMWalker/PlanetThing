@@ -99,6 +99,7 @@ void MenuSetup::tick()
 		m_ls.setHostLobbyDetails(ip, port);
 		m_ls.setNetworkNodeType(NetworkNodeType::Client);
 		m_ls.setDisplayName(TO_WSTR(displayName));
+		m_gs.setGameType(GameSetup::GameType::Networked);
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
 		bJoinMultiplayer = false;
 		bPlaySinglePlayer = false;
@@ -109,6 +110,7 @@ void MenuSetup::tick()
 	{
 		m_ls.setHostLobbySize(playerLobbySize);
 		m_ls.setMyLobbyPort((uint16)port);
+		m_gs.setGameType(GameSetup::GameType::Networked);
 		m_ls.setNetworkNodeType(NetworkNodeType::Host);
 		m_ls.setDisplayName(TO_WSTR(displayName));
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);

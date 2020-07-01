@@ -85,6 +85,11 @@ void BaseController::tick()
 	updateTransform();
 }
 
+void BaseController::setHostPlanet(CelestialBody* pHost)
+{
+	m_pHostPlanet = pHost;
+}
+
 void BaseController::fireProjectile()
 {
 	if (m_bFirstShot)
