@@ -168,6 +168,7 @@ void SockSmeller::runClient()
 		uint16 remotePort = 0u;
 
 		sf::Socket::Status status = m_clientSocket.receive(p, remoteIp, remotePort);
+		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
 
 		if (m_clientEstablishClock.getElapsedTime() > sf::seconds(2.0f) && !m_bConnEstablished)
 		{
@@ -224,7 +225,6 @@ void SockSmeller::runClient()
 
 void SockSmeller::runHost()
 {
-
 	while (m_bIsRunning)
 	{
 		sf::Clock c;
@@ -256,7 +256,8 @@ void SockSmeller::runHost()
 		hostCheckForDeadClients();
 
 		auto t = c.restart().asMilliseconds();
-		std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
+		if (REFRESH_RATE - t < REFRESH_RATE)
+			std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
 	}
 	KPrintf(L"Bye..\n");
 

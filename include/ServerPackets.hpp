@@ -159,25 +159,16 @@ static sf::Packet& operator <<(sf::Packet& p, const GeneratedLevel& genLevel)
 	const Krawler::uint64 PosBufferSize = sizeof(Krawler::Vec2f) * genLevel.numOfPlanets;
 	const Krawler::uint64 MassBufferSize = sizeof(float) * genLevel.numOfPlanets;
 
-	char* positionBuffer = new char[PosBufferSize];
-	KCHECK(positionBuffer);
+	p.append((void*)&genLevel.positions[0], PosBufferSize);
+	p.append((void*)&genLevel.masses[0], MassBufferSize);
 
-	char* massBuffer = new char[MassBufferSize];
-	KCHECK(massBuffer);
-
-	memcpy_s((void*)positionBuffer, PosBufferSize, (void*)&genLevel.positions[0], PosBufferSize);
-	memcpy_s((void*)massBuffer, MassBufferSize, (void*)&genLevel.masses[0], MassBufferSize);
-
-	p.append(positionBuffer, PosBufferSize);
-	p.append(massBuffer, MassBufferSize);
-
-	for (auto& name : genLevel.names)
+	for (auto name : genLevel.names)
 	{
+		name.erase(std::find(name.begin(), name.end(), '\0'), name.end());
 		p.append(name.c_str(), name.length());
+		p << (Krawler::uint8)('\0');
 	}
 
-	delete[] positionBuffer;
-	delete[] massBuffer;
 	return p;
 }
 
@@ -185,7 +176,7 @@ static sf::Packet& operator >>(sf::Packet& p, GeneratedLevel& genLevel)
 {
 	read_base_in(p, (ServerClientMessage*)&genLevel);
 	// Addon the offset for the number of planets var into the struct
-	
+
 	char* pData = (char*)p.getData() + sizeof(MessageType) + sizeof(long long);
 
 	memcpy_s(&genLevel.numOfPlanets, sizeof(Krawler::uint64), pData, sizeof(Krawler::uint64));
@@ -206,12 +197,16 @@ static sf::Packet& operator >>(sf::Packet& p, GeneratedLevel& genLevel)
 	memcpy_s((void*)&genLevel.masses[0], MassBufferSize, (void*)(pData + MassOffset), MassBufferSize);
 
 	std::string tempName;
-
+	Krawler::uint64 summedSize = 0;
 	for (Krawler::uint64 i = 0; i < genLevel.numOfPlanets; ++i)
 	{
-		tempName = (pData + NamesOffset);
+		// if it's the first name it will be located at pData+NamesOffset
+		// otherwise it will be located at pData + NamesOffset + SummedStringSize
+		tempName = (pData + NamesOffset + summedSize);
+		summedSize += tempName.size() + 1; // +1 for '\0' 
 		genLevel.names[i] = tempName;
 	}
+
 	return p;
 }
 
