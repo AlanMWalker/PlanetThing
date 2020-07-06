@@ -35,7 +35,9 @@ void CPUPlayerController::onEnterScene()
 	if (!m_pHostPlanet->isActive())
 	{
 		getEntity()->setActive(false);
+		setTargetsInactive();
 	}
+
 	m_orbitRadius = Blackboard::PLAYER_ORBIT_RADIUS;
 	m_theta = Maths::RandFloat(0.0, 359.0f);
 }
@@ -48,7 +50,7 @@ void CPUPlayerController::tick()
 
 
 	m_shotStrength = Maths::RandFloat(0.0f, 100.0f);
-	fireProjectile();
+	//fireProjectile();
 
 }
 

@@ -62,6 +62,10 @@
       <AdditionalDependencies>opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;ws2_32.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-audio-d.lib;sfml-network-d.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\SFML-2.5.1\lib</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -72,6 +76,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\KRAWLER\KRAWLER\KRAWLER Engine\include;$(ProjectDir)\..\..\SFML-2.5.1\include;$(ProjectDir)\include;$(ProjectDir)\imgui</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -92,15 +97,15 @@
     <ClCompile Include="source\Camera.cpp" />
     <ClCompile Include="source\CelestialBody.cpp" />
     <ClCompile Include="source\CPUPlayerController.cpp" />
+    <ClCompile Include="source\LobbySetup.cpp" />
     <ClCompile Include="source\LocalPlayerController.cpp" />
     <ClCompile Include="source\MenuSetup.cpp" />
+    <ClCompile Include="source\NetworkPlayerController.cpp" />
     <ClCompile Include="source\NewtonianGravity.cpp" />
-    <ClCompile Include="source\PathFinder\AStar.cpp" />
-    <ClCompile Include="source\PathFinder\Dijkstra.cpp" />
-    <ClCompile Include="source\PathFinder\Node.cpp" />
     <ClCompile Include="source\GameSetup.cpp" />
     <ClCompile Include="source\GodDebugComp.cpp" />
     <ClCompile Include="source\ProjectilePath.cpp" />
+    <ClCompile Include="source\SockSmeller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -123,15 +128,15 @@
     <ClInclude Include="include\DbgImgui.hpp" />
     <ClInclude Include="include\GameSetup.hpp" />
     <ClInclude Include="include\GodDebugComp.hpp" />
+    <ClInclude Include="include\LobbySetup.hpp" />
     <ClInclude Include="include\LocalPlayerController.hpp" />
     <ClInclude Include="include\MenuSetup.hpp" />
+    <ClInclude Include="include\NetworkPlayerController.hpp" />
+    <ClInclude Include="include\NetworkUtils.hpp" />
     <ClInclude Include="include\NewtonianGravity.hpp" />
-    <ClInclude Include="include\PathFinder\AStar.h" />
-    <ClInclude Include="include\PathFinder\Dijkstra.h" />
-    <ClInclude Include="include\PathFinder\Node.h" />
-    <ClInclude Include="include\PathFinder\PathAlgorithm.h" />
-    <ClInclude Include="include\PathFinder\PathFinder.h" />
     <ClInclude Include="include\ProjectilePath.hpp" />
+    <ClInclude Include="include\ServerPackets.hpp" />
+    <ClInclude Include="include\SockSmeller.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
