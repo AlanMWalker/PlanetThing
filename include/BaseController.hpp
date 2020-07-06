@@ -29,6 +29,8 @@ public:
 	// at some stage during it's own implementation
 	virtual void tick() override;
 
+	void setHostPlanet(CelestialBody* pHost);
+
 protected:
 
 	void fireProjectile();

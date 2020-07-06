@@ -100,6 +100,7 @@
     <ClCompile Include="source\LobbySetup.cpp" />
     <ClCompile Include="source\LocalPlayerController.cpp" />
     <ClCompile Include="source\MenuSetup.cpp" />
+    <ClCompile Include="source\NetworkPlayerController.cpp" />
     <ClCompile Include="source\NewtonianGravity.cpp" />
     <ClCompile Include="source\GameSetup.cpp" />
     <ClCompile Include="source\GodDebugComp.cpp" />
@@ -130,6 +131,7 @@
     <ClInclude Include="include\LobbySetup.hpp" />
     <ClInclude Include="include\LocalPlayerController.hpp" />
     <ClInclude Include="include\MenuSetup.hpp" />
+    <ClInclude Include="include\NetworkPlayerController.hpp" />
     <ClInclude Include="include\NetworkUtils.hpp" />
     <ClInclude Include="include\NewtonianGravity.hpp" />
     <ClInclude Include="include\ProjectilePath.hpp" />

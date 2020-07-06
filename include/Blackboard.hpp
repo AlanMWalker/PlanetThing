@@ -16,7 +16,7 @@ namespace Blackboard
 	static const wchar_t* LobbyScene = L"Lobby_Scene";
 
 	// Constants for physics
-	const float G = 6.67e-11; // m^3 kg^–1 s^–2
+	const float G = 6.67e-11f; // m^3 kg^–1 s^–2
 	const float BOX2D_CAP = 200; //m/s
 
 	// Masses

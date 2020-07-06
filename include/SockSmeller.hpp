@@ -58,6 +58,10 @@ public:
 	void setLobbyState(LobbyState lobbyState) { m_lobbyState = lobbyState; }
 	LobbyState getLobbyState() const { return m_lobbyState; }
 
+	NetworkNodeType getNetworkNodeType() const { return m_nodeType; }
+
+	void hostSendGenLevel(GeneratedLevel& genLevel);
+	
 private:
 
 	SockSmeller();
@@ -74,6 +78,8 @@ private:
 		Krawler::int64 lastTimestamp;
 		std::wstring displayName;
 	};
+
+	const Krawler::uint32 REFRESH_RATE = static_cast<Krawler::uint32>(((1.0f / 100.0f) * 1000));
 
 	void runSockSmeller();
 	void runClient();

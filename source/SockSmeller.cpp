@@ -1,6 +1,7 @@
+#include <future>
+
 #include "SockSmeller.hpp"
 #include "Blackboard.hpp"
-#include <future>
 
 using namespace Krawler;
 
@@ -110,6 +111,18 @@ std::vector<std::wstring> SockSmeller::getConnectedUserDisplayNames()
 	return names;
 }
 
+void SockSmeller::hostSendGenLevel(GeneratedLevel& genLevel)
+{
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
+	genLevel.timeStamp = timestamp();
+
+	sf::Packet p;
+	p << genLevel;
+
+	for (auto& c : m_connectedClients)
+		m_hostSocket.send(p, c.ip, c.port);
+}
+
 SockSmeller::SockSmeller()
 	: m_outboundPort(0), m_inboundPort(0)
 {
@@ -117,6 +130,7 @@ SockSmeller::SockSmeller()
 
 void SockSmeller::runSockSmeller()
 {
+
 	m_bIsRunning = true;
 	switch (m_nodeType)
 	{
@@ -147,11 +161,14 @@ void SockSmeller::runClient()
 
 	while (m_bIsRunning)
 	{
+		sf::Clock c;
+
 		//Process receive messages
 		sf::IpAddress remoteIp;
 		uint16 remotePort = 0u;
 
 		sf::Socket::Status status = m_clientSocket.receive(p, remoteIp, remotePort);
+		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
 
 		if (m_clientEstablishClock.getElapsedTime() > sf::seconds(2.0f) && !m_bConnEstablished)
 		{
@@ -200,6 +217,8 @@ void SockSmeller::runClient()
 			m_bIsRunning = false;
 			break;
 		}
+		auto t = c.restart().asMilliseconds();
+		std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
 		// Send new packets
 	}
 }
@@ -208,6 +227,8 @@ void SockSmeller::runHost()
 {
 	while (m_bIsRunning)
 	{
+		sf::Clock c;
+
 		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
 		//Process receive messages
 		sf::Packet p;
@@ -233,7 +254,10 @@ void SockSmeller::runHost()
 		}
 
 		hostCheckForDeadClients();
-		// Send new packets
+
+		auto t = c.restart().asMilliseconds();
+		if (REFRESH_RATE - t < REFRESH_RATE)
+			std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
 	}
 	KPrintf(L"Bye..\n");
 
@@ -339,6 +363,7 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 				s(&e);
 			}
 		}
+		m_clientSocket.setBlocking(false);
 	}
 	break;
 	case MessageType::KeepAlive:
@@ -358,9 +383,9 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	break;
 	case MessageType::Disconnect:
 	{
-		if (m_subscribersMap.count(MessageType::Establish) > 0)
+		if (m_subscribersMap.count(MessageType::Disconnect) > 0)
 		{
-			for (auto s : m_subscribersMap[MessageType::Disconnect])
+			for (auto& s : m_subscribersMap[MessageType::Disconnect])
 			{
 				DisconnectConnection dc;
 				p >> dc;
@@ -373,15 +398,32 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 
 	case MessageType::LobbyNameList:
 	{
-		for (auto s : m_subscribersMap[MessageType::LobbyNameList])
+		if (m_subscribersMap.count(MessageType::LobbyNameList) > 0)
 		{
-			LobbyNameList lnl;
-			p >> lnl;
-			s(&lnl);
+			for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
+			{
+				LobbyNameList lnl;
+				p >> lnl;
+				s(&lnl);
+			}
 		}
 	}
 	break;
 
+	case::MessageType::GeneratedLevel:
+	{
+		if (m_subscribersMap.count(MessageType::GeneratedLevel) > 0)
+		{
+			for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
+			{
+				GeneratedLevel gen;
+				KPrintf(L"Host gen level received with %llu number of planets\n", gen.numOfPlanets);
+				p >> gen;
+				s(&gen);
+			}
+		}
+	}
+	break;
 	case MessageType::None:
 	default:
 		break;

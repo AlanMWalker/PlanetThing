@@ -115,6 +115,12 @@ void CelestialBody::fixedTick()
 
 }
 
+void CelestialBody::setMass(float mass)
+{
+	m_mass = mass; 
+	m_pBody->setDensity(getDensity());
+}
+
 float CelestialBody::getMass() const
 {
 	return m_mass;

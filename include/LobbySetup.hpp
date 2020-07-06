@@ -10,6 +10,7 @@
 #include "DbgImgui.hpp"
 
 
+class GameSetup;
 
 class LobbySetup :
 	public Krawler::KComponentBase
@@ -17,12 +18,13 @@ class LobbySetup :
 public:
 
 
-	LobbySetup();
+	LobbySetup(GameSetup& gs);
 	~LobbySetup() = default;
 
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
 	virtual void tick() override;
+
 	void setNetworkNodeType(NetworkNodeType type);
 	void setHostLobbySize(Krawler::uint32 size);
 	void setMyLobbyPort(Krawler::uint16 port);
@@ -49,5 +51,10 @@ private:
 	void handleClientEstablish(ServerClientMessage*);
 	void handleClientDisconnect(ServerClientMessage*);
 	void handleClientLobbyNameList(ServerClientMessage*);
-	std::vector<std::string> m_lobbyNamesClient; // Filled in for client only. host will reqest 
+	void handleClientGenLevel(ServerClientMessage*);
+
+	std::vector<std::string> m_lobbyNamesClient; // Filled in for client only. host will request 
+	GameSetup& m_gameSetup;
+
+	std::mutex m_gameStateMutex;
 };

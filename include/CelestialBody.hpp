@@ -26,6 +26,8 @@ public:
 	virtual void tick() override;
 	virtual void fixedTick() override;
 
+	void setMass(float mass);
+
 	float getMass() const;
 	float getRadius() const;
 	Krawler::Vec2f getCentre();
