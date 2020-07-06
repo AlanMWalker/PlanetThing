@@ -24,6 +24,7 @@ public:
 	virtual Krawler::KInitStatus init() override;
 	virtual void onEnterScene() override;
 	virtual void tick() override;
+
 	void setNetworkNodeType(NetworkNodeType type);
 	void setHostLobbySize(Krawler::uint32 size);
 	void setMyLobbyPort(Krawler::uint16 port);
@@ -52,7 +53,7 @@ private:
 	void handleClientLobbyNameList(ServerClientMessage*);
 	void handleClientGenLevel(ServerClientMessage*);
 
-	std::vector<std::string> m_lobbyNamesClient; // Filled in for client only. host will reqest 
+	std::vector<std::string> m_lobbyNamesClient; // Filled in for client only. host will request 
 	GameSetup& m_gameSetup;
 
 	std::mutex m_gameStateMutex;

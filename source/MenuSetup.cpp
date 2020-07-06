@@ -47,7 +47,6 @@ void MenuSetup::tick()
 	//port.resize(6);
 	m_pImguiComp->update();
 	m_pImguiComp->begin("Planet Thing -- Menu");
-	ImGuiWindowFlags f;
 	auto before = bPlaySinglePlayer;
 
 	ImGui::Checkbox("Play Single Player", &bPlaySinglePlayer);
@@ -108,11 +107,16 @@ void MenuSetup::tick()
 
 	if (bHostPressed)
 	{
+		// Lobby setup
 		m_ls.setHostLobbySize(playerLobbySize);
 		m_ls.setMyLobbyPort((uint16)port);
-		m_gs.setGameType(GameSetup::GameType::Networked);
 		m_ls.setNetworkNodeType(NetworkNodeType::Host);
 		m_ls.setDisplayName(TO_WSTR(displayName));
+
+		// Game Setup 
+		m_gs.setGameType(GameSetup::GameType::Networked);
+		m_gs.setNetworkPlayerCount(playerLobbySize);
+
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
 		bJoinMultiplayer = false;
 		bPlaySinglePlayer = false;

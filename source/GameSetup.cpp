@@ -48,10 +48,10 @@ GameSetup::~GameSetup()
 KInitStatus GameSetup::init()
 {
 	createGod();
-	GET_APP()->setPrintFPS(true);
+	GET_APP()->setPrintFPS(false);
 	GET_APP()->getRenderer()->setSortType(Renderer::KRenderSortType::LayerSort);
 
-	// No gravity pls 
+	// No gravity please 
 	m_pPhysicsWorld = &GET_APP()->getPhysicsWorld();
 	m_pPhysicsWorld->setGravity(Vec2f(0.0f, 0.0f));
 	m_pPhysicsWorld->setPPM(PPM);
@@ -516,7 +516,7 @@ void GameSetup::setupLevelNetworkedClient()
 			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
 			{
 				// -1 for players planet
-				if (count >= (m_genLevel.numOfPlanets - 1))
+				if (count >= (m_genLevel.numOfPlanets))
 				{
 					celestial->setInActive();
 				}

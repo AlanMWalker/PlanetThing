@@ -417,6 +417,7 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
 			{
 				GeneratedLevel gen;
+				KPrintf(L"Host gen level received with %llu number of planets\n", gen.numOfPlanets);
 				p >> gen;
 				s(&gen);
 			}

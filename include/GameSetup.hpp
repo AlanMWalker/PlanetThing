@@ -73,7 +73,7 @@ public:
 	virtual void cleanUp() override;
 
 	float colScale = 10000;
-	// Invoked by MenuSetup before it transitions into the singleplayer game
+	// Invoked by MenuSetup before it transitions into the single player game
 	void setAIPlayerCount(Krawler::int32 count);
 
 	// Invoked by LobbySetup before it transitions into the networked game
@@ -101,7 +101,6 @@ private:
 	std::vector<Krawler::KEntity*> m_aiPlanets;
 	std::vector<Krawler::KEntity*> m_satellites;
 	std::vector<Krawler::KEntity*> m_moons;
-
 
 	DbgLineDraw line;
 	ProjectilePath* m_pPath = nullptr;
