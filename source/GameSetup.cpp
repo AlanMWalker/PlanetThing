@@ -16,7 +16,6 @@
 #include "CelestialBody.hpp"
 #include "CPUPlayerController.hpp"
 
-#include "SockSmeller.hpp"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -112,6 +111,8 @@ void GameSetup::onEnterScene()
 
 void GameSetup::tick()
 {
+	manageGameState();
+
 	static int idx = PLANETS_COUNT;
 	if (KInput::MouseJustPressed(KMouseButton::Right))
 	{
@@ -468,13 +469,15 @@ void GameSetup::setupLevelNetworkedHost()
 		planetsFound[i]->setPosition(points[i]);
 	}
 
-	std::stack<std::string> nameStack;
-	auto nameList = SockSmeller::get().getConnectedUserDisplayNames();
-	std::random_shuffle(nameList.begin(), nameList.end());
-	for (auto n : nameList)
+	std::stack<std::string> uuidStack;
+	auto clientList = SockSmeller::get().getClientList();
+	std::random_shuffle(clientList.begin(), clientList.end());
+
+	for (auto c : clientList)
 	{
-		nameStack.push(TO_ASTR(n));
+		uuidStack.push(TO_ASTR(c.uuid));
 	}
+	uuidStack.push(TO_ASTR(SockSmeller::get().getHostUUID()));
 
 	// send planet mass & positions to other client
 	GeneratedLevel genLevel;
@@ -489,13 +492,24 @@ void GameSetup::setupLevelNetworkedHost()
 		}
 		else
 		{
-			KCHECK(!nameStack.empty());
-			genLevel.names.push_back(nameStack.top());
-			nameStack.pop();
+			KCHECK(!uuidStack.empty());
+			genLevel.names.push_back(uuidStack.top());
+			uuidStack.pop();
 		}
 	}
 	genLevel.numOfPlanets = planetsFound.size();
 	SockSmeller::get().hostSendGenLevel(genLevel);
+
+
+	// shuffle name list and set first player 
+	/*for (auto client : SockSmeller::get().getClientList())
+	{
+		m_lobbyPlayers.push_back(client.uuid);
+	}
+	m_lobbyPlayers.push_back(m_myUUID);
+
+	std::random_shuffle(m_lobbyPlayers.begin(), m_lobbyPlayers.end());*/
+	m_currentPlayerTurnIdx = 0;
 }
 
 void GameSetup::setupLevelNetworkedClient()
@@ -539,5 +553,50 @@ void GameSetup::setupLevelNetworkedClient()
 			m_pPlayerPlanet->getComponent<BaseController>()->setHostPlanet(planetsFound[i]);
 		}
 	}
+}
+
+void GameSetup::manageGameState()
+{
+	switch (m_gameType)
+	{
+	case GameSetup::GameType::Networked:
+		manageNetworked();
+		break;
+	case GameSetup::GameType::Local:
+		manageLocal();
+	default:
+		break;
+	}
+}
+
+void GameSetup::manageNetworked()
+{
+	// Nothing to manage as a networked client, the host handles it all
+	if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
+	{
+		return;
+	}
+
+	// As the host
+	static bool bIsFirstRun = true;
+	if (bIsFirstRun)
+	{
+		if (m_lobbyPlayers[0] == m_myUUID)
+		{
+			// No need to send network message
+			// host starts
+		}
+		else
+		{
+			// Send message to the clients
+			// to say which client starts
+		}
+		bIsFirstRun = false;
+	}
+}
+
+void GameSetup::manageLocal()
+{
+	// STUB
 }
 

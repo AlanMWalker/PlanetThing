@@ -48,7 +48,7 @@ bool SockSmeller::setupAsHost(uint16 port, uint32 playerCount)
 {
 	m_inboundPort = port;
 	m_nodeType = NetworkNodeType::Host;
-
+	m_hostUUID = GenerateUUID();
 	auto status = m_hostSocket.bind(port);
 	if (status == sf::Socket::Status::Error)
 	{
@@ -309,6 +309,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 
 		conClient.lastTimestamp = timestamp();
 		conClient.displayName = TO_WSTR(con.displayName);
+		conClient.uuid = GenerateUUID();
 		replyEstablishHost(con, conClient);
 	}
 	break;

@@ -34,6 +34,21 @@ enum class LobbyState : Krawler::int32
 class SockSmeller
 {
 public:
+	struct ConnectedClient
+	{
+		bool operator ==(const ConnectedClient& c)
+		{
+			return c.displayName == displayName && c.port == port && c.ip == ip;
+		}
+
+		sf::IpAddress ip;
+		Krawler::uint16 port;
+		Krawler::int64 lastTimestamp;
+		std::wstring displayName;
+		std::wstring uuid;
+	};
+
+
 	using Subscriber = std::function<void(ServerClientMessage*)>;
 
 	~SockSmeller();
@@ -50,6 +65,8 @@ public:
 	void tearDown();
 	void subscribeToMessageType(MessageType type, Subscriber& s);
 	std::wstring getDisplayName() const { return m_displayName; }
+	std::wstring getHostUUID() const { return m_hostUUID; }
+
 	void setDisplayName(const std::wstring& displayName) { m_displayName = displayName; }
 
 	bool isClientConnectionEstablished() const { return m_bConnEstablished.load(); }
@@ -60,24 +77,16 @@ public:
 
 	NetworkNodeType getNetworkNodeType() const { return m_nodeType; }
 
-	void hostSendGenLevel(GeneratedLevel& genLevel);
+
+	std::vector<ConnectedClient> getClientList() const { return std::vector<ConnectedClient>(m_connectedClients.begin(), m_connectedClients.end()); }
+
 	
+	// Host send functions
+	void hostSendGenLevel(GeneratedLevel& genLevel);
+
 private:
 
 	SockSmeller();
-
-	struct ConnectedClient
-	{
-		bool operator ==(const ConnectedClient& c)
-		{
-			return c.displayName == displayName && c.port == port && c.ip == ip;
-		}
-
-		sf::IpAddress ip;
-		Krawler::uint16 port;
-		Krawler::int64 lastTimestamp;
-		std::wstring displayName;
-	};
 
 	const Krawler::uint32 REFRESH_RATE = static_cast<Krawler::uint32>(((1.0f / 100.0f) * 1000));
 
@@ -124,6 +133,7 @@ private:
 	LobbyState m_lobbyState = LobbyState::None;
 
 	sf::String m_displayName;
+	sf::String m_hostUUID;
 
 	std::thread m_updateThread;
 
