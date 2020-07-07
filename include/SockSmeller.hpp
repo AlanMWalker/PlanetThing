@@ -85,12 +85,16 @@ public:
 	
 	// Host send functions
 	void hostSendGenLevel(GeneratedLevel& genLevel);
+	void hostSendMoveSatellite(float theta, const std::wstring& uuid);
+
+	// Client send functions 
+	void clientSendSatelliteMove(Krawler::int32 dir);
 
 private:
 
 	SockSmeller();
 
-	const Krawler::uint32 REFRESH_RATE = static_cast<Krawler::uint32>(((1.0f / 100.0f) * 1000));
+	const Krawler::uint32 REFRESH_RATE = static_cast<Krawler::uint32>(((1.0f / 60.0f) * 1000));
 
 	void runSockSmeller();
 	void runClient();
@@ -108,6 +112,8 @@ private:
 
 	void hostSendUpdatedNameList();
 
+	void hostSendSatellitePositions();
+
 	MessageType getMessageTypeFromPacket(const sf::Packet& p) const;
 	ConnectedClient* getConnectedClient(const sf::IpAddress& ip, Krawler::uint16 port);
 
@@ -117,36 +123,38 @@ private:
 	const float HostMaxDelta = 12.0f;
 	bool m_bIsSetup = false;
 
-	bool m_bReplyCountdownReset = false;
-	bool m_bKeepAliveSent = false;
+	std::deque<ConnectedClient> m_connectedClients;
+	std::list<SatellitePositionUpdate> m_moveSatelliteQueue;
+	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
+	
+	sf::Clock m_clientEstablishClock;
 	sf::Clock m_keepAliveClock;
 	sf::Clock m_keepAliveReplyClock;
-
-	Krawler::uint32 m_hostLobbyplayerCount = 1;
-
-	sf::IpAddress m_outboundIp;
-	Krawler::uint16 m_outboundPort;
-	Krawler::uint16 m_inboundPort;
 
 	sf::UdpSocket m_hostSocket; // host
 	sf::UdpSocket m_clientSocket; // client
 
-	NetworkNodeType m_nodeType = NetworkNodeType::Client;
-	LobbyState m_lobbyState = LobbyState::None;
-
 	sf::String m_displayName;
 	sf::String m_myUUID;
 
+	NetworkNodeType m_nodeType = NetworkNodeType::Client;
+	LobbyState m_lobbyState = LobbyState::None;
+
+	Krawler::uint32 m_hostLobbyplayerCount = 1;
+
+	sf::IpAddress m_outboundIp;
+
+	Krawler::uint16 m_outboundPort;
+	Krawler::uint16 m_inboundPort;
+
 	std::thread m_updateThread;
+	std::mutex m_connectedClientMutex;
+	std::mutex m_moveQueueMutex;
 
 	atombool m_bIsRunning = false;
 	atombool m_bConnEstablished = false;
 	atombool m_hasNameListChanged = true;
 
-	std::deque<ConnectedClient> m_connectedClients;
-	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
-
-	sf::Clock m_clientEstablishClock;
-
-	std::mutex m_connectedClientMutex;
+	bool m_bReplyCountdownReset = false;
+	bool m_bKeepAliveSent = false;
 };

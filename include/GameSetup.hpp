@@ -83,6 +83,8 @@ public:
 	void setGameType(GameType type) { m_gameType = type; }
 	void setLevelGen(const GeneratedLevel& level) { m_genLevel = level; }
 
+	GameType getGameType() const { return m_gameType; }
+
 private:
 	
 	float PPM = 10.0f;

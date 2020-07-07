@@ -96,7 +96,10 @@ sf::Packet& operator>>(sf::Packet& p, GeneratedLevel& genLevel)
 {
 	read_base_in(p, (ServerClientMessage*)&genLevel);
 	// Addon the offset for the number of planets var into the struct
-
+	// it's kind of annoying with this current approach 
+	// because you have to append on the size of contents of the parent struct
+	// but you have to do it by individual element since there is padding on the struct
+	// or force an alignment standard into the struct and always include it over the network... 
 	char* pData = (char*)p.getData() + sizeof(MessageType) + sizeof(long long);
 
 	memcpy_s(&genLevel.numOfPlanets, sizeof(Krawler::uint64), pData, sizeof(Krawler::uint64));
@@ -156,5 +159,37 @@ sf::Packet& operator<<(sf::Packet& p, const NextPlayerTurn& gm)
 sf::Packet& operator>>(sf::Packet& p, NextPlayerTurn& gm)
 {
 	read_base_in(p, (ServerClientMessage*)&gm);
+	return p;
+}
+
+sf::Packet& operator<<(sf::Packet& p, const MoveSatellite& ms)
+{
+	write_base_out(p, (ServerClientMessage*)&ms);
+	p << ms.direction;
+	p << ms.uuid;
+	return p;
+}
+
+sf::Packet& operator>>(sf::Packet& p, MoveSatellite& ms)
+{
+	read_base_in(p, (ServerClientMessage*)&ms);
+	p >> ms.direction;
+	p >> ms.uuid;
+	return p;
+}
+
+sf::Packet& operator<<(sf::Packet& p, const SatellitePositionUpdate& spu)
+{
+	write_base_out(p, (ServerClientMessage*)&spu);
+	p << spu.theta;
+	p << spu.uuid;
+	return p;
+}
+
+sf::Packet& operator>>(sf::Packet& p, SatellitePositionUpdate& spu)
+{
+	read_base_in(p, (ServerClientMessage*)&spu);
+	p >> spu.theta;
+	p >> spu.uuid;
 	return p;
 }

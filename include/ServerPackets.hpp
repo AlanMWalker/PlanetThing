@@ -16,7 +16,9 @@ enum class MessageType : Krawler::int32
 	Disconnect,
 	LobbyNameList,
 	GeneratedLevel,
-	NextPlayerTurn
+	NextPlayerTurn,
+	MoveSatellite, // Sent by client wanting to move
+	SatellitePositionUpdate // Sent by host once it moves a client
 };
 
 struct ServerClientMessage
@@ -94,3 +96,33 @@ struct NextPlayerTurn : public ServerClientMessage
 
 sf::Packet& operator <<(sf::Packet& p, const NextPlayerTurn& tt);
 sf::Packet& operator >>(sf::Packet& p, NextPlayerTurn& tt);
+
+//--------------------------------------------------------------------------------
+struct MoveSatellite : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	MoveSatellite() { type = MessageType::MoveSatellite; }
+	
+	// -1 = Anticlockwise
+	// +1 = Clockwise
+	Krawler::int32 direction = 0;
+	std::string uuid;
+};
+
+sf::Packet& operator <<(sf::Packet& p, const MoveSatellite& ms);
+sf::Packet& operator >>(sf::Packet& p, MoveSatellite& ms);
+
+//--------------------------------------------------------------------------------
+struct SatellitePositionUpdate : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	SatellitePositionUpdate() { type = MessageType::SatellitePositionUpdate; }
+
+	float theta;
+	std::string uuid;
+};
+
+sf::Packet& operator <<(sf::Packet& p, const SatellitePositionUpdate& spu);
+sf::Packet& operator >>(sf::Packet& p, SatellitePositionUpdate& spu);
