@@ -48,7 +48,7 @@ bool SockSmeller::setupAsHost(uint16 port, uint32 playerCount)
 {
 	m_inboundPort = port;
 	m_nodeType = NetworkNodeType::Host;
-	m_hostUUID = GenerateUUID();
+	m_myUUID = GenerateUUID();
 	auto status = m_hostSocket.bind(port);
 	if (status == sf::Socket::Status::Error)
 	{
@@ -115,6 +115,17 @@ void SockSmeller::hostSendGenLevel(GeneratedLevel& genLevel)
 {
 	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	genLevel.timeStamp = timestamp();
+
+	for (auto c : genLevel.names)
+	{
+		KPrintf(L"Name entry found on host %s\n", TO_WSTR(c).c_str());
+	}
+
+	for (auto c : genLevel.uuids)
+	{
+		KPrintf(L"UUID entry found on host %s\n", TO_WSTR(c).c_str());
+	}
+
 
 	sf::Packet p;
 	p << genLevel;
@@ -361,10 +372,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 				EstablishConnection e;
 				p >> e;
 				m_bConnEstablished = true;
+				m_myUUID = e.uuid;
 				s(&e);
 			}
 		}
-		m_clientSocket.setBlocking(false);
 	}
 	break;
 	case MessageType::KeepAlive:
@@ -418,8 +429,18 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
 			{
 				GeneratedLevel gen;
-				KPrintf(L"Host gen level received with %llu number of planets\n", gen.numOfPlanets);
 				p >> gen;
+				KPrintf(L"Host gen level received with %llu number of planets\n", gen.numOfPlanets);
+				for (auto c : gen.names)
+				{
+					KPrintf(L"Name entry found on client %s\n", TO_WSTR(c).c_str());
+				}
+
+				for (auto c : gen.uuids)
+				{
+					KPrintf(L"UUID entry found on client %s\n", TO_WSTR(c).c_str());
+				}
+
 				s(&gen);
 			}
 		}
@@ -448,6 +469,7 @@ void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const
 
 	EstablishConnection e(establish);
 	e.timeStamp = timestamp();
+	e.uuid = TO_ASTR(conClient.uuid);
 	sf::Packet p;
 	p << e;
 	m_hostSocket.send(p, conClient.ip, conClient.port);

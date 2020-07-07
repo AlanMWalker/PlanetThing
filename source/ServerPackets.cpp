@@ -82,6 +82,13 @@ sf::Packet& operator<<(sf::Packet& p, const GeneratedLevel& genLevel)
 		p << (Krawler::uint8)('\0');
 	}
 
+	for (auto uuid : genLevel.uuids)
+	{
+		uuid.erase(std::find(uuid.begin(), uuid.end(), '\0'), uuid.end());
+		p.append(uuid.c_str(), uuid.length());
+		p << (Krawler::uint8)('\0');
+	}
+
 	return p;
 }
 
@@ -101,6 +108,7 @@ sf::Packet& operator>>(sf::Packet& p, GeneratedLevel& genLevel)
 	genLevel.positions.resize(genLevel.numOfPlanets);
 	genLevel.masses.resize(genLevel.numOfPlanets);
 	genLevel.names.resize(genLevel.numOfPlanets);
+	genLevel.uuids.resize(genLevel.numOfPlanets);
 
 	const Krawler::uint64 PositionOffset = sizeof(Krawler::uint64);
 	const Krawler::uint64 MassOffset = sizeof(Krawler::uint64) + PosBufferSize;
@@ -109,15 +117,26 @@ sf::Packet& operator>>(sf::Packet& p, GeneratedLevel& genLevel)
 	memcpy_s((void*)&genLevel.positions[0], PosBufferSize, (void*)(pData + PositionOffset), PosBufferSize);
 	memcpy_s((void*)&genLevel.masses[0], MassBufferSize, (void*)(pData + MassOffset), MassBufferSize);
 
-	std::string tempName;
+	std::string tempStr;
 	Krawler::uint64 summedSize = 0;
 	for (Krawler::uint64 i = 0; i < genLevel.numOfPlanets; ++i)
 	{
 		// if it's the first name it will be located at pData+NamesOffset
 		// otherwise it will be located at pData + NamesOffset + SummedStringSize
-		tempName = (pData + NamesOffset + summedSize);
-		summedSize += tempName.size() + 1; // +1 for '\0' 
-		genLevel.names[i] = tempName;
+		tempStr = (pData + NamesOffset + summedSize);
+		summedSize += tempStr.size() + 1; // +1 for '\0' 
+		genLevel.names[i] = tempStr;
+	}
+
+
+	tempStr.clear();
+	for (Krawler::uint64 i = 0; i < genLevel.numOfPlanets; ++i)
+	{
+		// if it's the first name it will be located at pData+NamesOffset
+		// otherwise it will be located at pData + NamesOffset + SummedStringSize
+		tempStr = (pData + NamesOffset + summedSize);
+		summedSize += tempStr.size() + 1; // +1 for '\0' 
+		genLevel.uuids[i] = tempStr;
 	}
 
 	return p;

@@ -40,6 +40,7 @@ struct EstablishConnection : public ServerClientMessage
 	EstablishConnection() { type = MessageType::Establish; }
 	std::string clientVersion;
 	std::string displayName;
+	std::string uuid; // filled out on reply
 };
 
 sf::Packet& operator <<(sf::Packet& p, const EstablishConnection& establishStruct);
@@ -59,7 +60,6 @@ struct LobbyNameList : public ServerClientMessage
 {
 	LobbyNameList() { type = MessageType::LobbyNameList; }
 	std::string nameList; //csv list
-	std::string uuidList; //csv list
 };
 
 sf::Packet& operator <<(sf::Packet& p, const LobbyNameList& lnl);
@@ -77,6 +77,7 @@ struct GeneratedLevel : public ServerClientMessage
 	std::vector<Krawler::Vec2f> positions;
 	std::vector<float> masses;
 	std::vector<std::string> names;
+	std::vector<std::string> uuids;
 };
 
 

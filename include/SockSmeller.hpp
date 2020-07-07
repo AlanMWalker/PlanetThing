@@ -65,7 +65,7 @@ public:
 	void tearDown();
 	void subscribeToMessageType(MessageType type, Subscriber& s);
 	std::wstring getDisplayName() const { return m_displayName; }
-	std::wstring getHostUUID() const { return m_hostUUID; }
+	std::wstring getMyUUID() const { return m_myUUID; }
 
 	void setDisplayName(const std::wstring& displayName) { m_displayName = displayName; }
 
@@ -133,7 +133,7 @@ private:
 	LobbyState m_lobbyState = LobbyState::None;
 
 	sf::String m_displayName;
-	sf::String m_hostUUID;
+	sf::String m_myUUID;
 
 	std::thread m_updateThread;
 

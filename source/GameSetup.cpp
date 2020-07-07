@@ -469,15 +469,16 @@ void GameSetup::setupLevelNetworkedHost()
 		planetsFound[i]->setPosition(points[i]);
 	}
 
-	std::stack<std::string> uuidStack;
+	using UUIDName = std::pair< std::string, std::string>;
+	std::stack<UUIDName> uuidAndName;
+
 	auto clientList = SockSmeller::get().getClientList();
 	std::random_shuffle(clientList.begin(), clientList.end());
 
 	for (auto c : clientList)
 	{
-		uuidStack.push(TO_ASTR(c.uuid));
+		uuidAndName.push(UUIDName(TO_ASTR(c.uuid), TO_ASTR(c.displayName)));
 	}
-	uuidStack.push(TO_ASTR(SockSmeller::get().getHostUUID()));
 
 	// send planet mass & positions to other client
 	GeneratedLevel genLevel;
@@ -489,12 +490,14 @@ void GameSetup::setupLevelNetworkedHost()
 		if (p->getEntity() == m_pPlayerPlanet)
 		{
 			genLevel.names.push_back(TO_ASTR(SockSmeller::get().getDisplayName()));
+			genLevel.uuids.push_back(TO_ASTR(SockSmeller::get().getMyUUID()));
 		}
 		else
 		{
-			KCHECK(!uuidStack.empty());
-			genLevel.names.push_back(uuidStack.top());
-			uuidStack.pop();
+			KCHECK(!uuidAndName.empty());
+			genLevel.uuids.push_back(uuidAndName.top().first);
+			genLevel.names.push_back(uuidAndName.top().second);
+			uuidAndName.pop();
 		}
 	}
 	genLevel.numOfPlanets = planetsFound.size();
@@ -502,13 +505,13 @@ void GameSetup::setupLevelNetworkedHost()
 
 
 	// shuffle name list and set first player 
-	/*for (auto client : SockSmeller::get().getClientList())
+	for (auto client : SockSmeller::get().getClientList())
 	{
 		m_lobbyPlayers.push_back(client.uuid);
 	}
-	m_lobbyPlayers.push_back(m_myUUID);
+	m_lobbyPlayers.push_back(SockSmeller::get().getMyUUID());
 
-	std::random_shuffle(m_lobbyPlayers.begin(), m_lobbyPlayers.end());*/
+	std::random_shuffle(m_lobbyPlayers.begin(), m_lobbyPlayers.end());
 	m_currentPlayerTurnIdx = 0;
 }
 
@@ -581,7 +584,7 @@ void GameSetup::manageNetworked()
 	static bool bIsFirstRun = true;
 	if (bIsFirstRun)
 	{
-		if (m_lobbyPlayers[0] == m_myUUID)
+		if (m_lobbyPlayers[0] == SockSmeller::get().getMyUUID())
 		{
 			// No need to send network message
 			// host starts
