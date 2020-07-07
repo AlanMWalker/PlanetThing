@@ -514,6 +514,12 @@ void GameSetup::setupLevelNetworkedHost()
 
 	std::random_shuffle(m_lobbyPlayers.begin(), m_lobbyPlayers.end());
 	m_currentPlayerTurnIdx = 0;
+
+	// if I'm the first uuid in the list, then I take the first turn
+	if (m_lobbyPlayers[m_currentPlayerTurnIdx] == SockSmeller::get().getMyUUID())
+	{
+		m_playerController->setTurnIsActive(true);
+	}
 }
 
 void GameSetup::setupLevelNetworkedClient()
@@ -555,6 +561,13 @@ void GameSetup::setupLevelNetworkedClient()
 		if (TO_WSTR(m_genLevel.uuids[i]) == SockSmeller::get().getMyUUID())
 		{
 			m_playerController->setHostPlanet(planetsFound[i]);
+			
+			// If my planet is the first in the list
+			// it's my turn
+			if (i == 0)
+			{
+				m_playerController->setTurnIsActive(true);
+			}
 		}
 	}
 }

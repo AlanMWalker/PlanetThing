@@ -31,6 +31,10 @@ public:
 
 	void setHostPlanet(CelestialBody* pHost);
 
+	void setTurnIsActive(bool bIsTurnActive) { m_bIsTurnActive = bIsTurnActive; }
+
+	bool isTurnActive() const { return m_bIsTurnActive; }
+
 protected:
 
 	void fireProjectile();
@@ -65,5 +69,7 @@ private:
 	std::vector<std::reference_wrapper<CelestialBody>> m_objects;
 
 	bool m_bFirstShot = true;
+	bool m_bIsTurnActive = false; 
+
 	std::wstring m_uuid;
 };

@@ -229,9 +229,10 @@ void SockSmeller::runClient()
 			break;
 		}
 		auto t = c.restart().asMilliseconds();
-		std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
-		// Send new packets
+		t = Maths::Clamp(0, (int32)REFRESH_RATE, t);
+		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
+	KPRINTF("Client no longer running network thread\n");
 }
 
 void SockSmeller::runHost()
@@ -267,8 +268,8 @@ void SockSmeller::runHost()
 		hostCheckForDeadClients();
 
 		auto t = c.restart().asMilliseconds();
-		if (REFRESH_RATE - t < REFRESH_RATE)
-			std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
+		t = Maths::Clamp(0, (int32)REFRESH_RATE, t);
+		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPrintf(L"Bye..\n");
 
@@ -387,8 +388,8 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			{
 				m_bKeepAliveSent = false;
 				m_bReplyCountdownReset = false;
-				//m_keepAliveClock.restart();
-				//m_keepAliveReplyClock.restart();
+				m_keepAliveClock.restart();
+				m_keepAliveReplyClock.restart();
 			}
 		}
 	}

@@ -92,6 +92,12 @@ void BaseController::setHostPlanet(CelestialBody* pHost)
 
 void BaseController::fireProjectile()
 {
+	// if it's not my turn I can't fire
+	if (!m_bIsTurnActive)
+	{
+		return;
+	}
+
 	if (m_bFirstShot)
 	{
 		m_shotCooldown.restart();
