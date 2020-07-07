@@ -11,6 +11,8 @@
 #include "NewtonianGravity.hpp"
 #include "LocalPlayerController.hpp"
 #include "ServerPackets.hpp"
+#include "SockSmeller.hpp"
+#include "NetworkPlayerController.hpp"
 
 namespace sf
 {
@@ -82,8 +84,7 @@ public:
 	void setLevelGen(const GeneratedLevel& level) { m_genLevel = level; }
 
 private:
-
-
+	
 	float PPM = 10.0f;
 
 	void createGod();
@@ -96,11 +97,19 @@ private:
 	void setupLevelNetworkedHost();
 	void setupLevelNetworkedClient();
 
+	void manageGameState();
+
+	void manageNetworked(); 
+	void manageLocal();
+
+	void setupNetworkedPlanetsAndSatellites(const GeneratedLevel& genLevel, std::vector<CelestialBody*>& planetsFound);
+
 	Krawler::KEntity* m_pPlayerPlanet = nullptr;
 	std::vector<Krawler::KEntity*> m_networkedPlanets;
 	std::vector<Krawler::KEntity*> m_aiPlanets;
 	std::vector<Krawler::KEntity*> m_satellites;
 	std::vector<Krawler::KEntity*> m_moons;
+	std::vector<Krawler::KEntity*> m_networkedSatellites;
 
 	DbgLineDraw line;
 	ProjectilePath* m_pPath = nullptr;
@@ -113,10 +122,14 @@ private:
 	sf::Shader* m_pBackgroundShader = nullptr;
 	Krawler::Physics::KPhysicsWorld2D* m_pPhysicsWorld = nullptr;
 	LocalPlayerController* m_playerController = nullptr;
+	NetworkPlayerController* m_networkedControllers[Blackboard::MAX_NETWORKED];
 
 	NewtonianGravity m_newton;
 	GeneratedLevel m_genLevel;
 
 	Krawler::int32 m_aiCount = Blackboard::MIN_AI;
 	Krawler::int32 m_networkedCount = Blackboard::MIN_NETWORKED;
+
+	std::vector<std::wstring> m_lobbyPlayers;
+	Krawler::uint64 m_currentPlayerTurnIdx = 0;
 };

@@ -33,17 +33,17 @@ namespace Blackboard
 	constexpr float PLAYER_ORBIT_RADIUS = 50.0f;
 	constexpr float MOON_ORBIT_RADIUS = 75.0f;
 
+	constexpr Krawler::int32 MIN_NETWORKED = 1;
+	constexpr Krawler::int32 MAX_NETWORKED = 3;
+
 	// Populations 
 	constexpr Krawler::int32 PLANETS_COUNT = 5;
-	constexpr Krawler::int32 NETWORKED_PLANETS_COUNT = 3;
+	constexpr Krawler::int32 NETWORKED_PLANETS_COUNT = MAX_NETWORKED;
 	constexpr Krawler::int32 AI_PLANETS_COUNT = 3;
 	constexpr Krawler::int32 SATELLITES_COUNT = 50;
 	constexpr Krawler::int32 MOON_COUNT = 2;
 	constexpr Krawler::int32 MIN_AI = 1;
 	constexpr Krawler::int32 MAX_AI = 3;
-
-	constexpr Krawler::int32 MIN_NETWORKED = 1;
-	constexpr Krawler::int32 MAX_NETWORKED = 3;
 
 	constexpr Krawler::uint64 TARGET_COUNT = 3;
 

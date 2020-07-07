@@ -152,6 +152,12 @@ void LobbySetup::tickClient()
 
 void LobbySetup::tickHost()
 {
+	static std::list<std::wstring> namesList;
+	if (SockSmeller::get().hasNameListChanged())
+	{
+		namesList = SockSmeller::get().getConnectedUserDisplayNames();
+	}
+
 	bool bStartLobby = false;
 	m_pImguiComp->update();
 	m_pImguiComp->begin("Lobby");
@@ -159,7 +165,6 @@ void LobbySetup::tickHost()
 	ImGui::Separator();
 	ImGui::Text(" -- Connected users --");
 	ImGui::Text(&TO_ASTR(m_displayName)[0]);
-	auto namesList = SockSmeller::get().getConnectedUserDisplayNames();
 	for (auto& n : namesList)
 	{
 		ImGui::Text(&TO_ASTR(n)[0]);
@@ -174,7 +179,7 @@ void LobbySetup::tickHost()
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::MenuScene);
 	}
 
-	if (SockSmeller::get().getConnectedUserDisplayNames().size() == (uint64)m_lobbySize)
+	if (namesList.size() == (uint64)m_lobbySize)
 	{
 		bStartLobby = ImGui::Button("Start");
 		if (bStartLobby)

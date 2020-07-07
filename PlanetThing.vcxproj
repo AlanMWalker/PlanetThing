@@ -105,6 +105,7 @@
     <ClCompile Include="source\GameSetup.cpp" />
     <ClCompile Include="source\GodDebugComp.cpp" />
     <ClCompile Include="source\ProjectilePath.cpp" />
+    <ClCompile Include="source\ServerPackets.cpp" />
     <ClCompile Include="source\SockSmeller.cpp" />
   </ItemGroup>
   <ItemGroup>

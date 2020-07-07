@@ -48,7 +48,7 @@ bool SockSmeller::setupAsHost(uint16 port, uint32 playerCount)
 {
 	m_inboundPort = port;
 	m_nodeType = NetworkNodeType::Host;
-
+	m_myUUID = GenerateUUID();
 	auto status = m_hostSocket.bind(port);
 	if (status == sf::Socket::Status::Error)
 	{
@@ -95,19 +95,18 @@ void SockSmeller::subscribeToMessageType(MessageType type, Subscriber& s)
 	m_subscribersMap[type].push_back(s);
 }
 
-std::vector<std::wstring> SockSmeller::getConnectedUserDisplayNames()
+std::list<std::wstring> SockSmeller::getConnectedUserDisplayNames()
 {
-	std::vector<std::wstring> names;
+	std::list <std::wstring> names;
 	if (m_nodeType == NetworkNodeType::Host)
 	{
 		std::lock_guard<std::mutex> guard(m_connectedClientMutex);
-
-		names.reserve(m_connectedClients.size());
 		for (auto& c : m_connectedClients)
 		{
 			names.push_back(c.displayName);
 		}
 	}
+	m_hasNameListChanged = false;
 	return names;
 }
 
@@ -115,6 +114,17 @@ void SockSmeller::hostSendGenLevel(GeneratedLevel& genLevel)
 {
 	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	genLevel.timeStamp = timestamp();
+
+	for (auto c : genLevel.names)
+	{
+		KPrintf(L"Name entry found on host %s\n", TO_WSTR(c).c_str());
+	}
+
+	for (auto c : genLevel.uuids)
+	{
+		KPrintf(L"UUID entry found on host %s\n", TO_WSTR(c).c_str());
+	}
+
 
 	sf::Packet p;
 	p << genLevel;
@@ -218,9 +228,10 @@ void SockSmeller::runClient()
 			break;
 		}
 		auto t = c.restart().asMilliseconds();
-		std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
-		// Send new packets
+		t = Maths::Clamp(0, (int32)REFRESH_RATE, t);
+		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
+	KPRINTF("Client no longer running network thread\n");
 }
 
 void SockSmeller::runHost()
@@ -256,8 +267,8 @@ void SockSmeller::runHost()
 		hostCheckForDeadClients();
 
 		auto t = c.restart().asMilliseconds();
-		if (REFRESH_RATE - t < REFRESH_RATE)
-			std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE - t));
+		t = Maths::Clamp(0, (int32)REFRESH_RATE, t);
+		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPrintf(L"Bye..\n");
 
@@ -309,6 +320,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 
 		conClient.lastTimestamp = timestamp();
 		conClient.displayName = TO_WSTR(con.displayName);
+		conClient.uuid = GenerateUUID();
 		replyEstablishHost(con, conClient);
 	}
 	break;
@@ -317,7 +329,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		KeepAlive ka;
 		p >> ka;
 		KPrintf(L"Inbound keep alive from %s : %hu \n", &TO_WSTR(remoteIp.toString())[0], remotePort);
-		// we receieved a keep alive, so we'll send back 
+		// we received a keep alive, so we'll send back 
 		// a keep alive
 		auto client = getConnectedClient(remoteIp, remotePort);
 		if (client)
@@ -360,10 +372,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 				EstablishConnection e;
 				p >> e;
 				m_bConnEstablished = true;
+				m_myUUID = e.uuid;
 				s(&e);
 			}
 		}
-		m_clientSocket.setBlocking(false);
 	}
 	break;
 	case MessageType::KeepAlive:
@@ -375,8 +387,8 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			{
 				m_bKeepAliveSent = false;
 				m_bReplyCountdownReset = false;
-				//m_keepAliveClock.restart();
-				//m_keepAliveReplyClock.restart();
+				m_keepAliveClock.restart();
+				m_keepAliveReplyClock.restart();
 			}
 		}
 	}
@@ -417,8 +429,18 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
 			{
 				GeneratedLevel gen;
-				KPrintf(L"Host gen level received with %llu number of planets\n", gen.numOfPlanets);
 				p >> gen;
+				KPrintf(L"Host gen level received with %llu number of planets\n", gen.numOfPlanets);
+				for (auto c : gen.names)
+				{
+					KPrintf(L"Name entry found on client %s\n", TO_WSTR(c).c_str());
+				}
+
+				for (auto c : gen.uuids)
+				{
+					KPrintf(L"UUID entry found on client %s\n", TO_WSTR(c).c_str());
+				}
+
 				s(&gen);
 			}
 		}
@@ -447,12 +469,15 @@ void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const
 
 	EstablishConnection e(establish);
 	e.timeStamp = timestamp();
+	e.uuid = TO_ASTR(conClient.uuid);
 	sf::Packet p;
 	p << e;
 	m_hostSocket.send(p, conClient.ip, conClient.port);
+	m_hasNameListChanged = true;
 
 	// now the connected client list has changed, we should tell all clients
 	hostSendUpdatedNameList();
+
 }
 
 void SockSmeller::hostSendDisconnect(const ConnectedClient& c)

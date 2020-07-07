@@ -7,6 +7,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <list>
 
 #include "ServerPackets.hpp"
 #include "NetworkUtils.hpp"
@@ -34,6 +35,21 @@ enum class LobbyState : Krawler::int32
 class SockSmeller
 {
 public:
+	struct ConnectedClient
+	{
+		bool operator ==(const ConnectedClient& c)
+		{
+			return c.displayName == displayName && c.port == port && c.ip == ip;
+		}
+
+		sf::IpAddress ip;
+		Krawler::uint16 port;
+		Krawler::int64 lastTimestamp;
+		std::wstring displayName;
+		std::wstring uuid;
+	};
+
+
 	using Subscriber = std::function<void(ServerClientMessage*)>;
 
 	~SockSmeller();
@@ -50,34 +66,29 @@ public:
 	void tearDown();
 	void subscribeToMessageType(MessageType type, Subscriber& s);
 	std::wstring getDisplayName() const { return m_displayName; }
+	std::wstring getMyUUID() const { return m_myUUID; }
+
 	void setDisplayName(const std::wstring& displayName) { m_displayName = displayName; }
 
 	bool isClientConnectionEstablished() const { return m_bConnEstablished.load(); }
-	std::vector<std::wstring> getConnectedUserDisplayNames();
+	std::list<std::wstring> getConnectedUserDisplayNames();
+	bool hasNameListChanged() const { return m_hasNameListChanged.load(); }
 
 	void setLobbyState(LobbyState lobbyState) { m_lobbyState = lobbyState; }
 	LobbyState getLobbyState() const { return m_lobbyState; }
 
 	NetworkNodeType getNetworkNodeType() const { return m_nodeType; }
 
-	void hostSendGenLevel(GeneratedLevel& genLevel);
+
+	std::vector<ConnectedClient> getClientList() const { return std::vector<ConnectedClient>(m_connectedClients.begin(), m_connectedClients.end()); }
+
 	
+	// Host send functions
+	void hostSendGenLevel(GeneratedLevel& genLevel);
+
 private:
 
 	SockSmeller();
-
-	struct ConnectedClient
-	{
-		bool operator ==(const ConnectedClient& c)
-		{
-			return c.displayName == displayName && c.port == port && c.ip == ip;
-		}
-
-		sf::IpAddress ip;
-		Krawler::uint16 port;
-		Krawler::int64 lastTimestamp;
-		std::wstring displayName;
-	};
 
 	const Krawler::uint32 REFRESH_RATE = static_cast<Krawler::uint32>(((1.0f / 100.0f) * 1000));
 
@@ -124,11 +135,13 @@ private:
 	LobbyState m_lobbyState = LobbyState::None;
 
 	sf::String m_displayName;
+	sf::String m_myUUID;
 
 	std::thread m_updateThread;
 
 	atombool m_bIsRunning = false;
 	atombool m_bConnEstablished = false;
+	atombool m_hasNameListChanged = true;
 
 	std::deque<ConnectedClient> m_connectedClients;
 	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
