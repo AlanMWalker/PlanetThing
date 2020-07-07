@@ -328,8 +328,8 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 	{
 		KeepAlive ka;
 		p >> ka;
-		//KPrintf(L"Inbound keep alive from %s : %hu \n", &TO_WSTR(remoteIp.toString())[0], remotePort);
-		// we receieved a keep alive, so we'll send back 
+		KPrintf(L"Inbound keep alive from %s : %hu \n", &TO_WSTR(remoteIp.toString())[0], remotePort);
+		// we received a keep alive, so we'll send back 
 		// a keep alive
 		auto client = getConnectedClient(remoteIp, remotePort);
 		if (client)

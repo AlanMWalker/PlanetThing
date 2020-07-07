@@ -31,9 +31,15 @@ public:
 
 	void setHostPlanet(CelestialBody* pHost);
 
+	CelestialBody* getHostPlanet() { return m_pHostPlanet; }
+
 	void setTurnIsActive(bool bIsTurnActive) { m_bIsTurnActive = bIsTurnActive; }
 
 	bool isTurnActive() const { return m_bIsTurnActive; }
+
+	void hideTargets();
+
+	void showTargets();
 
 protected:
 
@@ -69,7 +75,7 @@ private:
 	std::vector<std::reference_wrapper<CelestialBody>> m_objects;
 
 	bool m_bFirstShot = true;
-	bool m_bIsTurnActive = false; 
+	bool m_bIsTurnActive = false;
 
 	std::wstring m_uuid;
 };
