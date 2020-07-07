@@ -27,13 +27,13 @@ sf::Packet& operator>>(sf::Packet& p, KeepAlive& keepAlive)
 sf::Packet& operator<<(sf::Packet& p, const EstablishConnection& establishStruct)
 {
 	write_base_out(p, (ServerClientMessage*)&establishStruct);
-	return p << establishStruct.clientVersion << establishStruct.displayName;
+	return p << establishStruct.clientVersion << establishStruct.displayName << establishStruct.uuid;
 }
 
 sf::Packet& operator>>(sf::Packet& p, EstablishConnection& establishStruct)
 {
 	read_base_in(p, (ServerClientMessage*)&establishStruct);
-	return p >> establishStruct.clientVersion >> establishStruct.displayName;
+	return p >> establishStruct.clientVersion >> establishStruct.displayName >> establishStruct.uuid;
 }
 
 sf::Packet& operator<<(sf::Packet& p, const DisconnectConnection& dc)

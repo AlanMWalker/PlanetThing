@@ -491,6 +491,7 @@ void GameSetup::setupLevelNetworkedHost()
 		{
 			genLevel.names.push_back(TO_ASTR(SockSmeller::get().getDisplayName()));
 			genLevel.uuids.push_back(TO_ASTR(SockSmeller::get().getMyUUID()));
+			
 		}
 		else
 		{
@@ -551,9 +552,9 @@ void GameSetup::setupLevelNetworkedClient()
 	{
 		planetsFound[i]->setPosition(m_genLevel.positions[i]);
 		planetsFound[i]->setMass(m_genLevel.masses[i]);
-		if (TO_WSTR(m_genLevel.names[i]) == SockSmeller::get().getDisplayName())
+		if (TO_WSTR(m_genLevel.uuids[i]) == SockSmeller::get().getMyUUID())
 		{
-			m_pPlayerPlanet->getComponent<BaseController>()->setHostPlanet(planetsFound[i]);
+			m_playerController->setHostPlanet(planetsFound[i]);
 		}
 	}
 }
