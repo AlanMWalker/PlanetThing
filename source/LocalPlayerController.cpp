@@ -70,5 +70,10 @@ void LocalPlayerController::tick()
 	{
 		fireProjectile();
 	}
+
+	if (isTurnActive())
+	{
+		KPRINTF("ITS MY TURN\n");
+	}
 }
 

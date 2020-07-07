@@ -139,6 +139,11 @@ sf::Packet& operator>>(sf::Packet& p, GeneratedLevel& genLevel)
 		genLevel.uuids[i] = tempStr;
 	}
 
+	std::reverse(genLevel.positions.begin(), genLevel.positions.end());
+	std::reverse(genLevel.masses.begin(), genLevel.masses.end());
+	std::reverse(genLevel.names.begin(), genLevel.names.end());
+	std::reverse(genLevel.uuids.begin(), genLevel.uuids.end());
+
 	return p;
 }
 
