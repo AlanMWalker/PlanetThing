@@ -479,8 +479,9 @@ void GameSetup::setupLevelNetworkedHost()
 	}
 
 	// send planet mass & positions to other client
-	for (auto p : planetsFound)
+	for (uint64 i = 0; i < points.size(); ++i)
 	{
+		auto p = planetsFound[i];
 		genLevel.masses.push_back(p->getMass());
 		genLevel.positions.push_back(p->getCentre());
 
@@ -495,6 +496,13 @@ void GameSetup::setupLevelNetworkedHost()
 			KCHECK(!uuidAndName.empty());
 			genLevel.uuids.push_back(uuidAndName.top().first);
 			genLevel.names.push_back(uuidAndName.top().second);
+			for (auto& c : m_networkedControllers)
+			{
+				if (c->getHostPlanet() == p)
+				{
+					c->setUUID(TO_WSTR(uuidAndName.top().first));
+				}
+			}
 			uuidAndName.pop();
 		}
 	}
@@ -546,6 +554,8 @@ void GameSetup::setupLevelNetworkedClient()
 			if (controller->getHostPlanet() == planetsFound[i])
 			{
 				controller->getEntity()->setActive(true);
+				controller->setUUID(TO_WSTR(m_genLevel.uuids[i]));
+				KPrintf(L"Networked player UUID is %s \n", TO_WSTR(m_genLevel.uuids[i]).c_str());
 			}
 		}
 	}

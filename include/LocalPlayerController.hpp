@@ -1,5 +1,10 @@
 #pragma once 
+
+#include <mutex> 
+#include <atomic>
+
 #include "BaseController.hpp"
+#include "SockSmeller.hpp"
 
 class imguicomp;
 
@@ -18,6 +23,11 @@ public:
 
 private:
 
+	void handlePosUpdate(ServerClientMessage* scm);
+	
 	imguicomp* m_pImgui = nullptr;
+	std::mutex m_networkMtx;
 
+	atombool m_bHasNewPos = false;
+	float m_newTheta = 0.0f;
 };

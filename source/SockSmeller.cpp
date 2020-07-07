@@ -133,6 +133,31 @@ void SockSmeller::hostSendGenLevel(GeneratedLevel& genLevel)
 		m_hostSocket.send(p, c.ip, c.port);
 }
 
+void SockSmeller::hostSendMoveSatellite(float theta, const std::wstring& uuid)
+{
+	std::lock_guard<std::mutex> g(m_moveQueueMutex);
+	SatellitePositionUpdate ms;
+	ms.timeStamp = timestamp();
+	ms.theta = theta; 
+	ms.uuid = TO_ASTR(uuid);
+	m_moveSatelliteQueue.push_back(ms);
+}
+
+void SockSmeller::clientSendSatelliteMove(Krawler::int32 dir)
+{
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
+	MoveSatellite ms;
+	sf::Packet p;
+
+	ms.direction = dir;
+	ms.uuid = m_myUUID;
+	ms.timeStamp = timestamp();
+
+	p << ms;
+
+	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
+}
+
 SockSmeller::SockSmeller()
 	: m_outboundPort(0), m_inboundPort(0)
 {
@@ -228,7 +253,7 @@ void SockSmeller::runClient()
 			break;
 		}
 		auto t = c.restart().asMilliseconds();
-		t = Maths::Clamp(0, (int32)REFRESH_RATE, t);
+		t = Maths::Clamp(1, (int32)REFRESH_RATE, t);
 		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPRINTF("Client no longer running network thread\n");
@@ -265,9 +290,10 @@ void SockSmeller::runHost()
 		}
 
 		hostCheckForDeadClients();
+		hostSendSatellitePositions();
 
 		auto t = c.restart().asMilliseconds();
-		t = Maths::Clamp(0, (int32)REFRESH_RATE, t);
+		t = Maths::Clamp(1, (int32)REFRESH_RATE, t);
 		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPrintf(L"Bye..\n");
@@ -342,6 +368,19 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		}
 	}
 	break;
+	case MessageType::MoveSatellite:
+	{
+		if (m_subscribersMap.count(MessageType::MoveSatellite) > 0)
+		{
+			MoveSatellite ms;
+			p >> ms;
+			for (auto cb : m_subscribersMap[MessageType::MoveSatellite])
+			{
+				cb(&ms);
+			}
+		}
+	}
+	break;
 	case MessageType::None:
 	default:
 		KPRINTF("Unrecognised message sent to host..\n");
@@ -397,10 +436,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	{
 		if (m_subscribersMap.count(MessageType::Disconnect) > 0)
 		{
+			DisconnectConnection dc;
+			p >> dc;
 			for (auto& s : m_subscribersMap[MessageType::Disconnect])
 			{
-				DisconnectConnection dc;
-				p >> dc;
 				m_bConnEstablished = true;
 				s(&dc);
 			}
@@ -412,10 +451,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	{
 		if (m_subscribersMap.count(MessageType::LobbyNameList) > 0)
 		{
+			LobbyNameList lnl;
+			p >> lnl;
 			for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
 			{
-				LobbyNameList lnl;
-				p >> lnl;
 				s(&lnl);
 			}
 		}
@@ -426,10 +465,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	{
 		if (m_subscribersMap.count(MessageType::GeneratedLevel) > 0)
 		{
+			GeneratedLevel gen;
+			p >> gen;
 			for (auto& s : m_subscribersMap[MessageType::GeneratedLevel])
 			{
-				GeneratedLevel gen;
-				p >> gen;
 				KPrintf(L"Host gen level received with %llu number of planets\n", gen.numOfPlanets);
 				for (auto c : gen.names)
 				{
@@ -444,6 +483,20 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 				s(&gen);
 			}
 		}
+	}
+	break;
+	case MessageType::SatellitePositionUpdate:
+	{
+		if (m_subscribersMap.count(MessageType::SatellitePositionUpdate) > 0)
+		{
+			SatellitePositionUpdate spu;
+			p >> spu;
+			for (auto& s : m_subscribersMap[MessageType::SatellitePositionUpdate])
+			{
+				s(&spu);
+			}
+		}
+
 	}
 	break;
 	case MessageType::None:
@@ -533,6 +586,27 @@ void SockSmeller::hostSendUpdatedNameList()
 		sf::Packet p;
 		p << lnl;
 		m_hostSocket.send(p, c.ip, c.port);
+	}
+}
+
+void SockSmeller::hostSendSatellitePositions()
+{
+	// No position updates, do nothing
+	if (m_moveSatelliteQueue.empty())
+	{
+		return;
+	}
+
+	std::lock_guard<std::mutex> guard(m_moveQueueMutex);
+	while (!m_moveSatelliteQueue.empty())
+	{
+		for (auto c : m_connectedClients)
+		{
+			sf::Packet p; 
+			p << m_moveSatelliteQueue.front();
+			m_hostSocket.send(p, c.ip, c.port);
+			m_moveSatelliteQueue.pop_front();
+		}
 	}
 }
 
