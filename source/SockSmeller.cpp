@@ -95,19 +95,18 @@ void SockSmeller::subscribeToMessageType(MessageType type, Subscriber& s)
 	m_subscribersMap[type].push_back(s);
 }
 
-std::vector<std::wstring> SockSmeller::getConnectedUserDisplayNames()
+std::list<std::wstring> SockSmeller::getConnectedUserDisplayNames()
 {
-	std::vector<std::wstring> names;
+	std::list <std::wstring> names;
 	if (m_nodeType == NetworkNodeType::Host)
 	{
 		std::lock_guard<std::mutex> guard(m_connectedClientMutex);
-
-		names.reserve(m_connectedClients.size());
 		for (auto& c : m_connectedClients)
 		{
 			names.push_back(c.displayName);
 		}
 	}
+	m_hasNameListChanged = false;
 	return names;
 }
 
@@ -329,7 +328,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 	{
 		KeepAlive ka;
 		p >> ka;
-		KPrintf(L"Inbound keep alive from %s : %hu \n", &TO_WSTR(remoteIp.toString())[0], remotePort);
+		//KPrintf(L"Inbound keep alive from %s : %hu \n", &TO_WSTR(remoteIp.toString())[0], remotePort);
 		// we receieved a keep alive, so we'll send back 
 		// a keep alive
 		auto client = getConnectedClient(remoteIp, remotePort);
@@ -474,9 +473,11 @@ void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const
 	sf::Packet p;
 	p << e;
 	m_hostSocket.send(p, conClient.ip, conClient.port);
+	m_hasNameListChanged = true;
 
 	// now the connected client list has changed, we should tell all clients
 	hostSendUpdatedNameList();
+
 }
 
 void SockSmeller::hostSendDisconnect(const ConnectedClient& c)

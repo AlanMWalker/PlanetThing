@@ -7,6 +7,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <list>
 
 #include "ServerPackets.hpp"
 #include "NetworkUtils.hpp"
@@ -70,7 +71,8 @@ public:
 	void setDisplayName(const std::wstring& displayName) { m_displayName = displayName; }
 
 	bool isClientConnectionEstablished() const { return m_bConnEstablished.load(); }
-	std::vector<std::wstring> getConnectedUserDisplayNames();
+	std::list<std::wstring> getConnectedUserDisplayNames();
+	bool hasNameListChanged() const { return m_hasNameListChanged.load(); }
 
 	void setLobbyState(LobbyState lobbyState) { m_lobbyState = lobbyState; }
 	LobbyState getLobbyState() const { return m_lobbyState; }
@@ -139,6 +141,7 @@ private:
 
 	atombool m_bIsRunning = false;
 	atombool m_bConnEstablished = false;
+	atombool m_hasNameListChanged = true;
 
 	std::deque<ConnectedClient> m_connectedClients;
 	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
