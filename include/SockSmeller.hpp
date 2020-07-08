@@ -86,9 +86,11 @@ public:
 	// Host send functions
 	void hostSendGenLevel(GeneratedLevel& genLevel);
 	void hostSendMoveSatellite(float theta, const std::wstring& uuid);
+	void hostSendFireActivate(float strength, const std::wstring& uuid);
 
 	// Client send functions 
 	void clientSendSatelliteMove(Krawler::int32 dir);
+	void clientSendFireRequest(float strength);
 
 private:
 

@@ -24,9 +24,13 @@ public:
 protected:
 
 private:
-
+	// Host
 	void handlePlayerMoveHost(ServerClientMessage* scm);
-	void handlePosUpdate(SatellitePositionUpdate* spu);
+	void handlePlayerFireHost(ServerClientMessage* scm);
+
+
+	void handlePosUpdateClient(SatellitePositionUpdate* spu);
+	void handleFireActivatedClient(FireActivated* fa);
 
 	std::wstring m_playerUUID;
 
@@ -34,5 +38,8 @@ private:
 	std::mutex m_networkMtx;
 
 	atombool m_bHasNewPos = false;
+	atombool m_bFireShot = false;
+
 	float m_newTheta = 0.0f;
+	float m_networkedStrength = 0.0f;
 };

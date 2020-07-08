@@ -193,3 +193,36 @@ sf::Packet& operator>>(sf::Packet& p, SatellitePositionUpdate& spu)
 	p >> spu.uuid;
 	return p;
 }
+
+sf::Packet& operator<<(sf::Packet& p, const FireRequest& fr)
+{
+	write_base_out(p, (ServerClientMessage*)&fr);
+	p << fr.uuid;
+	p << fr.strength;
+	return p;
+
+}
+
+sf::Packet& operator>>(sf::Packet& p, FireRequest& fr)
+{
+	read_base_in(p, (ServerClientMessage*)&fr);
+	p >> fr.uuid;
+	p >> fr.strength;
+	return p;
+}
+
+sf::Packet& operator<<(sf::Packet& p, const FireActivated& fa)
+{
+	write_base_out(p, (ServerClientMessage*)&fa);
+	p << fa.uuid;
+	p << fa.strength;
+	return p;
+}
+
+sf::Packet& operator>>(sf::Packet& p, FireActivated& fa)
+{
+	read_base_in(p, (ServerClientMessage*)&fa);
+	p >> fa.uuid;
+	p >> fa.strength;
+	return p;
+}

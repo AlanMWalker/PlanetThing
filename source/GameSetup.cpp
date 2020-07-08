@@ -555,6 +555,10 @@ void GameSetup::setupLevelNetworkedClient()
 			{
 				controller->getEntity()->setActive(true);
 				controller->setUUID(TO_WSTR(m_genLevel.uuids[i]));
+				if (i == 0)
+				{
+					controller->setTurnIsActive(true);
+				}
 				KPrintf(L"Networked player UUID is %s \n", TO_WSTR(m_genLevel.uuids[i]).c_str());
 			}
 		}

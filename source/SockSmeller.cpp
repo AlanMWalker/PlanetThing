@@ -138,9 +138,26 @@ void SockSmeller::hostSendMoveSatellite(float theta, const std::wstring& uuid)
 	std::lock_guard<std::mutex> g(m_moveQueueMutex);
 	SatellitePositionUpdate ms;
 	ms.timeStamp = timestamp();
-	ms.theta = theta; 
+	ms.theta = theta;
 	ms.uuid = TO_ASTR(uuid);
 	m_moveSatelliteQueue.push_back(ms);
+}
+
+void SockSmeller::hostSendFireActivate(float strength, const std::wstring& uuid)
+{
+	std::lock_guard<std::mutex> g(m_moveQueueMutex);
+	
+	FireActivated fa;
+	fa.timeStamp = timestamp();
+	fa.uuid = TO_ASTR(uuid);
+	fa.strength = strength;
+	sf::Packet p; 
+	p << fa;
+
+	for (auto& c : m_connectedClients)
+	{
+		m_hostSocket.send(p, c.ip, c.port);
+	}
 }
 
 void SockSmeller::clientSendSatelliteMove(Krawler::int32 dir)
@@ -155,6 +172,19 @@ void SockSmeller::clientSendSatelliteMove(Krawler::int32 dir)
 
 	p << ms;
 
+	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
+}
+
+void SockSmeller::clientSendFireRequest(float strength)
+{
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
+	FireRequest fr;
+	fr.timeStamp = timestamp();
+	fr.uuid = m_myUUID;
+	fr.strength = strength;
+
+	sf::Packet p;
+	p << fr;
 	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
 }
 
@@ -381,6 +411,19 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		}
 	}
 	break;
+	case MessageType::FireRequest:
+	{
+		if (m_subscribersMap.count(MessageType::FireRequest) > 0)
+		{
+			FireRequest fr;
+			p >> fr;
+			for (auto cb : m_subscribersMap[MessageType::FireRequest])
+			{
+				cb(&fr);
+			}
+		}
+	}
+	break;
 	case MessageType::None:
 	default:
 		KPRINTF("Unrecognised message sent to host..\n");
@@ -499,6 +542,20 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 
 	}
 	break;
+	case MessageType::FireActivated:
+	{
+		if (m_subscribersMap.count(MessageType::FireActivated) > 0)
+		{
+			FireActivated fa;
+			p >> fa;
+			for (auto& s : m_subscribersMap[MessageType::FireActivated])
+			{
+				s(&fa);
+			}
+		}
+
+	}
+	break;
 	case MessageType::None:
 	default:
 		break;
@@ -602,7 +659,7 @@ void SockSmeller::hostSendSatellitePositions()
 	{
 		for (auto c : m_connectedClients)
 		{
-			sf::Packet p; 
+			sf::Packet p;
 			p << m_moveSatelliteQueue.front();
 			m_hostSocket.send(p, c.ip, c.port);
 			m_moveSatelliteQueue.pop_front();
