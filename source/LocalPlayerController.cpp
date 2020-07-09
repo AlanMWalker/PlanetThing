@@ -43,7 +43,7 @@ void LocalPlayerController::onEnterScene()
 	getEntity()->getComponent<KCSprite>()->setTexture(playerTex);
 
 	m_orbitRadius = Blackboard::PLAYER_ORBIT_RADIUS;
-	
+
 	auto god = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
 	KCHECK(god);
 	auto type = god->getComponent<GameSetup>()->getGameType();
@@ -51,8 +51,11 @@ void LocalPlayerController::onEnterScene()
 	{
 		if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
 		{
-			SockSmeller::Subscriber posUpdate = [this](ServerClientMessage* scm) { handlePosUpdate((SatellitePositionUpdate*)scm); };
+			SockSmeller::Subscriber posUpdate = [this](ServerClientMessage* scm) { handlePosUpdateClient((SatellitePositionUpdate*)scm); };
+			SockSmeller::Subscriber fireActive = [this](ServerClientMessage* scm) { handleFireActivated((SatellitePositionUpdate*)scm); };
+
 			SockSmeller::get().subscribeToMessageType(MessageType::SatellitePositionUpdate, posUpdate);
+			SockSmeller::get().subscribeToMessageType(MessageType::FireActivated, fireActive);
 		}
 	}
 	BaseController::onEnterScene();
@@ -125,19 +128,50 @@ void LocalPlayerController::tick()
 	ImGui::PopFont();
 	m_pImgui->end();
 
+
+	static bool bSentFireRequest = false;
+
 	if (bResult)
 	{
-		fireProjectile();
+		if (type == GameSetup::GameType::Local)
+		{
+			fireProjectile();
+		}
+		else
+		{
+			if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
+			{
+				fireProjectile();
+				SockSmeller::get().hostSendFireActivate(m_shotStrength, SockSmeller::get().getMyUUID());
+			}
+
+		}
 	}
+
+	//if (isTurnActive())
+	if (!bSentFireRequest && bResult)
+	{
+		SockSmeller::get().clientSendFireRequest(m_shotStrength);
+		bSentFireRequest = true;
+	}
+	else
+	{
+		if (m_bFire)
+		{
+			fireProjectile();
+			bSentFireRequest = false;
+			m_bFire = false;
+		}
+	}
+
 	if (m_bHasNewPos)
 	{
-		std::lock_guard<std::mutex> guard(m_networkMtx);
 		m_bHasNewPos = false;
-		m_theta= m_newTheta;
+		m_theta = m_newTheta;
 	}
 }
 
-void LocalPlayerController::handlePosUpdate(ServerClientMessage* scm)
+void LocalPlayerController::handlePosUpdateClient(ServerClientMessage* scm)
 {
 	auto spu = (SatellitePositionUpdate*)scm;
 	KCHECK(spu);
@@ -146,9 +180,23 @@ void LocalPlayerController::handlePosUpdate(ServerClientMessage* scm)
 	{
 		if (spu->uuid == TO_ASTR(SockSmeller::get().getMyUUID()))
 		{
-			std::lock_guard<std::mutex> guard(m_networkMtx);
+			KPrintf(L"Received new client position\n");
+
 			m_bHasNewPos = true;
 			m_newTheta = spu->theta;
+		}
+	}
+}
+
+void LocalPlayerController::handleFireActivated(ServerClientMessage* scm)
+{
+	auto fa = (FireActivated*)scm;
+
+	if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
+	{
+		if (fa->uuid == TO_ASTR(SockSmeller::get().getMyUUID()))
+		{
+			m_bFire = true;
 		}
 	}
 }

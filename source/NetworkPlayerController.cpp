@@ -36,21 +36,29 @@ void NetworkPlayerController::onEnterScene()
 	auto playerTex = ASSET().getTexture(L"player_ship");
 	KCHECK(playerTex);
 
-	SockSmeller::Subscriber handleMove = [this](ServerClientMessage* scm) { handlePlayerMoveHost(scm); };
-	SockSmeller::Subscriber posUpdate = [this](ServerClientMessage* scm) { handlePosUpdate((SatellitePositionUpdate*)scm); };
-
 	getEntity()->getComponent<KCSprite>()->setTexture(playerTex);
-	auto b = []() {};
 
 	if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
 	{
+		//Host handles
+		SockSmeller::Subscriber handleMove = [this](ServerClientMessage* scm) { handlePlayerMoveHost(scm); };
+		SockSmeller::Subscriber handleFire = [this](ServerClientMessage* scm) { handlePlayerFireHost(scm); };
+
 		SockSmeller::get().subscribeToMessageType(MessageType::MoveSatellite, handleMove);
+		SockSmeller::get().subscribeToMessageType(MessageType::FireRequest, handleFire);
 	}
 	else if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
 	{
+		// Client Handlers
+		SockSmeller::Subscriber posUpdate = [this](ServerClientMessage* scm) { handlePosUpdateClient((SatellitePositionUpdate*)scm); };
+		SockSmeller::Subscriber fireActive = [this](ServerClientMessage* scm) { handleFireActivatedClient((FireActivated*)scm); };
+
 		SockSmeller::get().subscribeToMessageType(MessageType::SatellitePositionUpdate, posUpdate);
+		SockSmeller::get().subscribeToMessageType(MessageType::FireActivated, fireActive);
 	}
+
 	m_orbitRadius = Blackboard::PLAYER_ORBIT_RADIUS;
+
 	BaseController::onEnterScene();
 }
 
@@ -64,25 +72,33 @@ void NetworkPlayerController::tick()
 			while (!m_moveSatQueue.empty())
 			{
 				{
-					std::lock_guard<std::mutex> guard(m_networkMtx);
 					auto dir = m_moveSatQueue.front();
 					dir = Maths::Clamp(-1, 1, dir);
 					m_theta += dir * Blackboard::PLAYER_ENTITY_ROTATION_SPEED * GET_APP()->getDeltaTime();
-					m_moveSatQueue.pop_front(); 
+					m_moveSatQueue.pop_front();
 				}
 				SockSmeller::get().hostSendMoveSatellite(m_theta, m_playerUUID);
 
 			}
 		}
-	
 	}
 	else if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
 	{
 		if (m_bHasNewPos)
 		{
-			std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_bHasNewPos = false;
 			m_theta = m_newTheta;
+		}
+	}
+
+	if (m_bFireShot)
+	{
+		m_bFireShot = false;
+		m_shotStrength = m_networkedStrength;
+		fireProjectile();
+		if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
+		{
+			SockSmeller::get().hostSendFireActivate(m_shotStrength, m_playerUUID);
 		}
 	}
 }
@@ -96,13 +112,27 @@ void NetworkPlayerController::handlePlayerMoveHost(ServerClientMessage* scm)
 	{
 		if (ms->uuid == TO_ASTR(m_playerUUID))
 		{
-			std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_moveSatQueue.push_back(ms->direction);
 		}
 	}
 }
 
-void NetworkPlayerController::handlePosUpdate(SatellitePositionUpdate* spu)
+void NetworkPlayerController::handlePlayerFireHost(ServerClientMessage* scm)
+{
+	FireRequest* fr = (FireRequest*)(scm);
+
+	KCHECK(fr);
+	if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
+	{
+		if (fr->uuid == TO_ASTR(m_playerUUID))
+		{
+			m_bFireShot = true;
+			m_networkedStrength = fr->strength;
+		}
+	}
+}
+
+void NetworkPlayerController::handlePosUpdateClient(SatellitePositionUpdate* spu)
 {
 	KCHECK(spu);
 
@@ -110,10 +140,22 @@ void NetworkPlayerController::handlePosUpdate(SatellitePositionUpdate* spu)
 	{
 		if (spu->uuid == TO_ASTR(m_playerUUID))
 		{
-			std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_bHasNewPos = true;
 			m_newTheta = spu->theta;
 		}
 	}
 }
 
+void NetworkPlayerController::handleFireActivatedClient(FireActivated* fa)
+{
+	KCHECK(fa);
+
+	if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
+	{
+		if (fa->uuid == TO_ASTR(m_playerUUID))
+		{
+			m_bFireShot = true;
+			m_networkedStrength = fa->strength;
+		}
+	}
+}

@@ -7,6 +7,14 @@ using namespace Krawler;
 
 SockSmeller::~SockSmeller()
 {
+	if (m_subscriberData.size() > 0)
+	{
+		for (auto d : m_subscriberData)
+			KFREE(d);
+		m_subscriberData.clear();
+	}
+
+	m_subscribersQueue.clear();
 }
 
 bool SockSmeller::isSetup() const
@@ -138,23 +146,53 @@ void SockSmeller::hostSendMoveSatellite(float theta, const std::wstring& uuid)
 	std::lock_guard<std::mutex> g(m_moveQueueMutex);
 	SatellitePositionUpdate ms;
 	ms.timeStamp = timestamp();
-	ms.theta = theta; 
+	ms.theta = theta;
 	ms.uuid = TO_ASTR(uuid);
 	m_moveSatelliteQueue.push_back(ms);
 }
 
+void SockSmeller::hostSendFireActivate(float strength, const std::wstring& uuid)
+{
+	std::lock_guard<std::mutex> g(m_moveQueueMutex);
+
+	FireActivated fa;
+	fa.timeStamp = timestamp();
+	fa.uuid = TO_ASTR(uuid);
+	fa.strength = strength;
+	sf::Packet p;
+	p << fa;
+
+	for (auto& c : m_connectedClients)
+	{
+		m_hostSocket.send(p, c.ip, c.port);
+	}
+}
+
 void SockSmeller::clientSendSatelliteMove(Krawler::int32 dir)
 {
-	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	MoveSatellite ms;
 	sf::Packet p;
-
+	KPrintf(L"Sending client move\n");
 	ms.direction = dir;
 	ms.uuid = m_myUUID;
 	ms.timeStamp = timestamp();
 
 	p << ms;
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
+	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
+}
 
+void SockSmeller::clientSendFireRequest(float strength)
+{
+	FireRequest fr;
+	fr.timeStamp = timestamp();
+	fr.uuid = m_myUUID;
+	fr.strength = strength;
+
+	sf::Packet p;
+	p << fr;
+
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
 }
 
@@ -203,8 +241,7 @@ void SockSmeller::runClient()
 		uint16 remotePort = 0u;
 
 		sf::Socket::Status status = m_clientSocket.receive(p, remoteIp, remotePort);
-		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
-
+		m_connectedClientMutex.lock();
 		if (m_clientEstablishClock.getElapsedTime() > sf::seconds(2.0f) && !m_bConnEstablished)
 		{
 			p.clear();
@@ -215,7 +252,7 @@ void SockSmeller::runClient()
 
 		if (m_keepAliveClock.getElapsedTime().asSeconds() > KeepAliveTime)
 		{
-			if (!m_bKeepAliveSent)
+			//if (!m_bKeepAliveSent)
 			{
 				KPRINTF("Sending keep alive\n");
 				m_keepAliveClock.restart();
@@ -225,15 +262,12 @@ void SockSmeller::runClient()
 				m_keepAliveReplyClock.restart();
 				m_bReplyCountdownReset = true;
 			}
-			else
-			{
+		}
 
-				if (m_keepAliveReplyClock.getElapsedTime().asSeconds() > ServerReplyTime)
-				{
-					KPRINTF("Seems like the server hasn't been replying to my keep alives...\n");
-					m_bIsRunning = false;
-				}
-			}
+		if (m_keepAliveReplyClock.getElapsedTime().asSeconds() > ServerReplyTime)
+		{
+			KPRINTF("Seems like the server hasn't been replying to my keep alives...\n");
+			m_bIsRunning = false;
 		}
 
 		switch (status)
@@ -254,6 +288,7 @@ void SockSmeller::runClient()
 		}
 		auto t = c.restart().asMilliseconds();
 		t = Maths::Clamp(1, (int32)REFRESH_RATE, t);
+		m_connectedClientMutex.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPRINTF("Client no longer running network thread\n");
@@ -265,7 +300,8 @@ void SockSmeller::runHost()
 	{
 		sf::Clock c;
 
-		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
+		//std::lock_guard<std::mutex>guard(m_connectedClientMutex);
+		m_connectedClientMutex.lock();
 		//Process receive messages
 		sf::Packet p;
 		sf::IpAddress remoteIp;
@@ -290,10 +326,13 @@ void SockSmeller::runHost()
 		}
 
 		hostCheckForDeadClients();
-		hostSendSatellitePositions();
-
+		if (m_connectedClients.size() > 0)
+		{
+			hostSendSatellitePositions();
+		}
 		auto t = c.restart().asMilliseconds();
 		t = Maths::Clamp(1, (int32)REFRESH_RATE, t);
+		m_connectedClientMutex.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPrintf(L"Bye..\n");
@@ -336,10 +375,11 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 	ConnectedClient conClient;
 	conClient.ip = remoteIp;
 	conClient.port = remotePort;
+	std::lock_guard<std::mutex> g(m_subscriberQueueMutex);
 
 	switch (type)
 	{
-	case MessageType::Establish:
+	case MessageType::Establish: // TODO Should really go through subscriber model
 	{
 		EstablishConnection con;
 		p >> con;
@@ -350,7 +390,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		replyEstablishHost(con, conClient);
 	}
 	break;
-	case MessageType::KeepAlive:
+	case MessageType::KeepAlive: // TODO Should really go through subscriber model
 	{
 		KeepAlive ka;
 		p >> ka;
@@ -360,7 +400,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		auto client = getConnectedClient(remoteIp, remotePort);
 		if (client)
 		{
-			client->lastTimestamp = ka.timeStamp;
+			client->lastTimestamp = timestamp(); //ka.timeStamp;
 			sf::Packet reply;
 			ka.timeStamp = timestamp();
 			reply << ka;
@@ -376,7 +416,24 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 			p >> ms;
 			for (auto cb : m_subscribersMap[MessageType::MoveSatellite])
 			{
-				cb(&ms);
+				m_subscribersQueue.push_back(cb);
+				m_subscriberData.push_back(new MoveSatellite(ms));
+				KCHECK(m_subscriberData.back());
+			}
+		}
+	}
+	break;
+	case MessageType::FireRequest:
+	{
+		if (m_subscribersMap.count(MessageType::FireRequest) > 0)
+		{
+			FireRequest fr;
+			p >> fr;
+			for (auto cb : m_subscribersMap[MessageType::FireRequest])
+			{
+				m_subscribersQueue.push_back(cb);
+				m_subscriberData.push_back(new FireRequest(fr));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -400,6 +457,8 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		return;
 	}
 
+	std::lock_guard<std::mutex> g(m_subscriberQueueMutex);
+	//KPRINTF("Queue mutex taken by SockSmeller in Client mode\n");
 	switch (type)
 	{
 	case MessageType::Establish:
@@ -438,10 +497,14 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		{
 			DisconnectConnection dc;
 			p >> dc;
+
+			m_bConnEstablished = true;
+
 			for (auto& s : m_subscribersMap[MessageType::Disconnect])
 			{
-				m_bConnEstablished = true;
-				s(&dc);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new DisconnectConnection(dc));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -453,9 +516,12 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		{
 			LobbyNameList lnl;
 			p >> lnl;
+
 			for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
 			{
-				s(&lnl);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new LobbyNameList(lnl));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -480,7 +546,9 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 					KPrintf(L"UUID entry found on client %s\n", TO_WSTR(c).c_str());
 				}
 
-				s(&gen);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new GeneratedLevel(gen));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -493,16 +561,35 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			p >> spu;
 			for (auto& s : m_subscribersMap[MessageType::SatellitePositionUpdate])
 			{
-				s(&spu);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new SatellitePositionUpdate(spu));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 
+	}
+	break;
+	case MessageType::FireActivated:
+	{
+		if (m_subscribersMap.count(MessageType::FireActivated) > 0)
+		{
+			FireActivated fa;
+			p >> fa;
+			for (auto& s : m_subscribersMap[MessageType::FireActivated])
+			{
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new FireActivated(fa));
+				KCHECK(m_subscriberData.back());
+			}
+		}
 	}
 	break;
 	case MessageType::None:
 	default:
 		break;
 	}
+	//KPRINTF("Queue mutex lost by SockSmeller in Client mode\n");
+
 }
 
 void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const ConnectedClient& conClient)
@@ -602,7 +689,7 @@ void SockSmeller::hostSendSatellitePositions()
 	{
 		for (auto c : m_connectedClients)
 		{
-			sf::Packet p; 
+			sf::Packet p;
 			p << m_moveSatelliteQueue.front();
 			m_hostSocket.send(p, c.ip, c.port);
 			m_moveSatelliteQueue.pop_front();

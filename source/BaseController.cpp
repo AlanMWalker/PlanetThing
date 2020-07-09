@@ -111,7 +111,7 @@ void BaseController::fireProjectile()
 	// if it's not my turn I can't fire
 	if (!m_bIsTurnActive)
 	{
-		return;
+		//return;
 	}
 
 	if (m_bFirstShot)

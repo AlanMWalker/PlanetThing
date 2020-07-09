@@ -1,4 +1,4 @@
-# Project -- Mountain Lobster
+# Planet Thing
 
 ## Libraries Utilised
  - SFML 
@@ -21,4 +21,6 @@ then merged into master and tagged as a 'stable indev version' for gameplay
 testing.
 
 ## Credits
-* Mace
+* Mace (Code & Design)
+* Josh (Code)
+* Zack (Code & QA)

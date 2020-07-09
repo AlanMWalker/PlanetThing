@@ -18,7 +18,9 @@ enum class MessageType : Krawler::int32
 	GeneratedLevel,
 	NextPlayerTurn,
 	MoveSatellite, // Sent by client wanting to move
-	SatellitePositionUpdate // Sent by host once it moves a client
+	SatellitePositionUpdate, // Sent by host once it moves a client
+	FireRequest, // sent by client wanting to fire
+	FireActivated // sent by server accepting fire
 };
 
 struct ServerClientMessage
@@ -103,7 +105,7 @@ struct MoveSatellite : public ServerClientMessage
 	// Planet Positions & Masses
 	// Planet & Player Pairings
 	MoveSatellite() { type = MessageType::MoveSatellite; }
-	
+
 	// -1 = Anticlockwise
 	// +1 = Clockwise
 	Krawler::int32 direction = 0;
@@ -120,9 +122,36 @@ struct SatellitePositionUpdate : public ServerClientMessage
 	// Planet & Player Pairings
 	SatellitePositionUpdate() { type = MessageType::SatellitePositionUpdate; }
 
-	float theta;
+	float theta = 0.0f;
 	std::string uuid;
 };
 
 sf::Packet& operator <<(sf::Packet& p, const SatellitePositionUpdate& spu);
 sf::Packet& operator >>(sf::Packet& p, SatellitePositionUpdate& spu);
+
+//--------------------------------------------------------------------------------
+struct FireRequest : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	FireRequest() { type = MessageType::FireRequest; }
+	std::string uuid;
+	float strength = 0.0f;
+};
+
+sf::Packet& operator <<(sf::Packet& p, const FireRequest& fr);
+sf::Packet& operator >>(sf::Packet& p, FireRequest& fr);
+
+
+//--------------------------------------------------------------------------------
+struct FireActivated : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	FireActivated() { type = MessageType::FireActivated; }
+	std::string uuid;
+	float strength = 0.0f;
+};
+
+sf::Packet& operator <<(sf::Packet& p, const FireActivated& fa);
+sf::Packet& operator >>(sf::Packet& p, FireActivated& fa);

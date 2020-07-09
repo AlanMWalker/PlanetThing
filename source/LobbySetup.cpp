@@ -1,10 +1,11 @@
+#include <string>
+#include <sstream>
+
 #include "LobbySetup.hpp"
 #include "Blackboard.hpp"
 #include "ServerPackets.hpp"
 #include "GameSetup.hpp"
-
-#include <string>
-#include <sstream>
+#include "Invoker.hpp"
 
 using namespace Krawler;
 
@@ -18,9 +19,12 @@ LobbySetup::LobbySetup(GameSetup& gs)
 KInitStatus LobbySetup::init()
 {
 	auto entity = getEntity();
+	entity->addComponent(new Invoker(entity));
 	m_pImguiComp = new imguicomp(entity);
 	entity->setTag(L"God");
 	entity->addComponent(m_pImguiComp);
+
+
 	return KInitStatus::Success;
 }
 
@@ -63,7 +67,6 @@ void LobbySetup::onEnterScene()
 void LobbySetup::tick()
 {
 	SockSmeller::get().setLobbyState(m_lobbyState);
-	std::lock_guard<std::mutex> g(m_gameStateMutex);
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:
@@ -231,7 +234,6 @@ void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)
 
 void LobbySetup::handleClientGenLevel(ServerClientMessage* scm)
 {
-	std::lock_guard<std::mutex> g(m_gameStateMutex);
 	GeneratedLevel& gen = *((GeneratedLevel*)(scm));
 	m_gameSetup.setLevelGen(gen);
 	m_lobbyState = LobbyState::InGame;

@@ -23,11 +23,13 @@ public:
 
 private:
 
-	void handlePosUpdate(ServerClientMessage* scm);
+	void handlePosUpdateClient(ServerClientMessage* scm);
+	void handleFireActivated(ServerClientMessage* scm);
 	
 	imguicomp* m_pImgui = nullptr;
-	std::mutex m_networkMtx;
 
-	atombool m_bHasNewPos = false;
+	bool m_bHasNewPos = false;
+	bool m_bFire = false;
+	
 	float m_newTheta = 0.0f;
 };

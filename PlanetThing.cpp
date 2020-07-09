@@ -31,8 +31,8 @@ int main(void)
 	KApplicationInitialise initApp(false);
 	initApp.gameFps = 60;
 	initApp.physicsFps = 120;
-	initApp.width = 1024;
-	initApp.height = 768;
+	initApp.width = 1920;
+	initApp.height = 1080;
 	initApp.windowStyle = KWindowStyle::Windowed_Resizeable;
 
 	std::wifstream input;
