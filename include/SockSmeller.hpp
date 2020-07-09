@@ -7,6 +7,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <list>
 
 #include "ServerPackets.hpp"
 #include "NetworkUtils.hpp"
@@ -34,6 +35,21 @@ enum class LobbyState : Krawler::int32
 class SockSmeller
 {
 public:
+	struct ConnectedClient
+	{
+		bool operator ==(const ConnectedClient& c)
+		{
+			return c.displayName == displayName && c.port == port && c.ip == ip;
+		}
+
+		sf::IpAddress ip;
+		Krawler::uint16 port;
+		Krawler::int64 lastTimestamp;
+		std::wstring displayName;
+		std::wstring uuid;
+	};
+
+
 	using Subscriber = std::function<void(ServerClientMessage*)>;
 
 	~SockSmeller();
@@ -50,36 +66,42 @@ public:
 	void tearDown();
 	void subscribeToMessageType(MessageType type, Subscriber& s);
 	std::wstring getDisplayName() const { return m_displayName; }
+	std::wstring getMyUUID() const { return m_myUUID; }
+
 	void setDisplayName(const std::wstring& displayName) { m_displayName = displayName; }
 
 	bool isClientConnectionEstablished() const { return m_bConnEstablished.load(); }
-	std::vector<std::wstring> getConnectedUserDisplayNames();
+	std::list<std::wstring> getConnectedUserDisplayNames();
+	bool hasNameListChanged() const { return m_hasNameListChanged.load(); }
 
 	void setLobbyState(LobbyState lobbyState) { m_lobbyState = lobbyState; }
 	LobbyState getLobbyState() const { return m_lobbyState; }
 
 	NetworkNodeType getNetworkNodeType() const { return m_nodeType; }
+	std::vector<ConnectedClient> getClientList() const { return std::vector<ConnectedClient>(m_connectedClients.begin(), m_connectedClients.end()); }
 
+	std::deque<Subscriber>& getSubscribersQueue() { return m_subscribersQueue; }
+	std::deque<ServerClientMessage*>& getSubscriberData() { return m_subscriberData; }
+
+	// Host send functions
 	void hostSendGenLevel(GeneratedLevel& genLevel);
-	
+	void hostSendMoveSatellite(float theta, const std::wstring& uuid);
+	void hostSendFireActivate(float strength, const std::wstring& uuid);
+
+	// Client send functions 
+	void clientSendSatelliteMove(Krawler::int32 dir);
+	void clientSendFireRequest(float strength);
+
+	// A lock on this is taken by the Invoker component attached to 'God', which is on the 
+	// main thread (depending on if in lobby or game). This is so that packet subscriber 
+	// callbacks are invoked on the main thread, rather than the network thread. 
+	std::mutex& getQueueMutex() { return m_subscriberQueueMutex; }
+
 private:
 
 	SockSmeller();
 
-	struct ConnectedClient
-	{
-		bool operator ==(const ConnectedClient& c)
-		{
-			return c.displayName == displayName && c.port == port && c.ip == ip;
-		}
-
-		sf::IpAddress ip;
-		Krawler::uint16 port;
-		Krawler::int64 lastTimestamp;
-		std::wstring displayName;
-	};
-
-	const Krawler::uint32 REFRESH_RATE = static_cast<Krawler::uint32>(((1.0f / 100.0f) * 1000));
+	const Krawler::uint32 REFRESH_RATE = static_cast<Krawler::uint32>(((1.0f / 60.0f) * 1000));
 
 	void runSockSmeller();
 	void runClient();
@@ -97,43 +119,54 @@ private:
 
 	void hostSendUpdatedNameList();
 
+	void hostSendSatellitePositions();
+
 	MessageType getMessageTypeFromPacket(const sf::Packet& p) const;
 	ConnectedClient* getConnectedClient(const sf::IpAddress& ip, Krawler::uint16 port);
 
 	const Krawler::uint16 SEND_PORT = 32001U;
 	const float KeepAliveTime = 5.0f; // seconds
-	const float ServerReplyTime = 10.0f; // seconds
-	const float HostMaxDelta = 12.0f;
+	const float ServerReplyTime = 45.0f; // seconds
+	const float HostMaxDelta = 60.0f;
 	bool m_bIsSetup = false;
 
-	bool m_bReplyCountdownReset = false;
-	bool m_bKeepAliveSent = false;
+	std::deque<ConnectedClient> m_connectedClients;
+
+	std::deque<Subscriber> m_subscribersQueue;
+	std::deque<ServerClientMessage*> m_subscriberData;
+
+	std::list<SatellitePositionUpdate> m_moveSatelliteQueue;
+	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
+
+	sf::Clock m_clientEstablishClock;
 	sf::Clock m_keepAliveClock;
 	sf::Clock m_keepAliveReplyClock;
-
-	Krawler::uint32 m_hostLobbyplayerCount = 1;
-
-	sf::IpAddress m_outboundIp;
-	Krawler::uint16 m_outboundPort;
-	Krawler::uint16 m_inboundPort;
 
 	sf::UdpSocket m_hostSocket; // host
 	sf::UdpSocket m_clientSocket; // client
 
+	sf::String m_displayName;
+	sf::String m_myUUID;
+
 	NetworkNodeType m_nodeType = NetworkNodeType::Client;
 	LobbyState m_lobbyState = LobbyState::None;
 
-	sf::String m_displayName;
+	Krawler::uint32 m_hostLobbyplayerCount = 1;
+
+	sf::IpAddress m_outboundIp;
+
+	Krawler::uint16 m_outboundPort;
+	Krawler::uint16 m_inboundPort;
 
 	std::thread m_updateThread;
+	std::mutex m_connectedClientMutex;
+	std::mutex m_moveQueueMutex;
+	std::mutex m_subscriberQueueMutex;
 
 	atombool m_bIsRunning = false;
 	atombool m_bConnEstablished = false;
+	atombool m_hasNameListChanged = true;
 
-	std::deque<ConnectedClient> m_connectedClients;
-	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
-
-	sf::Clock m_clientEstablishClock;
-
-	std::mutex m_connectedClientMutex;
+	bool m_bReplyCountdownReset = false;
+	bool m_bKeepAliveSent = false;
 };

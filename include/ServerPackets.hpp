@@ -15,124 +15,61 @@ enum class MessageType : Krawler::int32
 	Establish,
 	Disconnect,
 	LobbyNameList,
-	GeneratedLevel
+	GeneratedLevel,
+	NextPlayerTurn,
+	MoveSatellite, // Sent by client wanting to move
+	SatellitePositionUpdate, // Sent by host once it moves a client
+	FireRequest, // sent by client wanting to fire
+	FireActivated // sent by server accepting fire
 };
 
-#pragma region Server Client Base Struct
 struct ServerClientMessage
 {
 	MessageType type = MessageType::None;
 	long long timeStamp = 0;
 };
 
-#pragma endregion 
-
-static void write_base_out(sf::Packet& p, ServerClientMessage* scm)
-{
-	p << static_cast<Krawler::int32>(scm->type) << scm->timeStamp;
-}
-
-static void read_base_in(sf::Packet& p, ServerClientMessage* scm)
-{
-	int a;
-	p >> a;
-	scm->type = (MessageType)(a);
-	p >> scm->timeStamp;
-}
-
-
 //--------------------------------------------------------------------------------
-#pragma region Keep Alive Struct
 struct KeepAlive : public ServerClientMessage
 {
 	KeepAlive() { type = MessageType::KeepAlive; }
 };
 
-static sf::Packet& operator <<(sf::Packet& p, const KeepAlive& keepAlive)
-{
-	write_base_out(p, (ServerClientMessage*)&keepAlive);
-	return p;
-}
-
-
-static sf::Packet& operator >>(sf::Packet& p, KeepAlive& keepAlive)
-{
-	read_base_in(p, (ServerClientMessage*)&keepAlive);
-	return p;
-}
-#pragma endregion
+sf::Packet& operator <<(sf::Packet& p, const KeepAlive& keepAlive);
+sf::Packet& operator >>(sf::Packet& p, KeepAlive& keepAlive);
 
 //--------------------------------------------------------------------------------
-
-#pragma region Establish Connection Struct
 struct EstablishConnection : public ServerClientMessage
 {
 	EstablishConnection() { type = MessageType::Establish; }
 	std::string clientVersion;
 	std::string displayName;
+	std::string uuid; // filled out on reply
 };
 
-static sf::Packet& operator <<(sf::Packet& p, const EstablishConnection& establishStruct)
-{
-	write_base_out(p, (ServerClientMessage*)&establishStruct);
-	return p << establishStruct.clientVersion << establishStruct.displayName;
-}
-
-
-static sf::Packet& operator >>(sf::Packet& p, EstablishConnection& establishStruct)
-{
-	read_base_in(p, (ServerClientMessage*)&establishStruct);
-	return p >> establishStruct.clientVersion >> establishStruct.displayName;
-}
-#pragma endregion
+sf::Packet& operator <<(sf::Packet& p, const EstablishConnection& establishStruct);
+sf::Packet& operator >>(sf::Packet& p, EstablishConnection& establishStruct);
 
 //--------------------------------------------------------------------------------
-#pragma region Disconnect Connection Struct
 struct DisconnectConnection : public ServerClientMessage
 {
 	DisconnectConnection() { type = MessageType::Disconnect; }
 };
 
-
-static sf::Packet& operator <<(sf::Packet& p, const DisconnectConnection& dc)
-{
-	write_base_out(p, (ServerClientMessage*)&dc);
-	return p;
-}
-
-static sf::Packet& operator >>(sf::Packet& p, DisconnectConnection& dc)
-{
-	read_base_in(p, (ServerClientMessage*)&dc);
-	return p;
-}
-
-#pragma endregion
+sf::Packet& operator <<(sf::Packet& p, const DisconnectConnection& dc);
+sf::Packet& operator >>(sf::Packet& p, DisconnectConnection& dc);
 
 //--------------------------------------------------------------------------------
-#pragma region Lobby Name List Struct
 struct LobbyNameList : public ServerClientMessage
 {
 	LobbyNameList() { type = MessageType::LobbyNameList; }
 	std::string nameList; //csv list
 };
 
-
-static sf::Packet& operator <<(sf::Packet& p, const LobbyNameList& lnl)
-{
-	write_base_out(p, (ServerClientMessage*)&lnl);
-	return p << lnl.nameList;
-}
-
-static sf::Packet& operator >>(sf::Packet& p, LobbyNameList& lnl)
-{
-	read_base_in(p, (ServerClientMessage*)&lnl);
-	return p >> lnl.nameList;
-}
-
-#pragma endregion
+sf::Packet& operator <<(sf::Packet& p, const LobbyNameList& lnl);
+sf::Packet& operator >>(sf::Packet& p, LobbyNameList& lnl);
 
 //--------------------------------------------------------------------------------
-#pragma region Level Gen Struct
 struct GeneratedLevel : public ServerClientMessage
 {
 	// Planet Positions & Masses
@@ -144,70 +81,77 @@ struct GeneratedLevel : public ServerClientMessage
 	std::vector<Krawler::Vec2f> positions;
 	std::vector<float> masses;
 	std::vector<std::string> names;
+	std::vector<std::string> uuids;
 };
 
-// Write out in this order
-// Num of planets
-// Planet positions 
-// Planet masses
-// Display Name Owners
-static sf::Packet& operator <<(sf::Packet& p, const GeneratedLevel& genLevel)
+
+sf::Packet& operator <<(sf::Packet& p, const GeneratedLevel& genLevel);
+sf::Packet& operator >>(sf::Packet& p, GeneratedLevel& genLevel);
+
+//--------------------------------------------------------------------------------
+struct NextPlayerTurn : public ServerClientMessage
 {
-	write_base_out(p, (ServerClientMessage*)&genLevel);
-	p << genLevel.numOfPlanets;
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	NextPlayerTurn() { type = MessageType::NextPlayerTurn; }
+};
 
-	const Krawler::uint64 PosBufferSize = sizeof(Krawler::Vec2f) * genLevel.numOfPlanets;
-	const Krawler::uint64 MassBufferSize = sizeof(float) * genLevel.numOfPlanets;
+sf::Packet& operator <<(sf::Packet& p, const NextPlayerTurn& tt);
+sf::Packet& operator >>(sf::Packet& p, NextPlayerTurn& tt);
 
-	p.append((void*)&genLevel.positions[0], PosBufferSize);
-	p.append((void*)&genLevel.masses[0], MassBufferSize);
-
-	for (auto name : genLevel.names)
-	{
-		name.erase(std::find(name.begin(), name.end(), '\0'), name.end());
-		p.append(name.c_str(), name.length());
-		p << (Krawler::uint8)('\0');
-	}
-
-	return p;
-}
-
-static sf::Packet& operator >>(sf::Packet& p, GeneratedLevel& genLevel)
+//--------------------------------------------------------------------------------
+struct MoveSatellite : public ServerClientMessage
 {
-	read_base_in(p, (ServerClientMessage*)&genLevel);
-	// Addon the offset for the number of planets var into the struct
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	MoveSatellite() { type = MessageType::MoveSatellite; }
 
-	char* pData = (char*)p.getData() + sizeof(MessageType) + sizeof(long long);
+	// -1 = Anticlockwise
+	// +1 = Clockwise
+	Krawler::int32 direction = 0;
+	std::string uuid;
+};
 
-	memcpy_s(&genLevel.numOfPlanets, sizeof(Krawler::uint64), pData, sizeof(Krawler::uint64));
-	genLevel.numOfPlanets = _byteswap_uint64(genLevel.numOfPlanets);
+sf::Packet& operator <<(sf::Packet& p, const MoveSatellite& ms);
+sf::Packet& operator >>(sf::Packet& p, MoveSatellite& ms);
 
-	const Krawler::uint64 PosBufferSize = sizeof(Krawler::Vec2f) * genLevel.numOfPlanets;
-	const Krawler::uint64 MassBufferSize = sizeof(float) * genLevel.numOfPlanets;
+//--------------------------------------------------------------------------------
+struct SatellitePositionUpdate : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	SatellitePositionUpdate() { type = MessageType::SatellitePositionUpdate; }
 
-	genLevel.positions.resize(genLevel.numOfPlanets);
-	genLevel.masses.resize(genLevel.numOfPlanets);
-	genLevel.names.resize(genLevel.numOfPlanets);
+	float theta = 0.0f;
+	std::string uuid;
+};
 
-	const Krawler::uint64 PositionOffset = sizeof(Krawler::uint64);
-	const Krawler::uint64 MassOffset = sizeof(Krawler::uint64) + PosBufferSize;
-	const Krawler::uint64 NamesOffset = sizeof(Krawler::uint64) + PosBufferSize + MassBufferSize;
+sf::Packet& operator <<(sf::Packet& p, const SatellitePositionUpdate& spu);
+sf::Packet& operator >>(sf::Packet& p, SatellitePositionUpdate& spu);
 
-	memcpy_s((void*)&genLevel.positions[0], PosBufferSize, (void*)(pData + PositionOffset), PosBufferSize);
-	memcpy_s((void*)&genLevel.masses[0], MassBufferSize, (void*)(pData + MassOffset), MassBufferSize);
+//--------------------------------------------------------------------------------
+struct FireRequest : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	FireRequest() { type = MessageType::FireRequest; }
+	std::string uuid;
+	float strength = 0.0f;
+};
 
-	std::string tempName;
-	Krawler::uint64 summedSize = 0;
-	for (Krawler::uint64 i = 0; i < genLevel.numOfPlanets; ++i)
-	{
-		// if it's the first name it will be located at pData+NamesOffset
-		// otherwise it will be located at pData + NamesOffset + SummedStringSize
-		tempName = (pData + NamesOffset + summedSize);
-		summedSize += tempName.size() + 1; // +1 for '\0' 
-		genLevel.names[i] = tempName;
-	}
+sf::Packet& operator <<(sf::Packet& p, const FireRequest& fr);
+sf::Packet& operator >>(sf::Packet& p, FireRequest& fr);
 
-	return p;
-}
 
-#pragma endregion
+//--------------------------------------------------------------------------------
+struct FireActivated : public ServerClientMessage
+{
+	// Planet Positions & Masses
+	// Planet & Player Pairings
+	FireActivated() { type = MessageType::FireActivated; }
+	std::string uuid;
+	float strength = 0.0f;
+};
+
+sf::Packet& operator <<(sf::Packet& p, const FireActivated& fa);
+sf::Packet& operator >>(sf::Packet& p, FireActivated& fa);

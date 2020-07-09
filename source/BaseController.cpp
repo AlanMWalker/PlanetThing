@@ -90,8 +90,30 @@ void BaseController::setHostPlanet(CelestialBody* pHost)
 	m_pHostPlanet = pHost;
 }
 
+void BaseController::hideTargets()
+{
+	for (auto t : m_targets)
+	{
+		t.pEntity->setActive(false);
+	}
+}
+
+void BaseController::showTargets()
+{
+	for (auto t : m_targets)
+	{
+		t.pEntity->setActive(true);
+	}
+}
+
 void BaseController::fireProjectile()
 {
+	// if it's not my turn I can't fire
+	if (!m_bIsTurnActive)
+	{
+		//return;
+	}
+
 	if (m_bFirstShot)
 	{
 		m_shotCooldown.restart();

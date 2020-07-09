@@ -15,8 +15,7 @@
 #include "DbgImgui.hpp"
 #include "CelestialBody.hpp"
 #include "CPUPlayerController.hpp"
-
-#include "SockSmeller.hpp"
+#include "Invoker.hpp"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -112,6 +111,8 @@ void GameSetup::onEnterScene()
 
 void GameSetup::tick()
 {
+	manageGameState();
+
 	static int idx = PLANETS_COUNT;
 	if (KInput::MouseJustPressed(KMouseButton::Right))
 	{
@@ -198,6 +199,7 @@ void GameSetup::createGod()
 {
 	auto entity = getEntity();
 	entity->setTag(L"God");
+	entity->addComponent(new Invoker(entity));
 	entity->addComponent(new imguicomp(entity));
 	entity->addComponent(new GodDebugComp(entity));
 	m_pPath = new ProjectilePath(entity);
@@ -240,6 +242,11 @@ void GameSetup::createCelestialBodies()
 {
 	auto scene = GET_SCENE_NAMED(Blackboard::GameScene);
 
+	// Allocate networked player satellite entities
+	// and networked player controllers
+	bool bDidAllocate = scene->addMultipleEntitiesToScene(AI_PLANETS_COUNT, m_networkedSatellites);
+	KCHECK(bDidAllocate);
+
 	const uint32 TotalCelestial = PLANETS_COUNT + SATELLITES_COUNT;
 	//auto created = scene->addMultipleEntitiesToScene(TotalCelestial, m_entities);
 	m_pPlayerPlanet = scene->addEntityToScene();
@@ -252,7 +259,8 @@ void GameSetup::createCelestialBodies()
 	m_pPlayerPlanet->addComponent(celestial);
 	m_newton.addCelestialBody(*celestial);
 
-	bool bDidAllocate = scene->addMultipleEntitiesToScene(AI_PLANETS_COUNT, m_aiPlanets);
+	// Allocate AI Planets
+	bDidAllocate = scene->addMultipleEntitiesToScene(AI_PLANETS_COUNT, m_aiPlanets);
 	KCHECK(bDidAllocate);
 	for (auto& ai : m_aiPlanets)
 	{
@@ -266,11 +274,12 @@ void GameSetup::createCelestialBodies()
 		new CPUPlayerController(celestial);
 		m_newton.addCelestialBody(*celestial);
 	}
-
+	// Allocate networked planets
 	bDidAllocate = scene->addMultipleEntitiesToScene(NETWORKED_PLANETS_COUNT, m_networkedPlanets);
 	KCHECK(bDidAllocate);
 	for (auto& np : m_networkedPlanets)
 	{
+		//Setup celestial body
 		auto celestial = new CelestialBody(np,
 			CelestialBody::BodyType::Planet,
 			*m_pPath
@@ -279,8 +288,22 @@ void GameSetup::createCelestialBodies()
 		KCHECK(celestial);
 		np->addComponent(celestial);
 		m_newton.addCelestialBody(*celestial);
+
 	}
 
+
+	for (uint64 i = 0; i < MAX_NETWORKED; ++i)
+	{
+		// setup networked player controller 
+		m_networkedControllers[i] = new NetworkPlayerController(m_networkedSatellites[i],
+			m_networkedPlanets[i]->getComponent<CelestialBody>()
+		);
+
+		KCHECK(m_networkedControllers[i]);
+		m_networkedSatellites[i]->addComponent(m_networkedControllers[i]);
+	}
+
+	// Allocate projectile satellites
 	bDidAllocate = scene->addMultipleEntitiesToScene(SATELLITES_COUNT, m_satellites);
 	KCHECK(bDidAllocate);
 	for (auto& sat : m_satellites)
@@ -296,6 +319,7 @@ void GameSetup::createCelestialBodies()
 	}
 
 
+	// Allocate moons
 	bDidAllocate = scene->addMultipleEntitiesToScene(MOON_COUNT, m_moons);
 	KCHECK(bDidAllocate);
 	for (auto& moon : m_moons)
@@ -394,33 +418,9 @@ void GameSetup::setupLevelLocal()
 void GameSetup::setupLevelNetworkedHost()
 {
 	std::vector<CelestialBody*> planetsFound;
-	int count = 0;
-	planetsFound.push_back(m_pPlayerPlanet->getComponent<CelestialBody>());
-	for (auto& ai : m_aiPlanets)
-	{
-		ai->getComponent<CelestialBody>()->setInActive();
-	}
-
-	for (auto ai : m_networkedPlanets)
-	{
-		auto celestial = ai->getComponent<CelestialBody>();
-		if (celestial)
-		{
-			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
-			{
-				if (count >= m_networkedCount)
-				{
-					celestial->setInActive();
-				}
-				else
-				{
-					planetsFound.push_back(celestial);
-					++count;
-				}
-			}
-		}
-	}
-
+	GeneratedLevel genLevel;
+	genLevel.numOfPlanets = (uint64)(m_networkedCount + 1u);
+	setupNetworkedPlanetsAndSatellites(genLevel, planetsFound);
 
 	const float boundRadius = Blackboard::PLANET_RADIUS * 4.0f;
 	std::vector<Vec2f> points;
@@ -468,39 +468,151 @@ void GameSetup::setupLevelNetworkedHost()
 		planetsFound[i]->setPosition(points[i]);
 	}
 
-	std::stack<std::string> nameStack;
-	auto nameList = SockSmeller::get().getConnectedUserDisplayNames();
-	std::random_shuffle(nameList.begin(), nameList.end());
-	for (auto n : nameList)
+	using UUIDName = std::pair< std::string, std::string>;
+	std::stack<UUIDName> uuidAndName;
+
+	auto clientList = SockSmeller::get().getClientList();
+	std::random_shuffle(clientList.begin(), clientList.end());
+
+	for (auto c : clientList)
 	{
-		nameStack.push(TO_ASTR(n));
+		uuidAndName.push(UUIDName(TO_ASTR(c.uuid), TO_ASTR(c.displayName)));
 	}
 
 	// send planet mass & positions to other client
-	GeneratedLevel genLevel;
-	for (auto p : planetsFound)
+	for (uint64 i = 0; i < points.size(); ++i)
 	{
+		auto p = planetsFound[i];
 		genLevel.masses.push_back(p->getMass());
 		genLevel.positions.push_back(p->getCentre());
 
 		if (p->getEntity() == m_pPlayerPlanet)
 		{
 			genLevel.names.push_back(TO_ASTR(SockSmeller::get().getDisplayName()));
+			genLevel.uuids.push_back(TO_ASTR(SockSmeller::get().getMyUUID()));
+
 		}
 		else
 		{
-			KCHECK(!nameStack.empty());
-			genLevel.names.push_back(nameStack.top());
-			nameStack.pop();
+			KCHECK(!uuidAndName.empty());
+			genLevel.uuids.push_back(uuidAndName.top().first);
+			genLevel.names.push_back(uuidAndName.top().second);
+			for (auto& c : m_networkedControllers)
+			{
+				if (c->getHostPlanet() == p)
+				{
+					c->setUUID(TO_WSTR(uuidAndName.top().first));
+				}
+			}
+			uuidAndName.pop();
 		}
 	}
 	genLevel.numOfPlanets = planetsFound.size();
 	SockSmeller::get().hostSendGenLevel(genLevel);
+
+
+	// shuffle name list and set first player 
+	for (auto client : SockSmeller::get().getClientList())
+	{
+		m_lobbyPlayers.push_back(client.uuid);
+	}
+	m_lobbyPlayers.push_back(SockSmeller::get().getMyUUID());
+
+	std::random_shuffle(m_lobbyPlayers.begin(), m_lobbyPlayers.end());
+	m_currentPlayerTurnIdx = 0;
+
+	// if I'm the first uuid in the list, then I take the first turn
+	if (m_lobbyPlayers[m_currentPlayerTurnIdx] == SockSmeller::get().getMyUUID())
+	{
+		m_playerController->setTurnIsActive(true);
+	}
 }
 
 void GameSetup::setupLevelNetworkedClient()
 {
 	std::vector<CelestialBody*> planetsFound;
+	setupNetworkedPlanetsAndSatellites(m_genLevel, planetsFound);
+
+
+	for (uint64 i = 0; i < m_genLevel.positions.size(); ++i)
+	{
+		planetsFound[i]->setPosition(m_genLevel.positions[i]);
+		planetsFound[i]->setMass(m_genLevel.masses[i]);
+		if (TO_WSTR(m_genLevel.uuids[i]) == SockSmeller::get().getMyUUID())
+		{
+			m_playerController->setHostPlanet(planetsFound[i]);
+
+			// If my planet is the first in the list
+			// it's my turn
+			if (i == 0)
+			{
+				m_playerController->setTurnIsActive(true);
+			}
+		}
+
+		for (auto& controller : m_networkedControllers)
+		{
+			if (controller->getHostPlanet() == planetsFound[i])
+			{
+				controller->getEntity()->setActive(true);
+				controller->setUUID(TO_WSTR(m_genLevel.uuids[i]));
+				if (i == 0)
+				{
+					controller->setTurnIsActive(true);
+				}
+				KPrintf(L"Networked player UUID is %s \n", TO_WSTR(m_genLevel.uuids[i]).c_str());
+			}
+		}
+	}
+}
+
+void GameSetup::manageGameState()
+{
+	switch (m_gameType)
+	{
+	case GameSetup::GameType::Networked:
+		manageNetworked();
+		break;
+	case GameSetup::GameType::Local:
+		manageLocal();
+	default:
+		break;
+	}
+}
+
+void GameSetup::manageNetworked()
+{
+	// Nothing to manage as a networked client, the host handles it all
+	if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
+	{
+		return;
+	}
+
+	// As the host
+	static bool bIsFirstRun = true;
+	if (bIsFirstRun)
+	{
+		if (m_lobbyPlayers[0] == SockSmeller::get().getMyUUID())
+		{
+			// No need to send network message
+			// host starts
+		}
+		else
+		{
+			// Send message to the clients
+			// to say which client starts
+		}
+		bIsFirstRun = false;
+	}
+}
+
+void GameSetup::manageLocal()
+{
+	// STUB
+}
+
+void GameSetup::setupNetworkedPlanetsAndSatellites(const GeneratedLevel& genLevel, std::vector<CelestialBody*>& planetsFound)
+{
 	int count = 0;
 	planetsFound.push_back(m_pPlayerPlanet->getComponent<CelestialBody>());
 	for (auto& ai : m_aiPlanets)
@@ -508,35 +620,30 @@ void GameSetup::setupLevelNetworkedClient()
 		ai->getComponent<CelestialBody>()->setInActive();
 	}
 
-	for (auto networkedPlayer : m_networkedPlanets)
+	for (uint64 i = 0; i < MAX_NETWORKED; ++i)
 	{
+		auto networkedPlayer = m_networkedPlanets[i];
 		auto celestial = networkedPlayer->getComponent<CelestialBody>();
+		KCHECK(celestial);
 		if (celestial)
 		{
 			if (celestial->getBodyType() == CelestialBody::BodyType::Planet)
 			{
 				// -1 for players planet
-				if (count >= (m_genLevel.numOfPlanets))
+				if (count >= (genLevel.numOfPlanets - 1))
 				{
 					celestial->setInActive();
+					m_networkedSatellites[i]->setActive(false);
+					m_networkedControllers[i]->hideTargets();
 				}
 				else
 				{
 					planetsFound.push_back(celestial);
+					m_networkedSatellites[i]->setActive(true);
+					m_networkedControllers[i]->showTargets();
 					++count;
 				}
 			}
-		}
-	}
-
-
-	for (uint64 i = 0; i < m_genLevel.positions.size(); ++i)
-	{
-		planetsFound[i]->setPosition(m_genLevel.positions[i]);
-		planetsFound[i]->setMass(m_genLevel.masses[i]);
-		if (TO_WSTR(m_genLevel.names[i]) == SockSmeller::get().getDisplayName())
-		{
-			m_pPlayerPlanet->getComponent<BaseController>()->setHostPlanet(planetsFound[i]);
 		}
 	}
 }

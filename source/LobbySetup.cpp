@@ -1,10 +1,11 @@
+#include <string>
+#include <sstream>
+
 #include "LobbySetup.hpp"
 #include "Blackboard.hpp"
 #include "ServerPackets.hpp"
 #include "GameSetup.hpp"
-
-#include <string>
-#include <sstream>
+#include "Invoker.hpp"
 
 using namespace Krawler;
 
@@ -18,9 +19,12 @@ LobbySetup::LobbySetup(GameSetup& gs)
 KInitStatus LobbySetup::init()
 {
 	auto entity = getEntity();
+	entity->addComponent(new Invoker(entity));
 	m_pImguiComp = new imguicomp(entity);
 	entity->setTag(L"God");
 	entity->addComponent(m_pImguiComp);
+
+
 	return KInitStatus::Success;
 }
 
@@ -63,7 +67,6 @@ void LobbySetup::onEnterScene()
 void LobbySetup::tick()
 {
 	SockSmeller::get().setLobbyState(m_lobbyState);
-	std::lock_guard<std::mutex> g(m_gameStateMutex);
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:
@@ -152,6 +155,12 @@ void LobbySetup::tickClient()
 
 void LobbySetup::tickHost()
 {
+	static std::list<std::wstring> namesList;
+	if (SockSmeller::get().hasNameListChanged())
+	{
+		namesList = SockSmeller::get().getConnectedUserDisplayNames();
+	}
+
 	bool bStartLobby = false;
 	m_pImguiComp->update();
 	m_pImguiComp->begin("Lobby");
@@ -159,7 +168,6 @@ void LobbySetup::tickHost()
 	ImGui::Separator();
 	ImGui::Text(" -- Connected users --");
 	ImGui::Text(&TO_ASTR(m_displayName)[0]);
-	auto namesList = SockSmeller::get().getConnectedUserDisplayNames();
 	for (auto& n : namesList)
 	{
 		ImGui::Text(&TO_ASTR(n)[0]);
@@ -174,7 +182,7 @@ void LobbySetup::tickHost()
 		GET_APP()->getSceneDirector().transitionToScene(Blackboard::MenuScene);
 	}
 
-	if (SockSmeller::get().getConnectedUserDisplayNames().size() == (uint64)m_lobbySize)
+	if (namesList.size() == (uint64)m_lobbySize)
 	{
 		bStartLobby = ImGui::Button("Start");
 		if (bStartLobby)
@@ -226,7 +234,6 @@ void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)
 
 void LobbySetup::handleClientGenLevel(ServerClientMessage* scm)
 {
-	std::lock_guard<std::mutex> g(m_gameStateMutex);
 	GeneratedLevel& gen = *((GeneratedLevel*)(scm));
 	m_gameSetup.setLevelGen(gen);
 	m_lobbyState = LobbyState::InGame;

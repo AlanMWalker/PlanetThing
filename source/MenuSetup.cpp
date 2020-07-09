@@ -29,7 +29,7 @@ void MenuSetup::tick()
 	static bool bJoinMultiplayer = false;
 	static bool bPlaySinglePlayer = false;
 	static bool bHostMultiplayer = false;
-	static std::string ip;
+	static std::string ip = "localhost";
 	static std::string displayName;
 	//static std::string port;
 	static int port;
