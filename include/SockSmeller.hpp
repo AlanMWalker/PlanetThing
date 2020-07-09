@@ -126,8 +126,8 @@ private:
 
 	const Krawler::uint16 SEND_PORT = 32001U;
 	const float KeepAliveTime = 5.0f; // seconds
-	const float ServerReplyTime = 10.0f; // seconds
-	const float HostMaxDelta = 12.0f;
+	const float ServerReplyTime = 45.0f; // seconds
+	const float HostMaxDelta = 60.0f;
 	bool m_bIsSetup = false;
 
 	std::deque<ConnectedClient> m_connectedClients;

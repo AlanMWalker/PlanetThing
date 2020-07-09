@@ -180,6 +180,8 @@ void LocalPlayerController::handlePosUpdateClient(ServerClientMessage* scm)
 	{
 		if (spu->uuid == TO_ASTR(SockSmeller::get().getMyUUID()))
 		{
+			KPrintf(L"Received new client position\n");
+
 			m_bHasNewPos = true;
 			m_newTheta = spu->theta;
 		}

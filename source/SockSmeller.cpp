@@ -170,22 +170,20 @@ void SockSmeller::hostSendFireActivate(float strength, const std::wstring& uuid)
 
 void SockSmeller::clientSendSatelliteMove(Krawler::int32 dir)
 {
-	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	MoveSatellite ms;
 	sf::Packet p;
-
+	KPrintf(L"Sending client move\n");
 	ms.direction = dir;
 	ms.uuid = m_myUUID;
 	ms.timeStamp = timestamp();
 
 	p << ms;
-
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
 }
 
 void SockSmeller::clientSendFireRequest(float strength)
 {
-	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	FireRequest fr;
 	fr.timeStamp = timestamp();
 	fr.uuid = m_myUUID;
@@ -193,6 +191,8 @@ void SockSmeller::clientSendFireRequest(float strength)
 
 	sf::Packet p;
 	p << fr;
+
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	m_clientSocket.send(p, m_outboundIp, m_outboundPort);
 }
 
@@ -241,8 +241,7 @@ void SockSmeller::runClient()
 		uint16 remotePort = 0u;
 
 		sf::Socket::Status status = m_clientSocket.receive(p, remoteIp, remotePort);
-		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
-
+		m_connectedClientMutex.lock();
 		if (m_clientEstablishClock.getElapsedTime() > sf::seconds(2.0f) && !m_bConnEstablished)
 		{
 			p.clear();
@@ -253,7 +252,7 @@ void SockSmeller::runClient()
 
 		if (m_keepAliveClock.getElapsedTime().asSeconds() > KeepAliveTime)
 		{
-			if (!m_bKeepAliveSent)
+			//if (!m_bKeepAliveSent)
 			{
 				KPRINTF("Sending keep alive\n");
 				m_keepAliveClock.restart();
@@ -263,15 +262,12 @@ void SockSmeller::runClient()
 				m_keepAliveReplyClock.restart();
 				m_bReplyCountdownReset = true;
 			}
-			else
-			{
+		}
 
-				if (m_keepAliveReplyClock.getElapsedTime().asSeconds() > ServerReplyTime)
-				{
-					KPRINTF("Seems like the server hasn't been replying to my keep alives...\n");
-					m_bIsRunning = false;
-				}
-			}
+		if (m_keepAliveReplyClock.getElapsedTime().asSeconds() > ServerReplyTime)
+		{
+			KPRINTF("Seems like the server hasn't been replying to my keep alives...\n");
+			m_bIsRunning = false;
 		}
 
 		switch (status)
@@ -292,6 +288,7 @@ void SockSmeller::runClient()
 		}
 		auto t = c.restart().asMilliseconds();
 		t = Maths::Clamp(1, (int32)REFRESH_RATE, t);
+		m_connectedClientMutex.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPRINTF("Client no longer running network thread\n");
@@ -303,7 +300,8 @@ void SockSmeller::runHost()
 	{
 		sf::Clock c;
 
-		std::lock_guard<std::mutex>guard(m_connectedClientMutex);
+		//std::lock_guard<std::mutex>guard(m_connectedClientMutex);
+		m_connectedClientMutex.lock();
 		//Process receive messages
 		sf::Packet p;
 		sf::IpAddress remoteIp;
@@ -328,10 +326,13 @@ void SockSmeller::runHost()
 		}
 
 		hostCheckForDeadClients();
-		hostSendSatellitePositions();
-
+		if (m_connectedClients.size() > 0)
+		{
+			hostSendSatellitePositions();
+		}
 		auto t = c.restart().asMilliseconds();
 		t = Maths::Clamp(1, (int32)REFRESH_RATE, t);
+		m_connectedClientMutex.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(t));
 	}
 	KPrintf(L"Bye..\n");
@@ -399,7 +400,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		auto client = getConnectedClient(remoteIp, remotePort);
 		if (client)
 		{
-			client->lastTimestamp = ka.timeStamp;
+			client->lastTimestamp = timestamp(); //ka.timeStamp;
 			sf::Packet reply;
 			ka.timeStamp = timestamp();
 			reply << ka;
@@ -457,7 +458,7 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	}
 
 	std::lock_guard<std::mutex> g(m_subscriberQueueMutex);
-	
+	//KPRINTF("Queue mutex taken by SockSmeller in Client mode\n");
 	switch (type)
 	{
 	case MessageType::Establish:
@@ -587,6 +588,8 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 	default:
 		break;
 	}
+	//KPRINTF("Queue mutex lost by SockSmeller in Client mode\n");
+
 }
 
 void SockSmeller::replyEstablishHost(const EstablishConnection& establish, const ConnectedClient& conClient)
