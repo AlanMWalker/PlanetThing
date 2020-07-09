@@ -78,11 +78,11 @@ public:
 	LobbyState getLobbyState() const { return m_lobbyState; }
 
 	NetworkNodeType getNetworkNodeType() const { return m_nodeType; }
-
-
 	std::vector<ConnectedClient> getClientList() const { return std::vector<ConnectedClient>(m_connectedClients.begin(), m_connectedClients.end()); }
 
-	
+	std::deque<Subscriber>& getSubscribersQueue() { return m_subscribersQueue; }
+	std::deque<ServerClientMessage*>& getSubscriberData() { return m_subscriberData; }
+
 	// Host send functions
 	void hostSendGenLevel(GeneratedLevel& genLevel);
 	void hostSendMoveSatellite(float theta, const std::wstring& uuid);
@@ -91,6 +91,11 @@ public:
 	// Client send functions 
 	void clientSendSatelliteMove(Krawler::int32 dir);
 	void clientSendFireRequest(float strength);
+
+	// A lock on this is taken by the Invoker component attached to 'God', which is on the 
+	// main thread (depending on if in lobby or game). This is so that packet subscriber 
+	// callbacks are invoked on the main thread, rather than the network thread. 
+	std::mutex& getQueueMutex() { return m_subscriberQueueMutex; }
 
 private:
 
@@ -126,9 +131,13 @@ private:
 	bool m_bIsSetup = false;
 
 	std::deque<ConnectedClient> m_connectedClients;
+
+	std::deque<Subscriber> m_subscribersQueue;
+	std::deque<ServerClientMessage*> m_subscriberData;
+
 	std::list<SatellitePositionUpdate> m_moveSatelliteQueue;
 	std::map<MessageType, std::vector<Subscriber>> m_subscribersMap;
-	
+
 	sf::Clock m_clientEstablishClock;
 	sf::Clock m_keepAliveClock;
 	sf::Clock m_keepAliveReplyClock;
@@ -152,6 +161,7 @@ private:
 	std::thread m_updateThread;
 	std::mutex m_connectedClientMutex;
 	std::mutex m_moveQueueMutex;
+	std::mutex m_subscriberQueueMutex;
 
 	atombool m_bIsRunning = false;
 	atombool m_bConnEstablished = false;

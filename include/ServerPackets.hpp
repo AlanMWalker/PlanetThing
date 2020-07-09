@@ -105,7 +105,7 @@ struct MoveSatellite : public ServerClientMessage
 	// Planet Positions & Masses
 	// Planet & Player Pairings
 	MoveSatellite() { type = MessageType::MoveSatellite; }
-	
+
 	// -1 = Anticlockwise
 	// +1 = Clockwise
 	Krawler::int32 direction = 0;
@@ -122,7 +122,7 @@ struct SatellitePositionUpdate : public ServerClientMessage
 	// Planet & Player Pairings
 	SatellitePositionUpdate() { type = MessageType::SatellitePositionUpdate; }
 
-	float theta;
+	float theta = 0.0f;
 	std::string uuid;
 };
 
@@ -136,7 +136,7 @@ struct FireRequest : public ServerClientMessage
 	// Planet & Player Pairings
 	FireRequest() { type = MessageType::FireRequest; }
 	std::string uuid;
-	float strength;
+	float strength = 0.0f;
 };
 
 sf::Packet& operator <<(sf::Packet& p, const FireRequest& fr);
@@ -150,7 +150,7 @@ struct FireActivated : public ServerClientMessage
 	// Planet & Player Pairings
 	FireActivated() { type = MessageType::FireActivated; }
 	std::string uuid;
-	float strength;
+	float strength = 0.0f;
 };
 
 sf::Packet& operator <<(sf::Packet& p, const FireActivated& fa);

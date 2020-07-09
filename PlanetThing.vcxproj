@@ -97,6 +97,7 @@
     <ClCompile Include="source\Camera.cpp" />
     <ClCompile Include="source\CelestialBody.cpp" />
     <ClCompile Include="source\CPUPlayerController.cpp" />
+    <ClCompile Include="source\Invoker.cpp" />
     <ClCompile Include="source\LobbySetup.cpp" />
     <ClCompile Include="source\LocalPlayerController.cpp" />
     <ClCompile Include="source\MenuSetup.cpp" />
@@ -129,6 +130,7 @@
     <ClInclude Include="include\DbgImgui.hpp" />
     <ClInclude Include="include\GameSetup.hpp" />
     <ClInclude Include="include\GodDebugComp.hpp" />
+    <ClInclude Include="include\Invoker.hpp" />
     <ClInclude Include="include\LobbySetup.hpp" />
     <ClInclude Include="include\LocalPlayerController.hpp" />
     <ClInclude Include="include\MenuSetup.hpp" />

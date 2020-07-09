@@ -15,7 +15,7 @@
 #include "DbgImgui.hpp"
 #include "CelestialBody.hpp"
 #include "CPUPlayerController.hpp"
-
+#include "Invoker.hpp"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -199,6 +199,7 @@ void GameSetup::createGod()
 {
 	auto entity = getEntity();
 	entity->setTag(L"God");
+	entity->addComponent(new Invoker(entity));
 	entity->addComponent(new imguicomp(entity));
 	entity->addComponent(new GodDebugComp(entity));
 	m_pPath = new ProjectilePath(entity);
@@ -418,7 +419,7 @@ void GameSetup::setupLevelNetworkedHost()
 {
 	std::vector<CelestialBody*> planetsFound;
 	GeneratedLevel genLevel;
-	genLevel.numOfPlanets = m_networkedCount + 1u;
+	genLevel.numOfPlanets = (uint64)(m_networkedCount + 1u);
 	setupNetworkedPlanetsAndSatellites(genLevel, planetsFound);
 
 	const float boundRadius = Blackboard::PLANET_RADIUS * 4.0f;

@@ -7,6 +7,14 @@ using namespace Krawler;
 
 SockSmeller::~SockSmeller()
 {
+	if (m_subscriberData.size() > 0)
+	{
+		for (auto d : m_subscriberData)
+			KFREE(d);
+		m_subscriberData.clear();
+	}
+
+	m_subscribersQueue.clear();
 }
 
 bool SockSmeller::isSetup() const
@@ -146,12 +154,12 @@ void SockSmeller::hostSendMoveSatellite(float theta, const std::wstring& uuid)
 void SockSmeller::hostSendFireActivate(float strength, const std::wstring& uuid)
 {
 	std::lock_guard<std::mutex> g(m_moveQueueMutex);
-	
+
 	FireActivated fa;
 	fa.timeStamp = timestamp();
 	fa.uuid = TO_ASTR(uuid);
 	fa.strength = strength;
-	sf::Packet p; 
+	sf::Packet p;
 	p << fa;
 
 	for (auto& c : m_connectedClients)
@@ -366,10 +374,11 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 	ConnectedClient conClient;
 	conClient.ip = remoteIp;
 	conClient.port = remotePort;
+	std::lock_guard<std::mutex> g(m_subscriberQueueMutex);
 
 	switch (type)
 	{
-	case MessageType::Establish:
+	case MessageType::Establish: // TODO Should really go through subscriber model
 	{
 		EstablishConnection con;
 		p >> con;
@@ -380,7 +389,7 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 		replyEstablishHost(con, conClient);
 	}
 	break;
-	case MessageType::KeepAlive:
+	case MessageType::KeepAlive: // TODO Should really go through subscriber model
 	{
 		KeepAlive ka;
 		p >> ka;
@@ -406,7 +415,10 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 			p >> ms;
 			for (auto cb : m_subscribersMap[MessageType::MoveSatellite])
 			{
-				cb(&ms);
+				//cb(&ms);
+				m_subscribersQueue.push_back(cb);
+				m_subscriberData.push_back(new MoveSatellite(ms));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -419,7 +431,10 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 			p >> fr;
 			for (auto cb : m_subscribersMap[MessageType::FireRequest])
 			{
-				cb(&fr);
+				//cb(&fr);
+				m_subscribersQueue.push_back(cb);
+				m_subscriberData.push_back(new FireRequest(fr));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -443,6 +458,8 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		return;
 	}
 
+	std::lock_guard<std::mutex> g(m_subscriberQueueMutex);
+	
 	switch (type)
 	{
 	case MessageType::Establish:
@@ -481,10 +498,15 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		{
 			DisconnectConnection dc;
 			p >> dc;
+
+			m_bConnEstablished = true;
+
 			for (auto& s : m_subscribersMap[MessageType::Disconnect])
 			{
-				m_bConnEstablished = true;
-				s(&dc);
+				//s(&dc);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new DisconnectConnection(dc));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -496,9 +518,13 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 		{
 			LobbyNameList lnl;
 			p >> lnl;
+
 			for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
 			{
-				s(&lnl);
+				//s(&lnl);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new LobbyNameList(lnl));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -523,7 +549,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 					KPrintf(L"UUID entry found on client %s\n", TO_WSTR(c).c_str());
 				}
 
-				s(&gen);
+				//s(&gen);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new GeneratedLevel(gen));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 	}
@@ -536,7 +565,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			p >> spu;
 			for (auto& s : m_subscribersMap[MessageType::SatellitePositionUpdate])
 			{
-				s(&spu);
+				//s(&spu);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new SatellitePositionUpdate(spu));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 
@@ -550,7 +582,10 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			p >> fa;
 			for (auto& s : m_subscribersMap[MessageType::FireActivated])
 			{
-				s(&fa);
+				//s(&fa);
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new FireActivated(fa));
+				KCHECK(m_subscriberData.back());
 			}
 		}
 

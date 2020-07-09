@@ -35,10 +35,10 @@ private:
 	std::wstring m_playerUUID;
 
 	std::list<Krawler::int32> m_moveSatQueue;
-	std::mutex m_networkMtx;
+	//std::mutex m_networkMtx;
 
-	atombool m_bHasNewPos = false;
-	atombool m_bFireShot = false;
+	bool m_bHasNewPos = false;
+	bool m_bFireShot = false;
 
 	float m_newTheta = 0.0f;
 	float m_networkedStrength = 0.0f;
