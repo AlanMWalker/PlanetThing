@@ -52,7 +52,10 @@ void LocalPlayerController::onEnterScene()
 		if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
 		{
 			SockSmeller::Subscriber posUpdate = [this](ServerClientMessage* scm) { handlePosUpdateClient((SatellitePositionUpdate*)scm); };
+			SockSmeller::Subscriber fireActive = [this](ServerClientMessage* scm) { handleFireActivated((SatellitePositionUpdate*)scm); };
+
 			SockSmeller::get().subscribeToMessageType(MessageType::SatellitePositionUpdate, posUpdate);
+			SockSmeller::get().subscribeToMessageType(MessageType::FireActivated, fireActive);
 		}
 	}
 	BaseController::onEnterScene();
@@ -124,8 +127,8 @@ void LocalPlayerController::tick()
 	bool bResult = ImGui::Button("Fire Projectile");
 	ImGui::PopFont();
 	m_pImgui->end();
-	
-	
+
+
 	static bool bSentFireRequest = false;
 
 	if (bResult)
@@ -141,25 +144,26 @@ void LocalPlayerController::tick()
 				fireProjectile();
 				SockSmeller::get().hostSendFireActivate(m_shotStrength, SockSmeller::get().getMyUUID());
 			}
-			else
-			{
-				//if (isTurnActive())
-				if(!bSentFireRequest)
-				{
-					SockSmeller::get().clientSendFireRequest(m_shotStrength);
-					bSentFireRequest = true;
-				}
-				else
-				{
-					if (m_bFire)
-					{
-						fireProjectile();
-						bSentFireRequest = false;
-					}
-				}
-			}
+
 		}
 	}
+
+	//if (isTurnActive())
+	if (!bSentFireRequest && bResult)
+	{
+		SockSmeller::get().clientSendFireRequest(m_shotStrength);
+		bSentFireRequest = true;
+	}
+	else
+	{
+		if (m_bFire)
+		{
+			fireProjectile();
+			bSentFireRequest = false;
+			m_bFire = false;
+		}
+	}
+
 	if (m_bHasNewPos)
 	{
 		m_bHasNewPos = false;
@@ -185,7 +189,7 @@ void LocalPlayerController::handlePosUpdateClient(ServerClientMessage* scm)
 void LocalPlayerController::handleFireActivated(ServerClientMessage* scm)
 {
 	auto fa = (FireActivated*)scm;
-	
+
 	if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
 	{
 		if (fa->uuid == TO_ASTR(SockSmeller::get().getMyUUID()))

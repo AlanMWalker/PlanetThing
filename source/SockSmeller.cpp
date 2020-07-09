@@ -581,7 +581,6 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 				KCHECK(m_subscriberData.back());
 			}
 		}
-
 	}
 	break;
 	case MessageType::None:

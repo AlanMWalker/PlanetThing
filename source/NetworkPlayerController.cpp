@@ -45,6 +45,7 @@ void NetworkPlayerController::onEnterScene()
 		SockSmeller::Subscriber handleFire = [this](ServerClientMessage* scm) { handlePlayerFireHost(scm); };
 
 		SockSmeller::get().subscribeToMessageType(MessageType::MoveSatellite, handleMove);
+		SockSmeller::get().subscribeToMessageType(MessageType::FireRequest, handleFire);
 	}
 	else if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Client)
 	{
@@ -95,6 +96,10 @@ void NetworkPlayerController::tick()
 		m_bFireShot = false;
 		m_shotStrength = m_networkedStrength;
 		fireProjectile();
+		if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
+		{
+			SockSmeller::get().hostSendFireActivate(m_shotStrength, m_playerUUID);
+		}
 	}
 }
 
