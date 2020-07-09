@@ -162,7 +162,6 @@ void LocalPlayerController::tick()
 	}
 	if (m_bHasNewPos)
 	{
-		//std::lock_guard<std::mutex> guard(m_networkMtx);
 		m_bHasNewPos = false;
 		m_theta = m_newTheta;
 	}
@@ -177,7 +176,6 @@ void LocalPlayerController::handlePosUpdateClient(ServerClientMessage* scm)
 	{
 		if (spu->uuid == TO_ASTR(SockSmeller::get().getMyUUID()))
 		{
-			//std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_bHasNewPos = true;
 			m_newTheta = spu->theta;
 		}

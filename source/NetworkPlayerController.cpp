@@ -71,7 +71,6 @@ void NetworkPlayerController::tick()
 			while (!m_moveSatQueue.empty())
 			{
 				{
-					//std::lock_guard<std::mutex> guard(m_networkMtx);
 					auto dir = m_moveSatQueue.front();
 					dir = Maths::Clamp(-1, 1, dir);
 					m_theta += dir * Blackboard::PLAYER_ENTITY_ROTATION_SPEED * GET_APP()->getDeltaTime();
@@ -86,7 +85,6 @@ void NetworkPlayerController::tick()
 	{
 		if (m_bHasNewPos)
 		{
-			//std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_bHasNewPos = false;
 			m_theta = m_newTheta;
 		}
@@ -95,7 +93,6 @@ void NetworkPlayerController::tick()
 	if (m_bFireShot)
 	{
 		m_bFireShot = false;
-		//std::lock_guard<std::mutex> guard(m_networkMtx);
 		m_shotStrength = m_networkedStrength;
 		fireProjectile();
 	}
@@ -110,7 +107,6 @@ void NetworkPlayerController::handlePlayerMoveHost(ServerClientMessage* scm)
 	{
 		if (ms->uuid == TO_ASTR(m_playerUUID))
 		{
-			//std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_moveSatQueue.push_back(ms->direction);
 		}
 	}
@@ -125,7 +121,6 @@ void NetworkPlayerController::handlePlayerFireHost(ServerClientMessage* scm)
 	{
 		if (fr->uuid == TO_ASTR(m_playerUUID))
 		{
-			//std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_bFireShot = true;
 			m_networkedStrength = fr->strength;
 		}
@@ -140,7 +135,6 @@ void NetworkPlayerController::handlePosUpdateClient(SatellitePositionUpdate* spu
 	{
 		if (spu->uuid == TO_ASTR(m_playerUUID))
 		{
-			//std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_bHasNewPos = true;
 			m_newTheta = spu->theta;
 		}
@@ -155,7 +149,6 @@ void NetworkPlayerController::handleFireActivatedClient(FireActivated* fa)
 	{
 		if (fa->uuid == TO_ASTR(m_playerUUID))
 		{
-			//std::lock_guard<std::mutex> guard(m_networkMtx);
 			m_bFireShot = true;
 			m_networkedStrength = fa->strength;
 		}

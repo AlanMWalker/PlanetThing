@@ -415,7 +415,6 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 			p >> ms;
 			for (auto cb : m_subscribersMap[MessageType::MoveSatellite])
 			{
-				//cb(&ms);
 				m_subscribersQueue.push_back(cb);
 				m_subscriberData.push_back(new MoveSatellite(ms));
 				KCHECK(m_subscriberData.back());
@@ -431,7 +430,6 @@ void SockSmeller::receiveHostPacket(sf::Packet& p, sf::IpAddress remoteIp, uint1
 			p >> fr;
 			for (auto cb : m_subscribersMap[MessageType::FireRequest])
 			{
-				//cb(&fr);
 				m_subscribersQueue.push_back(cb);
 				m_subscriberData.push_back(new FireRequest(fr));
 				KCHECK(m_subscriberData.back());
@@ -503,7 +501,6 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 
 			for (auto& s : m_subscribersMap[MessageType::Disconnect])
 			{
-				//s(&dc);
 				m_subscribersQueue.push_back(s);
 				m_subscriberData.push_back(new DisconnectConnection(dc));
 				KCHECK(m_subscriberData.back());
@@ -521,7 +518,6 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 
 			for (auto& s : m_subscribersMap[MessageType::LobbyNameList])
 			{
-				//s(&lnl);
 				m_subscribersQueue.push_back(s);
 				m_subscriberData.push_back(new LobbyNameList(lnl));
 				KCHECK(m_subscriberData.back());
@@ -549,7 +545,6 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 					KPrintf(L"UUID entry found on client %s\n", TO_WSTR(c).c_str());
 				}
 
-				//s(&gen);
 				m_subscribersQueue.push_back(s);
 				m_subscriberData.push_back(new GeneratedLevel(gen));
 				KCHECK(m_subscriberData.back());
@@ -565,7 +560,6 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			p >> spu;
 			for (auto& s : m_subscribersMap[MessageType::SatellitePositionUpdate])
 			{
-				//s(&spu);
 				m_subscribersQueue.push_back(s);
 				m_subscriberData.push_back(new SatellitePositionUpdate(spu));
 				KCHECK(m_subscriberData.back());
@@ -582,7 +576,6 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			p >> fa;
 			for (auto& s : m_subscribersMap[MessageType::FireActivated])
 			{
-				//s(&fa);
 				m_subscribersQueue.push_back(s);
 				m_subscriberData.push_back(new FireActivated(fa));
 				KCHECK(m_subscriberData.back());

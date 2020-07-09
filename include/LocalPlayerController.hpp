@@ -27,7 +27,6 @@ private:
 	void handleFireActivated(ServerClientMessage* scm);
 	
 	imguicomp* m_pImgui = nullptr;
-	//std::mutex m_networkMtx;
 
 	bool m_bHasNewPos = false;
 	bool m_bFire = false;

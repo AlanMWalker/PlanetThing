@@ -35,7 +35,6 @@ private:
 	std::wstring m_playerUUID;
 
 	std::list<Krawler::int32> m_moveSatQueue;
-	//std::mutex m_networkMtx;
 
 	bool m_bHasNewPos = false;
 	bool m_bFireShot = false;

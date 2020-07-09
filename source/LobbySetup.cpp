@@ -67,7 +67,6 @@ void LobbySetup::onEnterScene()
 void LobbySetup::tick()
 {
 	SockSmeller::get().setLobbyState(m_lobbyState);
-	//std::lock_guard<std::mutex> g(m_gameStateMutex);
 	switch (m_nodeType)
 	{
 	case NetworkNodeType::Host:
@@ -235,7 +234,6 @@ void LobbySetup::handleClientLobbyNameList(ServerClientMessage* scm)
 
 void LobbySetup::handleClientGenLevel(ServerClientMessage* scm)
 {
-	//std::lock_guard<std::mutex> g(m_gameStateMutex);
 	GeneratedLevel& gen = *((GeneratedLevel*)(scm));
 	m_gameSetup.setLevelGen(gen);
 	m_lobbyState = LobbyState::InGame;
