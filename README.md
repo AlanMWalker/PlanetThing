@@ -1,4 +1,4 @@
-# Project -- Mountain Lobster
+# Planet Thing
 
 ## Libraries Utilised
  - SFML 
