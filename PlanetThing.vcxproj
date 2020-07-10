@@ -108,6 +108,7 @@
     <ClCompile Include="source\ProjectilePath.cpp" />
     <ClCompile Include="source\ServerPackets.cpp" />
     <ClCompile Include="source\SockSmeller.cpp" />
+    <ClCompile Include="source\TurnTaker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -140,6 +141,7 @@
     <ClInclude Include="include\ProjectilePath.hpp" />
     <ClInclude Include="include\ServerPackets.hpp" />
     <ClInclude Include="include\SockSmeller.hpp" />
+    <ClInclude Include="include\TurnTaker.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

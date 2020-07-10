@@ -16,6 +16,7 @@
 #include "CelestialBody.hpp"
 #include "CPUPlayerController.hpp"
 #include "Invoker.hpp"
+#include "TurnTaker.hpp"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -198,12 +199,15 @@ void GameSetup::setAIPlayerCount(int32 count)
 void GameSetup::createGod()
 {
 	auto entity = getEntity();
+	KCHECK(entity);
 	entity->setTag(L"God");
 	entity->addComponent(new Invoker(entity));
 	entity->addComponent(new imguicomp(entity));
 	entity->addComponent(new GodDebugComp(entity));
 	m_pPath = new ProjectilePath(entity);
 	entity->addComponent(m_pPath);
+
+	entity->addComponent(new TurnTaker(entity));
 }
 
 void GameSetup::zoomAt(const Krawler::Vec2f& pos, float zoom)
@@ -526,6 +530,8 @@ void GameSetup::setupLevelNetworkedHost()
 	{
 		m_playerController->setTurnIsActive(true);
 	}
+	
+	getEntity()->getComponent<TurnTaker>()->setUUIDList(m_lobbyPlayers);
 }
 
 void GameSetup::setupLevelNetworkedClient()

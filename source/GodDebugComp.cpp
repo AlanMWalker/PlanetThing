@@ -2,7 +2,6 @@
 #include <KApplication.h>
 
 #include "GodDebugComp.hpp"
-#include "PlayerLocomotive.hpp"
 #include "GameSetup.hpp"
 
 //#include "ServerPoll.hpp"
