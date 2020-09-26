@@ -87,6 +87,7 @@ public:
 	void hostSendGenLevel(GeneratedLevel& genLevel);
 	void hostSendMoveSatellite(float theta, const std::wstring& uuid);
 	void hostSendFireActivate(float strength, const std::wstring& uuid);
+	void hostSendNextPlayerTurn(const std::wstring& nextPlayerUUID); 
 
 	// Client send functions 
 	void clientSendSatelliteMove(Krawler::int32 dir);

@@ -12,9 +12,13 @@
 namespace Blackboard
 {
 	// Scene Names
-	static const wchar_t* MenuScene = L"Menu_Scene";
-	static const wchar_t* GameScene = L"Main_Scene";
-	static const wchar_t* LobbyScene = L"Lobby_Scene";
+	static const wchar_t* MENU_SCENE = L"Menu_Scene";
+	static const wchar_t* GAME_SCENE = L"Main_Scene";
+	static const wchar_t* LOBBY_SCENE = L"Lobby_Scene";
+
+	// Entity names
+	static const wchar_t* PLAYER_ENTITY_NAME = L"Player_Satellite";
+
 
 	// Constants for physics
 	const float G = 6.67e-11f; // m^3 kg^–1 s^–2

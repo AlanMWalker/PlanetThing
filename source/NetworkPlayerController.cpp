@@ -95,11 +95,15 @@ void NetworkPlayerController::tick()
 	{
 		m_bFireShot = false;
 		m_shotStrength = m_networkedStrength;
-		fireProjectile();
 		if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
 		{
 			SockSmeller::get().hostSendFireActivate(m_shotStrength, m_playerUUID);
+			if (isTurnActive())
+			{
+				m_pTurnTaker->notifyTurnTaken(m_playerUUID);
+			}
 		}
+		fireProjectile();
 	}
 }
 

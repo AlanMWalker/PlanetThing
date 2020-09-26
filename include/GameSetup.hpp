@@ -133,5 +133,4 @@ private:
 	Krawler::int32 m_networkedCount = Blackboard::MIN_NETWORKED;
 
 	std::vector<std::wstring> m_lobbyPlayers;
-	Krawler::uint64 m_currentPlayerTurnIdx = 0;
 };

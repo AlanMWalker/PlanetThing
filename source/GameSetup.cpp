@@ -16,6 +16,7 @@
 #include "CelestialBody.hpp"
 #include "CPUPlayerController.hpp"
 #include "Invoker.hpp"
+#include "TurnTaker.hpp"
 
 using namespace Krawler;
 using namespace Krawler::Input;
@@ -26,15 +27,8 @@ using namespace std;
 
 using namespace Blackboard;
 
-static 	KCColliderBaseCallback cb = [](const KCollisionDetectionData& d)
-{
-	//d.entityA->getComponent<KCSprite>()->setColour(Colour::Magenta);
-	//d.entityB->getComponent<KCSprite>()->setColour(Colour::Magenta);
-};
-
-
 GameSetup::GameSetup()
-	: KComponentBase(GET_APP()->getSceneDirector().getSceneByName(Blackboard::GameScene)->addEntityToScene())
+	: KComponentBase(GET_APP()->getSceneDirector().getSceneByName(Blackboard::GAME_SCENE)->addEntityToScene())
 {
 	getEntity()->addComponent(this);
 }
@@ -54,7 +48,7 @@ KInitStatus GameSetup::init()
 	m_pPhysicsWorld = &GET_APP()->getPhysicsWorld();
 	m_pPhysicsWorld->setGravity(Vec2f(0.0f, 0.0f));
 	m_pPhysicsWorld->setPPM(PPM);
-	auto scene = GET_SCENE_NAMED(Blackboard::GameScene);
+	auto scene = GET_SCENE_NAMED(Blackboard::GAME_SCENE);
 
 	GET_APP()->getRenderer()->addDebugShape(&line);
 	GET_APP()->getRenderer()->showDebugDrawables(true);
@@ -86,8 +80,10 @@ void GameSetup::onEnterScene()
 	{
 	case GameSetup::GameType::Local:
 		setupLevelLocal();
+		getEntity()->getComponent<TurnTaker>()->setIsNetworked(false);
 		break;
 	case GameSetup::GameType::Networked:
+		getEntity()->getComponent<TurnTaker>()->setIsNetworked(true);
 		if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
 		{
 			setupLevelNetworkedHost();
@@ -198,12 +194,16 @@ void GameSetup::setAIPlayerCount(int32 count)
 void GameSetup::createGod()
 {
 	auto entity = getEntity();
+	KCHECK(entity);
 	entity->setTag(L"God");
 	entity->addComponent(new Invoker(entity));
 	entity->addComponent(new imguicomp(entity));
 	entity->addComponent(new GodDebugComp(entity));
 	m_pPath = new ProjectilePath(entity);
 	entity->addComponent(m_pPath);
+
+	entity->addComponent(new TurnTaker(entity));
+
 }
 
 void GameSetup::zoomAt(const Krawler::Vec2f& pos, float zoom)
@@ -240,7 +240,7 @@ void GameSetup::setBackgroundShaderParams()
 
 void GameSetup::createCelestialBodies()
 {
-	auto scene = GET_SCENE_NAMED(Blackboard::GameScene);
+	auto scene = GET_SCENE_NAMED(Blackboard::GAME_SCENE);
 
 	// Allocate networked player satellite entities
 	// and networked player controllers
@@ -519,13 +519,24 @@ void GameSetup::setupLevelNetworkedHost()
 	m_lobbyPlayers.push_back(SockSmeller::get().getMyUUID());
 
 	std::random_shuffle(m_lobbyPlayers.begin(), m_lobbyPlayers.end());
-	m_currentPlayerTurnIdx = 0;
 
 	// if I'm the first uuid in the list, then I take the first turn
-	if (m_lobbyPlayers[m_currentPlayerTurnIdx] == SockSmeller::get().getMyUUID())
+	if (m_lobbyPlayers[0] == SockSmeller::get().getMyUUID())
 	{
 		m_playerController->setTurnIsActive(true);
 	}
+	else
+	{
+		for (auto& c : m_networkedControllers)
+		{
+			if (c->getUUID() == m_lobbyPlayers[0])
+			{
+				c->setTurnIsActive(true);
+			}
+		}
+	}
+	
+	getEntity()->getComponent<TurnTaker>()->setUUIDList(m_lobbyPlayers);
 }
 
 void GameSetup::setupLevelNetworkedClient()

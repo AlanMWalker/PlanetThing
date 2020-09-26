@@ -10,7 +10,7 @@
 using namespace Krawler;
 
 LobbySetup::LobbySetup(GameSetup& gs)
-	: KComponentBase(GET_SCENE_NAMED(Blackboard::LobbyScene)->addEntityToScene()), m_lobbySize((unsigned)Blackboard::MIN_NETWORKED),
+	: KComponentBase(GET_SCENE_NAMED(Blackboard::LOBBY_SCENE)->addEntityToScene()), m_lobbySize((unsigned)Blackboard::MIN_NETWORKED),
 	m_lobbyHostPort(0), m_myLobbyPort(0), m_gameSetup(gs)
 {
 	getEntity()->addComponent(this);
@@ -179,7 +179,7 @@ void LobbySetup::tickHost()
 		m_lobbyState = LobbyState::HostCancel;
 		SockSmeller::get().setLobbyState(m_lobbyState);
 		SockSmeller::get().tearDown();
-		GET_APP()->getSceneDirector().transitionToScene(Blackboard::MenuScene);
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::MENU_SCENE);
 	}
 
 	if (namesList.size() == (uint64)m_lobbySize)
@@ -195,7 +195,7 @@ void LobbySetup::tickHost()
 
 	if (bStartLobby)
 	{
-		GET_APP()->getSceneDirector().transitionToScene(Blackboard::GameScene);
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::GAME_SCENE);
 	}
 }
 
@@ -237,5 +237,5 @@ void LobbySetup::handleClientGenLevel(ServerClientMessage* scm)
 	GeneratedLevel& gen = *((GeneratedLevel*)(scm));
 	m_gameSetup.setLevelGen(gen);
 	m_lobbyState = LobbyState::InGame;
-	GET_APP()->getSceneDirector().transitionToScene(Blackboard::GameScene);
+	GET_APP()->getSceneDirector().transitionToScene(Blackboard::GAME_SCENE);
 }

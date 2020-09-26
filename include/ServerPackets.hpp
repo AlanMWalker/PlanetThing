@@ -94,6 +94,7 @@ struct NextPlayerTurn : public ServerClientMessage
 	// Planet Positions & Masses
 	// Planet & Player Pairings
 	NextPlayerTurn() { type = MessageType::NextPlayerTurn; }
+	std::string nextPlayerUUID;
 };
 
 sf::Packet& operator <<(sf::Packet& p, const NextPlayerTurn& tt);

@@ -10,7 +10,7 @@ using namespace Krawler;
 
 
 MenuSetup::MenuSetup(GameSetup& gs, LobbySetup& ls)
-	: KComponentBase(GET_SCENE_NAMED(Blackboard::MenuScene)->addEntityToScene()), m_gs(gs), m_ls(ls)
+	: KComponentBase(GET_SCENE_NAMED(Blackboard::MENU_SCENE)->addEntityToScene()), m_gs(gs), m_ls(ls)
 {
 	getEntity()->addComponent(this);
 }
@@ -87,7 +87,7 @@ void MenuSetup::tick()
 	{
 		m_gs.setAIPlayerCount(aiCount);
 		m_gs.setGameType(GameSetup::GameType::Local);
-		GET_APP()->getSceneDirector().transitionToScene(Blackboard::GameScene);
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::GAME_SCENE);
 		bJoinMultiplayer = false;
 		bPlaySinglePlayer = false;
 		bHostMultiplayer = false;
@@ -99,7 +99,7 @@ void MenuSetup::tick()
 		m_ls.setNetworkNodeType(NetworkNodeType::Client);
 		m_ls.setDisplayName(TO_WSTR(displayName));
 		m_gs.setGameType(GameSetup::GameType::Networked);
-		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LOBBY_SCENE);
 		bJoinMultiplayer = false;
 		bPlaySinglePlayer = false;
 		bHostMultiplayer = false;
@@ -117,7 +117,7 @@ void MenuSetup::tick()
 		m_gs.setGameType(GameSetup::GameType::Networked);
 		m_gs.setNetworkPlayerCount(playerLobbySize);
 
-		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LobbyScene);
+		GET_APP()->getSceneDirector().transitionToScene(Blackboard::LOBBY_SCENE);
 		bJoinMultiplayer = false;
 		bPlaySinglePlayer = false;
 		bHostMultiplayer = false;

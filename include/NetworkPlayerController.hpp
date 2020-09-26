@@ -20,6 +20,7 @@ public:
 	virtual void tick() override;
 
 	void setUUID(const std::wstring& uuid) { m_playerUUID = uuid; }
+	std::wstring getUUID() const { return m_playerUUID; }
 
 protected:
 

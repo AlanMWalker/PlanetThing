@@ -9,7 +9,7 @@ using namespace Krawler;
 using namespace Krawler::Components;
 
 CPUPlayerController::CPUPlayerController(CelestialBody* pHost)
-	: BaseController(GET_SCENE_NAMED(Blackboard::GameScene)->addEntityToScene(), pHost, Blackboard::AI_SATELLITE_DIMENSION)
+	: BaseController(GET_SCENE_NAMED(Blackboard::GAME_SCENE)->addEntityToScene(), pHost, Blackboard::AI_SATELLITE_DIMENSION)
 {
 	getEntity()->setTag(L"AI_Satellite");
 	getEntity()->addComponent(this);
