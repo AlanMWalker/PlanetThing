@@ -150,15 +150,17 @@ sf::Packet& operator>>(sf::Packet& p, GeneratedLevel& genLevel)
 	return p;
 }
 
-sf::Packet& operator<<(sf::Packet& p, const NextPlayerTurn& gm)
+sf::Packet& operator<<(sf::Packet& p, const NextPlayerTurn& npt)
 {
-	write_base_out(p, (ServerClientMessage*)&gm);
+	write_base_out(p, (ServerClientMessage*)&npt);
+	p << npt.nextPlayerUUID;
 	return p;
 }
 
-sf::Packet& operator>>(sf::Packet& p, NextPlayerTurn& gm)
+sf::Packet& operator>>(sf::Packet& p, NextPlayerTurn& npt)
 {
-	read_base_in(p, (ServerClientMessage*)&gm);
+	read_base_in(p, (ServerClientMessage*)&npt);
+	p >> npt.nextPlayerUUID;
 	return p;
 }
 

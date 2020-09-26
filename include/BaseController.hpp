@@ -4,6 +4,7 @@
 #include "CelestialBody.hpp"
 #include "Blackboard.hpp"
 
+#include "TurnTaker.hpp"
 
 class imguicomp;
 
@@ -47,6 +48,7 @@ protected:
 	void setTargetsInactive();
 
 	CelestialBody* m_pHostPlanet = nullptr;
+	TurnTaker* m_pTurnTaker = nullptr;
 
 
 	float m_shotStrength = 50.0f;

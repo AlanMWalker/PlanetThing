@@ -23,13 +23,13 @@ KInitStatus BaseController::init()
 	getEntity()->addComponent(new KCSprite(getEntity(), m_dimension));
 	getEntity()->m_pTransform->setOrigin(m_dimension * 0.5f);
 
-	auto God = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
+	auto God = GET_SCENE_NAMED(Blackboard::GAME_SCENE)->findEntity(L"God");
 	KCHECK(God);
 
 
 	for (auto& t : m_targets)
 	{
-		t.pEntity = GET_SCENE_NAMED(Blackboard::GameScene)->addEntityToScene();
+		t.pEntity = GET_SCENE_NAMED(Blackboard::GAME_SCENE)->addEntityToScene();
 		KCHECK(t.pEntity);
 		if (!t.pEntity)
 		{
@@ -78,6 +78,13 @@ void BaseController::onEnterScene()
 		t.pEntity->getComponent<KCBoxCollider>()->subscribeCollisionCallback(&t.callback);
 	}
 
+	auto scene = GET_SCENE_NAMED(Blackboard::GAME_SCENE);
+	auto god = scene->findEntity(L"God");
+	KCHECK(god);
+
+	m_pTurnTaker = god->getComponent<TurnTaker>();
+
+	KCHECK(m_pTurnTaker);
 }
 
 void BaseController::tick()
@@ -111,7 +118,7 @@ void BaseController::fireProjectile()
 	// if it's not my turn I can't fire
 	if (!m_bIsTurnActive)
 	{
-		//return;
+		return;
 	}
 
 	if (m_bFirstShot)
@@ -124,6 +131,7 @@ void BaseController::fireProjectile()
 		return;
 	}
 
+
 	for (auto cb : m_objects)
 	{
 		if (!cb.get().isActive())
@@ -133,6 +141,7 @@ void BaseController::fireProjectile()
 			const float strength = (m_shotStrength / 100.0f) * Blackboard::BOX2D_CAP;
 			cb.get().spawnAtPoint(getEntity()->m_pTransform->getPosition(), Normalise(dir) * strength, m_uuid);
 			m_shotCooldown.restart();
+			m_bIsTurnActive = false;
 			break;
 		}
 	}

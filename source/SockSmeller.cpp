@@ -153,7 +153,6 @@ void SockSmeller::hostSendMoveSatellite(float theta, const std::wstring& uuid)
 
 void SockSmeller::hostSendFireActivate(float strength, const std::wstring& uuid)
 {
-	std::lock_guard<std::mutex> g(m_moveQueueMutex);
 
 	FireActivated fa;
 	fa.timeStamp = timestamp();
@@ -162,6 +161,23 @@ void SockSmeller::hostSendFireActivate(float strength, const std::wstring& uuid)
 	sf::Packet p;
 	p << fa;
 
+	std::lock_guard<std::mutex> g(m_moveQueueMutex);
+	for (auto& c : m_connectedClients)
+	{
+		m_hostSocket.send(p, c.ip, c.port);
+	}
+}
+
+void SockSmeller::hostSendNextPlayerTurn(const std::wstring& nextPlayerUUID)
+{
+	NextPlayerTurn npt;
+	sf::Packet p;
+	npt.timeStamp = timestamp();
+	npt.nextPlayerUUID = TO_ASTR(nextPlayerUUID);
+
+	p << npt;
+
+	std::lock_guard<std::mutex> g(m_connectedClientMutex);
 	for (auto& c : m_connectedClients)
 	{
 		m_hostSocket.send(p, c.ip, c.port);
@@ -579,6 +595,21 @@ void SockSmeller::receiveClientPacket(sf::Packet& p, sf::IpAddress remoteIp, Kra
 			{
 				m_subscribersQueue.push_back(s);
 				m_subscriberData.push_back(new FireActivated(fa));
+				KCHECK(m_subscriberData.back());
+			}
+		}
+	}
+	break;
+	case MessageType::NextPlayerTurn:
+	{
+		if (m_subscribersMap.count(MessageType::NextPlayerTurn) > 0)
+		{
+			NextPlayerTurn npt;
+			p >> npt;
+			for (auto& s : m_subscribersMap[MessageType::NextPlayerTurn])
+			{
+				m_subscribersQueue.push_back(s);
+				m_subscriberData.push_back(new NextPlayerTurn(npt));
 				KCHECK(m_subscriberData.back());
 			}
 		}

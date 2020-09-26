@@ -60,21 +60,6 @@ void GodDebugComp::handleImgui()
 	m_pImgui->update();
 	ImGui::PushFont(m_pImgui->getImguiFont());
 	m_pImgui->begin("-- God Debug Tools --");
-	//ImGui::SliderFloat("Planet Mass (KG)", &gameSetup->PLANET_MASS, 9.8e13 / 2, 9.8e13 * 2);
-	//ImGui::SliderFloat("Object Mass (KG)", &gameSetup->OBJECT_MASS, 200 / 10.0f, 200 * 10.0f);
-	//double x = gameSetup->G;
-	//ImGui::InputDouble("Big G (m^3 kg^-1 s^-2)", &x);//, 6.67e-11, 6.67e-9);
-	//gameSetup->G = x;
-	//ImGui::Checkbox("Show Debug Shapes", &bDebugShapes);
-
-	ImGui::Separator();
-	//static sf::Clock c;
-	//for (auto& so : gameSetup->getSpaceThings())
-	//{
-
-	//	//if (!so.bIsPlanet)
-	//		ImGui::Text("%s is travelling at %f m/s", TO_ASTR(so.pEntity->getTag()).c_str(), GetLength(so.pPhysicsBody->getLinearVelocity()));
-	//}
 	ImGui::Separator();
 	ImGui::SliderFloat("Gravity map colour multiplier", &gameSetup->colScale, 1.0f, 100000.0f);
 	ImGui::PopFont();

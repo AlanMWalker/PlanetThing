@@ -51,10 +51,10 @@ int main(void)
 	StartupEngine(&initApp);
 
 	auto app = Krawler::KApplication::getApp();
-	app->getSceneDirector().addScene(new KScene(Blackboard::MenuScene, Rectf(0, 0, (70 * 32), (40 * 32))));
-	app->getSceneDirector().addScene(new KScene(Blackboard::GameScene, Rectf(0, 0, (70 * 32), (40 * 32))));
-	app->getSceneDirector().addScene(new KScene(Blackboard::LobbyScene, Rectf(0, 0, (70 * 32), (40 * 32))));
-	app->getSceneDirector().setStartScene(Blackboard::MenuScene);
+	app->getSceneDirector().addScene(new KScene(Blackboard::MENU_SCENE, Rectf(0, 0, (70 * 32), (40 * 32))));
+	app->getSceneDirector().addScene(new KScene(Blackboard::GAME_SCENE, Rectf(0, 0, (70 * 32), (40 * 32))));
+	app->getSceneDirector().addScene(new KScene(Blackboard::LOBBY_SCENE, Rectf(0, 0, (70 * 32), (40 * 32))));
+	app->getSceneDirector().setStartScene(Blackboard::MENU_SCENE);
 
 	// Create menu and game setup
 	// (don't need to delete as they will

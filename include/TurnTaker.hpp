@@ -4,6 +4,9 @@
 
 #include <vector>
 
+class NetworkPlayerController;
+struct ServerClientMessage;
+
 class TurnTaker
 	: public Krawler::KComponentBase
 {
@@ -12,13 +15,29 @@ public:
 	TurnTaker(Krawler::KEntity* pEntity);
 	~TurnTaker() = default;
 
-	void setUUIDList(const std::vector<std::wstring>& list);
-	void notifyTurnTaken();
+	virtual void onEnterScene() override; 
 
+
+	void setUUIDList(const std::vector<std::wstring>& list);
+	void notifyTurnTaken(const std::wstring& uuid);
+
+	void setIsNetworked(bool bIsNetworked) { m_bIsNetworked = bIsNetworked; }
 private:
 	
-	// Pairing = UUID (string) - Is Turn Active(bool)
-	std::map<std::wstring, bool> m_lobbyPlayers;
+	void setupClientSubscribers();
 
+	void handleClientNextTurn(ServerClientMessage* scm);
+
+	// Pairing = UUID (string) - Is Turn Active(bool)
+	struct UserData
+	{
+		std::wstring nextPlayer; 
+		bool bIsTurnActive = false;
+	};
+
+	std::map<std::wstring, UserData> m_lobbyPlayers;
+	std::vector<NetworkPlayerController*> m_networkControllers;
+
+	bool m_bIsNetworked = false;
 };
 

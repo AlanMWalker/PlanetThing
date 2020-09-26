@@ -13,9 +13,9 @@ using namespace Krawler::Input;
 using namespace Krawler::Components;
 
 LocalPlayerController::LocalPlayerController(CelestialBody* pHost)
-	: BaseController(GET_SCENE_NAMED(Blackboard::GameScene)->addEntityToScene(), pHost, Blackboard::PLAYER_SATELLITE_DIMENSION)
+	: BaseController(GET_SCENE_NAMED(Blackboard::GAME_SCENE)->addEntityToScene(), pHost, Blackboard::PLAYER_SATELLITE_DIMENSION)
 {
-	getEntity()->setTag(L"Player_Satellite");
+	getEntity()->setTag(Blackboard::PLAYER_ENTITY_NAME);
 	getEntity()->addComponent(this);
 }
 
@@ -35,7 +35,7 @@ KInitStatus LocalPlayerController::init()
 
 void LocalPlayerController::onEnterScene()
 {
-	auto God = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
+	auto God = GET_SCENE_NAMED(Blackboard::GAME_SCENE)->findEntity(L"God");
 	KCHECK(God);
 	m_pImgui = God->getComponent<imguicomp>();
 
@@ -44,7 +44,7 @@ void LocalPlayerController::onEnterScene()
 
 	m_orbitRadius = Blackboard::PLAYER_ORBIT_RADIUS;
 
-	auto god = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
+	auto god = GET_SCENE_NAMED(Blackboard::GAME_SCENE)->findEntity(L"God");
 	KCHECK(god);
 	auto type = god->getComponent<GameSetup>()->getGameType();
 	if (type == GameSetup::GameType::Networked)
@@ -58,6 +58,7 @@ void LocalPlayerController::onEnterScene()
 			SockSmeller::get().subscribeToMessageType(MessageType::FireActivated, fireActive);
 		}
 	}
+
 	BaseController::onEnterScene();
 }
 
@@ -65,7 +66,7 @@ void LocalPlayerController::tick()
 {
 	BaseController::tick();
 
-	auto god = GET_SCENE_NAMED(Blackboard::GameScene)->findEntity(L"God");
+	auto god = GET_SCENE_NAMED(Blackboard::GAME_SCENE)->findEntity(L"God");
 	KCHECK(god);
 
 	if (!god)
@@ -141,10 +142,13 @@ void LocalPlayerController::tick()
 		{
 			if (SockSmeller::get().getNetworkNodeType() == NetworkNodeType::Host)
 			{
-				fireProjectile();
-				SockSmeller::get().hostSendFireActivate(m_shotStrength, SockSmeller::get().getMyUUID());
+				if (isTurnActive())
+				{
+					fireProjectile();
+					SockSmeller::get().hostSendFireActivate(m_shotStrength, SockSmeller::get().getMyUUID());
+					m_pTurnTaker->notifyTurnTaken(SockSmeller::get().getMyUUID());
+				}
 			}
-
 		}
 	}
 
